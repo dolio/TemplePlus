@@ -42,6 +42,13 @@ def OnEndProjectile(spell, projectile, index_of_target):
 			target.condition_add_with_args('sp-False Life', spell.id, 600, temp_hp)
 			target_item.partsys_id = game.particles('sp-False Life', target)
 		else:
+			if spell.caster.can_sneak_attack(target):
+				target.spell_damage_weaponlike(
+						spell.caster, D20DT_NEGATIVE_ENERGY,
+						dice_new('0d0'), D20DAP_UNSPECIFIED,
+						100, D20A_CAST_SPELL, spell.id,
+						attack_roll, index_of_target)
+
 			if attack_roll & D20CAF_CRITICAL:
 				target.float_mesfile_line('mes\\combat.mes', 12, tf_red)
 				dam_amount = dam_amount * 2
