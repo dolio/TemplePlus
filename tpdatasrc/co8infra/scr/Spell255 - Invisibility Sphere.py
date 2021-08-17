@@ -9,7 +9,7 @@ def OnBeginSpellCast( spell ):
 def	OnSpellEffect( spell ):
 	print "Invisibility Sphere OnSpellEffect"
 
-	spell.duration = 100 * spell.caster_level
+	spell.duration = 10 * spell.caster_level
 
 	# spawn one spell_object object
 	spell_obj = game.obj_create( OBJECT_SPELL_GENERIC, spell.target_loc, spell.target_loc_off_x, spell.target_loc_off_y )
