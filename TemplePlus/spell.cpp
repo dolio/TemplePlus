@@ -2239,6 +2239,7 @@ bool LegacySpellSystem::SpellEntryFileParse(SpellEntry & spEntry, TioFile * tf)
 
 				{ "become_touch", UiPickerType::BecomeTouch },
 				{ "area or obj", UiPickerType::AreaOrObj},
+				{ "obj or area", UiPickerType::AreaOrObj},
 				{ "once-multi", UiPickerType::OnceMulti},
 				{ "any 30 feet", UiPickerType::Any30Feet },
 				{ "primary 30 feet", UiPickerType::Primary30Feet },
