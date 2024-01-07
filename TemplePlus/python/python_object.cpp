@@ -980,11 +980,12 @@ static PyObject* PyObjHandle_StatLevelGetBase(PyObject* obj, PyObject* args) {
 	}
 	Stat stat;
 	int statArg;
-	if (!PyArg_ParseTuple(args, "i|i:objhndl:stat_level_get_base", &stat, &statArg)) {
+	int raw = 0;
+	if (!PyArg_ParseTuple(args, "i|ii:objhndl:stat_level_get_base", &stat, &statArg)) {
 		return 0;
 	}
 
-	return PyInt_FromLong(objects.StatLevelGetBase(self->handle, stat));
+	return PyInt_FromLong(objects.StatLevelGetBase(self->handle, stat, !!raw));
 }
 
 static PyObject* PyObjHandle_StatLevelSetBase(PyObject* obj, PyObject* args) {

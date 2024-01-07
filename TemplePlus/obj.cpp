@@ -885,6 +885,18 @@ int Objects::StatLevelGetBase(objHndl obj, Stat stat)
 	return _StatLevelGetBase(obj, stat);
 }
 
+// Alternate version that allows selecting between reading the raw
+// stat number and dispatching.
+int Objects::StatLevelGetBase(objHndl obj, Stat stat, bool raw)
+{
+	if (raw){
+		return _StatLevelGetBase(obj, stat);
+	}
+
+	DispIoBonusList evtObj;
+	return StatLevelGetBaseWithModifiers(obj, stat, &evtObj);
+}
+
 /* 0x1004E810 */
 int Objects::StatLevelGetBaseWithModifiers(objHndl handle, Stat stat, DispIoBonusList*evtObj){
 
