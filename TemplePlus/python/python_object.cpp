@@ -985,7 +985,7 @@ static PyObject* PyObjHandle_StatLevelGetBase(PyObject* obj, PyObject* args) {
 		return 0;
 	}
 
-	return PyInt_FromLong(objects.StatLevelGetBase(self->handle, stat, false));
+	return PyInt_FromLong(objects.StatLevelGetBase(self->handle, stat, !!raw));
 }
 
 static PyObject* PyObjHandle_StatLevelSetBase(PyObject* obj, PyObject* args) {
