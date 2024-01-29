@@ -130,6 +130,7 @@ bool UiRenderer::DrawText(const string& text, const TigRect& rect, const TigText
 	if (text.empty())
 		return 1;
 
+	logger->info("Drawing: {}", text);
 	return tigFont.Draw(text.c_str(), rect, style) == TRUE;
 }
 
