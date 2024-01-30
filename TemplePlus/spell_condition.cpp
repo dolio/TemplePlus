@@ -1525,10 +1525,11 @@ int SilenceObjectEvent(DispatcherCallbackArgs args)
 
 	pkt.TriggerAoeHitScript();
 
+	int partId = -1;
+
 	switch (args.dispKey)
 	{
 	case DK_OnEnterAoE:
-		using namespace SavingThrowType;
 		// The original game checks spell resistance and saves whenever you
 		// walk into an area of silence. This is wrong. You only get to
 		// resist being the center of a silence spell, not affected by it
@@ -1538,17 +1539,19 @@ int SilenceObjectEvent(DispatcherCallbackArgs args)
 		// so you could resist becoming un-silenced.
 		if (!strict) {
 			if (pkt.CheckSpellResistance(dispIo->tgt)) return 0;
-			if (damage.SavingThrowSpell(dispIo->tgt, pkt.caster, pkt.dc, Will, 0, spellId)) {
+			if (pkt.SavingThrow(dispIo->tgt, 0)) {
+				// Saving throw successful!
 				floatSys.FloatSpellLine(dispIo->tgt, 0x7531, FloatLineColor::White);
 				return 0;
 			} else {
-				// intentionally fall through to apply effect
+				// Saving throw failed!
 				floatSys.FloatSpellLine(dispIo->tgt, 0x7532, FloatLineColor::White);
+				// intentionally fall through to apply effect
 			}
 		}
-		auto partId = gameSystems->GetParticleSys().CreateAtObj("Fizzle", dispIo->tgt);
+		partId = gameSystems->GetParticleSys().CreateAtObj("Fizzle", dispIo->tgt);
 		pkt.AddTarget(dispIo->tgt, partId, 1);
-		conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, spPkt.durationRemaining, evtId });
+		conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, pkt.durationRemaining, evtId });
 		break;
 	case DK_OnLeaveAoE:
 		pkt.EndPartsysForTgtObj(dispIo->tgt);
