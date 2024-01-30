@@ -81,6 +81,8 @@ public:
 
 	static int SuggestionOnAdd(DispatcherCallbackArgs args);
 
+	static int SilenceObjectEvent(DispatcherCallbackArgs args);
+
 	void apply() override {
 
 		// Fix for when summoned Balor from skull casts suggestion
@@ -1504,3 +1506,65 @@ int SpellConditionFixes::SuggestionOnAdd(DispatcherCallbackArgs args)
 	return 0;
 }
 
+int SilenceObjectEvent(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType17(args.dispIO);
+	auto evtId = args.GetCondArg(2);
+
+	if (evtId != dispIo->evtId) return 0;
+
+	auto spellId = args.GetCondArg(0);
+	SpellPacketBody pkt(spellId);
+
+	auto strict = config.stricterRulesEnforcement;
+
+	if (!pkt.spellEnum) {
+		logger->error("Error getting spell packet ID {}", spellId);
+		return 0;
+	}
+
+	pkt.TriggerAoeHitScript();
+
+	switch (args.dispKey)
+	{
+	case DK_OnEnterAoE:
+		using namespace SavingThrowType;
+		// The original game checks spell resistance and saves whenever you
+		// walk into an area of silence. This is wrong. You only get to
+		// resist being the center of a silence spell, not affected by it
+		// once it's in effect.
+		//
+		// Also, it seemed to check spell resistance before this switch,
+		// so you could resist becoming un-silenced.
+		if (!strict) {
+			if (pkt.CheckSpellResistance(dispIo->tgt)) return 0;
+			if (damage.SavingThrowSpell(dispIo->tgt, pkt.caster, pkt.dc, Will, 0, spellId)) {
+				floatSys.FloatSpellLine(dispIo->tgt, 0x7531, FloatLineColor::White);
+				return 0;
+			} else {
+				// intentionally fall through to apply effect
+				floatSys.FloatSpellLine(dispIo->tgt, 0x7532, FloatLineColor::White);
+			}
+		}
+		auto partId = gameSystems->GetParticleSys().CreateAtObj("Fizzle", dispIo->tgt);
+		pkt.AddTarget(dispIo->tgt, partId, 1);
+		conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, spPkt.durationRemaining, evtId });
+		break;
+	case DK_OnLeaveAoE:
+		pkt.EndPartsysForTgtObj(dispIo->tgt);
+		if (!pkt.RemoveObjFromTargetList(dispIo->tgt)) {
+			logger->error("sp-Silence hit trigger: cannot remove target");
+			break;
+		}
+		d20Sys.d20SendSignal(dispIo->tgt, DK_SIG_Spell_End, spellId, 0);
+		args.RemoveSpellMod();
+		break;
+	default:
+		break;
+	}
+
+	spellSys.UpdateSpellPacket(pkt);
+	pySpellIntegration.UpdateSpell(spellId);
+
+	return 0;
+}
