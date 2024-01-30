@@ -140,7 +140,6 @@ bool UiRenderer::DrawTextInWidget(int widgetId, const string &text, const TigRec
 	if (text.empty())
 		return 1;
 
-	logger->info("Drawing: {}", text);
 	TigRect extents(rect.x + wid->x , rect.y + wid->y , rect.width,rect.height);
 
 	return tigFont.Draw(text.c_str(), extents, style) == TRUE;

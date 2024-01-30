@@ -132,6 +132,8 @@ void TextLayouter::LayoutAndDraw(gsl::cstring_span<> text, const TigFont& font, 
 		return;
 	}
 
+	logger->info("Drawing {}", text);
+
 	// Get the base text format and check if we should render using the new or old algorithms
 	auto it = mMapping->find(font.name);
 	if (it == mMapping->end()) {
