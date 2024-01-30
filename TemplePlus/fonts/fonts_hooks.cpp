@@ -50,6 +50,7 @@ int FontRenderFix::FontDraw(const char* text, TigRect* extents, TigTextStyle* st
 		return 0;
 	}
 
+	logger->info("Drawing {}", text);
 	layouter.LayoutAndDraw(span( text, strlen(text) ), font, *extents, *style);
 
 	return 0;
