@@ -5,6 +5,7 @@
 #include <infrastructure/meshes.h>
 
 #include "common.h"
+#include "config/config.h"
 #include "dispatcher.h"
 #include "condition.h"
 #include "temple_functions.h"
