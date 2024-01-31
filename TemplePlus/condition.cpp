@@ -4957,7 +4957,7 @@ int SpellCallbacks::SilenceObjectEvent(DispatcherCallbackArgs args)
 		}
 		partId = gameSystems->GetParticleSys().CreateAtObj("Fizzle", dispIo->tgt);
 		pkt.AddTarget(dispIo->tgt, partId, 1);
-		// conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, pkt.durationRemaining, evtId });
+		conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, pkt.durationRemaining, evtId });
 		break;
 	case DK_OnLeaveAoE:
 		pkt.EndPartsysForTgtObj(dispIo->tgt);
@@ -7370,10 +7370,12 @@ void Conditions::AddConditionsToTable(){
 		static CondStructNew silence;
 		silence.ExtendExisting("sp-Silence");
 		silence.subDispDefs[6].dispCallback = spCallbacks.SilenceObjectEvent;
+		silence.subDispDefs[6].dispKey = DK_OnEnterAoE;
 
 		static CondStructNew silenceHit;
 		silenceHit.ExtendExisting("sp-Silence Hit");
 		silenceHit.subDispDefs[6].dispCallback = spCallbacks.SilenceObjectEvent;
+		silenceHit.subDispDefs[6].dispKey = DK_OnLeaveAoE;
 	}
 
 	// New Conditions!
