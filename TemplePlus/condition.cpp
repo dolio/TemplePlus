@@ -4929,7 +4929,7 @@ int SpellCallbacks::SilenceObjectEvent(DispatcherCallbackArgs args)
 		return 0;
 	}
 
-	pkt.TriggerAoeHitScript();
+	// pkt.TriggerAoeHitScript();
 
 	int partId = -1;
 
