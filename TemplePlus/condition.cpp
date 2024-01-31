@@ -4929,7 +4929,7 @@ int SpellCallbacks::SilenceObjectEvent(DispatcherCallbackArgs args)
 		return 0;
 	}
 
-	// pkt.TriggerAoeHitScript();
+	pkt.TriggerAoeHitScript();
 
 	int partId = -1;
 
@@ -4957,7 +4957,7 @@ int SpellCallbacks::SilenceObjectEvent(DispatcherCallbackArgs args)
 		}
 		partId = gameSystems->GetParticleSys().CreateAtObj("Fizzle", dispIo->tgt);
 		pkt.AddTarget(dispIo->tgt, partId, 1);
-		conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, pkt.durationRemaining, evtId });
+		// conds.AddTo(dispIo->tgt, "sp-Silence Hit", { spellId, pkt.durationRemaining, evtId });
 		break;
 	case DK_OnLeaveAoE:
 		pkt.EndPartsysForTgtObj(dispIo->tgt);
