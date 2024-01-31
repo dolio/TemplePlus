@@ -7372,8 +7372,8 @@ void Conditions::AddConditionsToTable(){
 		silence.subDispDefs[6].dispCallback = spCallbacks.SilenceObjectEvent;
 
 		static CondStructNew silenceHit;
-		silence.ExtendExisting("sp-Silence Hit");
-		silence.subDispDefs[6].dispCallback = spCallbacks.SilenceObjectEvent;
+		silenceHit.ExtendExisting("sp-Silence Hit");
+		silenceHit.subDispDefs[6].dispCallback = spCallbacks.SilenceObjectEvent;
 	}
 
 	// New Conditions!
