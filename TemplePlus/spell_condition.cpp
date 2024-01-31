@@ -1539,7 +1539,7 @@ int SilenceObjectEvent(DispatcherCallbackArgs args)
 		// so you could resist becoming un-silenced.
 		if (!strict) {
 			if (pkt.CheckSpellResistance(dispIo->tgt)) return 0;
-			if (pkt.SavingThrow(dispIo->tgt, 0)) {
+			if (pkt.SavingThrow(dispIo->tgt, D20SavingThrowFlag::D20STF_NONE)) {
 				// Saving throw successful!
 				floatSys.FloatSpellLine(dispIo->tgt, 0x7531, FloatLineColor::White);
 				return 0;
