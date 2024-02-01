@@ -3360,8 +3360,6 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 		return 1;
 	}
 
-	logger->info("Spell resistance code: {}", dispIo.spellEntry.spellResistanceCode);
-
 	// does spell allow SR (force flag will check anyway)
 	if ((dispIo.spellEntry.spellResistanceCode != 1) && !forceCheck)
 	{
