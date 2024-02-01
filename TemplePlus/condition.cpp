@@ -4944,7 +4944,9 @@ int SpellCallbacks::SilenceObjectEvent(DispatcherCallbackArgs args)
 		// Also, it seemed to check spell resistance before this switch,
 		// so you could resist becoming un-silenced.
 		if (!strict) {
-			if (pkt.CheckSpellResistance(dispIo->tgt)) return 0;
+			// force this check so that the spell can be marked as not having an
+			// automatic SR check.
+			if (pkt.CheckSpellResistance(dispIo->tgt, true)) return 0;
 			if (pkt.SavingThrow(dispIo->tgt, D20SavingThrowFlag::D20STF_NONE)) {
 				// Saving throw successful!
 				floatSys.FloatSpellLine(dispIo->tgt, 0x7531, FloatLineColor::White);
