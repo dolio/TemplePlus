@@ -1528,7 +1528,7 @@ int SpellConditionFixes::SilenceBegin(DispatcherCallbackArgs args)
 	auto objIdx = pkt.numSpellObjs;
 	if (objIdx < 128) {
 		pkt.spellObjs[objIdx].obj = center;
-		pkt.spellObjs[objIdx].partSysId = partId;
+		pkt.spellObjs[objIdx].partySysId = partId;
 		pkt.numSpellObjs++;
 	}
 
