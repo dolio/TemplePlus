@@ -1518,15 +1518,15 @@ int SpellConditionFixes::SilenceBegin(DispatcherCallbackArgs args)
 	auto wide = mm.metaMagicWidenSpellCount;
 	objHndl center = args.objHndCaller;
 
-	auto radius = ent.radiusTarget * (1+wide) * 12.0;
+	float radius = ent.radiusTarget * (1+wide) * 12.0;
 
 	auto evtId = objEvents.EventAppend(center, 32, 33, OLC_CRITTERS, radius, 0.0, XM_2PI);
-	args.CondNodeSetArg(2, evtId);
+	args.SetCondArg(2, evtId);
 
-	auto partId = args.CondNodeGetArg(3);
+	auto partId = args.GetCondArg(3);
 
-	auto objIx = pkt.numSpellObjs;
-	if (idx < 128) {
+	auto objIdx = pkt.numSpellObjs;
+	if (objIdx < 128) {
 		pkt.spellObjs[objIdx].obj = center;
 		pkt.spellObjs[objIdx].partSysId = partId;
 		pkt.numSpellObjs++;
