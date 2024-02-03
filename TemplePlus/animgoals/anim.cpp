@@ -509,7 +509,7 @@ BOOL AnimSystem::PushSpellDismiss(SpellPacketBody & pkt)
     if (!goalData.InitWithInterrupt(pkt.caster, ag_throw_spell_w_cast_anim))
         return FALSE;
 
-    SetGoalDataForSpellPacket(pkt, goalData, true, true);
+    SetGoalDataForSpellPacket(pkt, goalData, true, false);
 
     return goalData.Push(nullptr);
 }
@@ -531,9 +531,9 @@ BOOL AnimSystem::PushSpellInterrupt(const objHndl& caster, objHndl item, AnimGoa
     goalData.target.obj = (*actSeqSys.actSeqCur)->spellPktBody.caster;
     goalData.skillData.number = 0;
     if (inventory.UsesWandAnim(item))
-        goalData.animIdPrevious.number = GetWandAnimId(spellSchool);
+        goalData.animIdPrevious.number = GetWandAnimId(spellSchool, true);
     else
-        goalData.animIdPrevious.number = GetCastingAnimId(spellSchool);
+        goalData.animIdPrevious.number = GetCastingAnimId(spellSchool, true);
     
     return goalData.Push(nullptr);
 }
