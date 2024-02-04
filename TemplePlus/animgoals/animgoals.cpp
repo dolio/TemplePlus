@@ -2424,8 +2424,8 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(14));
 	attempt_spell_w_cast_anim.AddState(GoalIsAnimatingConjuration) // Index 14
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_GOTO_STATE(4))
-		.OnFailure(T_GOTO_STATE(15));
+		.OnSuccess(T_GOTO_STATE(15))
+		.OnFailure(T_GOTO_STATE(4));
 	attempt_spell_w_cast_anim.AddState(GoalStartConjurationAnim) // Index 15
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
