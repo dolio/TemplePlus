@@ -157,6 +157,7 @@ int GoalIsSlotFlag10NotSet(AnimSlot& slot)
   }
   }*/
   //return (slot.flags & AnimSlotFlag::ASF_UNK5) == 0? TRUE: FALSE;
+	logger->info("Flag 10 is not set: {}", (~(slot.flags >> 4)) & 1);
 	return (~(slot.flags >> 4)) & 1;
 	//return ~(slot.flags >> 4) & 1;
 }
@@ -725,7 +726,7 @@ int GoalStartConjurationAnim(AnimSlot &slot) {
 	;
 	objects.SetAnimId(obj, encodedId.ConjurationToCastAnimation());
 	
-	slot.path.someDelay = 1000;
+	slot.path.someDelay = 33;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
 	slot.flags |= AnimSlotFlag::ASF_UNK5;
 	slot.flags &= ~(AnimSlotFlag::ASF_UNK3 | AnimSlotFlag::ASF_UNK4);
