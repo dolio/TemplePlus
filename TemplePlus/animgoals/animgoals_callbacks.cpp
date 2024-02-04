@@ -725,7 +725,7 @@ int GoalStartConjurationAnim(AnimSlot &slot) {
 	;
 	objects.SetAnimId(obj, encodedId.ConjurationToCastAnimation());
 	
-	slot.path.someDelay = 33;
+	slot.path.someDelay = 1000;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
 	slot.flags |= AnimSlotFlag::ASF_UNK5;
 	slot.flags &= ~(AnimSlotFlag::ASF_UNK3 | AnimSlotFlag::ASF_UNK4);
