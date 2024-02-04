@@ -1088,7 +1088,7 @@ int GoalIsDoorFullyClosed(AnimSlot &slot) {
 int GoalTriggerSpell(AnimSlot &slot) {
 	static auto org = temple::GetRef<std::remove_pointer<GoalCallback>::type>(0x10017dd0);
 	auto result = org(slot);
-	slot.path.delay = 333;
+	slot.path.someDelay = 333;
 	return result;
 }
 
