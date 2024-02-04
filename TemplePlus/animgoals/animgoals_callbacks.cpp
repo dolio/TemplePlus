@@ -723,7 +723,7 @@ int GoalStartConjurationAnim(AnimSlot &slot) {
 		gameSystems->GetAnim().Debug();
 	}
 	;
-	objects.SetAnimId(obj, encodedId);
+	objects.SetAnimId(obj, encodedId.ConjurationToCastAnimation());
 	
 	slot.path.someDelay = 33;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
@@ -1087,7 +1087,9 @@ int GoalIsDoorFullyClosed(AnimSlot &slot) {
 // Originally @ 0x10017dd0
 int GoalTriggerSpell(AnimSlot &slot) {
 	static auto org = temple::GetRef<std::remove_pointer<GoalCallback>::type>(0x10017dd0);
-	return org(slot);
+	auto result = org(slot);
+	slot.path.delay = 333;
+	return result;
 }
 
 // Originally @ 0x10017f80

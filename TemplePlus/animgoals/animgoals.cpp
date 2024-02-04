@@ -2412,7 +2412,7 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(12));
 	attempt_spell_w_cast_anim.AddState(GoalTriggerSpell) // Index 11
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.OnSuccess(T_GOTO_STATE(2))
+		.OnSuccess(T_GOTO_STATE(2), DELAY_SLOT)
 		.OnFailure(T_GOTO_STATE(12));
 	attempt_spell_w_cast_anim.AddState(GoalAttemptSpell) // Index 12
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
