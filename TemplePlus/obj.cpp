@@ -311,7 +311,7 @@ gfx::EncodedAnimId Objects::GetIdleAnim(objHndl obj)
 }
 	else if (critterSys.IsMovingSilently(obj))
 {
-		return EncodedAnimId(44);
+		return EncodedAnimId(17);
 }
 	else if (critterSys.IsCombatModeActive(obj))
 {
