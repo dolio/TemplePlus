@@ -2412,7 +2412,7 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(12));
 	attempt_spell_w_cast_anim.AddState(GoalTriggerSpell) // Index 11
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.OnSuccess(T_GOTO_STATE(2), DELAY_SLOT)
+		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(12));
 	attempt_spell_w_cast_anim.AddState(GoalAttemptSpell) // Index 12
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
@@ -2424,8 +2424,8 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(14));
 	attempt_spell_w_cast_anim.AddState(GoalIsAnimatingConjuration) // Index 14
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_GOTO_STATE(15))
-		.OnFailure(T_GOTO_STATE(4));
+		.OnSuccess(T_GOTO_STATE(4))
+		.OnFailure(T_GOTO_STATE(15));
 	attempt_spell_w_cast_anim.AddState(GoalStartConjurationAnim) // Index 15
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
