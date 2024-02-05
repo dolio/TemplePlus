@@ -1314,7 +1314,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	}
 
 	auto &aas = gameSystems->GetAAS();
-	auto encodedId = slot.param1.number;
+	gfx::EncodedAnimId encodedId(slot.param1.number);
 	
 	objects.SetAnimId(obj, encodedId);
 	

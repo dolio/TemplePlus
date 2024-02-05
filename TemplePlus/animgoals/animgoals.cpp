@@ -2477,7 +2477,7 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddState(GoalUnconcealAnimate) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
-		.OnFailure(T_GOTO_STATE(?)); // abort?
+		.OnFailure(T_POP_ALL); // abort?
 	// if we haven't completed a conjuration yet
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 2
 		.SetArgs(AGDATA_SELF_OBJ)
