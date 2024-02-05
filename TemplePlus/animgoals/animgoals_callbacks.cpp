@@ -1294,3 +1294,38 @@ int AlwaysFail(AnimSlot &slot) {
 	return org(slot);
 }
  
+int GoalBeginConjuring(AnimSlot &slot) {
+	auto obj = slot.param1.obj;
+
+	if (!obj) {
+		logger->error("GoalBeginConjuring: Null object param.");
+		gameSystems->GetAnim().Debug();
+	}
+	if (!spellId) {
+		logger->error("GloatBeginConjuring; 0 spellId");
+		gameSystems->GetAnim().Debug();
+	}
+
+	auto aasHandle = objects.GetAnimHandle(obj);
+	auto aasId = aasHandle ? aasHandle->GetAnimId() : 0;
+	if (!aasId) {
+		logger->error("GoalBeginConjuring: Null AAS handle.");
+		gameSystems->GetAnim().Debug();
+	}
+
+	auto &aas = gameSystems->GetAAS();
+	auto encodedId = slot.param1.number;
+	
+	objects.SetAnimId(obj, encodedId);
+	
+	slot.path.someDelay = 33;
+	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
+	slot.flags |= AnimSlotFlag::ASF_UNK4 | AnimSlotFlat::ASF_UNK5;
+
+	return 1;
+}
+
+int GoalTestSlotFlag8(AnimSlot &slot) {
+	if (slot.flags & AnimSlotFlag::ASF_UNK4) return 1;
+	else return 0;
+}

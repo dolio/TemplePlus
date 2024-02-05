@@ -2432,6 +2432,7 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_POP_ALL);
 
 	// ag_throw_spell_w_cast_anim_2ndary
+	/* this seems broken, so I'm borrowing it for experimentation
 	auto throw_spell_w_cast_anim_2ndary = AnimGoalBuilder(goals_[ag_throw_spell_w_cast_anim_2ndary])
 		.SetPriority(AGP_5)
 		.SetInterruptAll(true)
@@ -2459,6 +2460,44 @@ AnimationGoals::AnimationGoals()
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_POP_GOAL)
 		.OnFailure(T_GOTO_STATE(2));
+	*/
+	auto throw_spell_w_cast_anim_2ndary = AnimGoalBuilder(goals_[ag_throw_spell_w_cast_anim_2ndary])
+		.SetPriority(AGP_5)
+		.SetInterruptAll(true)
+		.SetFieldC(true);
+	throw_spell_w_cast_anim_2ndary.AddCleanup(GoalCastConjureEnd)
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
+		.SetFlagsData(1);
+	// check if we have an animation to play
+	throw_spell_w_cast_anim_2ndary.AddState(GoalIsSlotFlag10NotSet) // Index 0
+    .SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(2))
+		.OnFailure(T_GOTO_STATE(1));
+	// advance unconceal animation, unless a problem occurs
+	throw_spell_w_cast_anim_2ndary.AddState(GoalUnconcealAnimate) // Index 1
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.OnFailure(T_GOTO_STATE(?)); // abort?
+	// if we haven't completed a conjuration yet
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 2
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(3))
+		.OnFailure(T_GOTO_STATE(4));
+	// begin conjuration animation
+	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 3
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
+		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.OnFailure(T_POP_ALL);
+	// if we were interrupted, restart conjuration, otherwise
+	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(3))
+		.OnSuccess(T_GOTO_STATE(5));
+	// start cast animation and trigger spell begin
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTriggerSpell) // Index 5
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
+		.OnSuccess(T_REWIND)
+		.OnFailure(T_POP_ALL);
 
 	// ag_back_off_from
 	auto back_off_from = AnimGoalBuilder(goals_[ag_back_off_from])
