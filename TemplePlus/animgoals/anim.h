@@ -177,6 +177,7 @@ public:
 	int PushGoalHitByWeapon(objHndl attacker, objHndl defender);
 	int PushDodge(objHndl attacker, objHndl dodger);
 	int PushAnimate(objHndl obj, int anim);
+	int PushGoalStunned(objHndl stunee);
 
 	/*
 	pushes spell animation, including wand animation if relevant

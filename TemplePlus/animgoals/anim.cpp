@@ -2483,3 +2483,19 @@ int AnimSystem::PushGoalHitByWeapon(objHndl attacker, objHndl defender) {
     return FALSE;
 }
 
+int AnimSystem::PushGoalStunned(objHndl critter) {
+	if (!critter) return FALSE;
+	if (critterSys.IsDeadOrUnconscious(critter)) return FALSE;
+	if (!gameSystems.GetAnim().Interrupt(critter, AnimGoalPriority::AGP_4, false))
+		return FALSE;
+
+	AnimSlotGoalStackEntry agd;
+	if (!agd.InitWithInterrupt(critter, AnimGoalType::ag_animate_stunned))
+		return FALSE;
+
+	AnimSlotId* animIdGlobal = addresses.animIdGlobal;
+	if (agd.Push(animIdGlobal))
+		return TRUE;
+
+	return FALSE;
+}
