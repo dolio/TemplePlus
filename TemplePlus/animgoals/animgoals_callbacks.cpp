@@ -1301,10 +1301,6 @@ int GoalBeginConjuring(AnimSlot &slot) {
 		logger->error("GoalBeginConjuring: Null object param.");
 		gameSystems->GetAnim().Debug();
 	}
-	if (!spellId) {
-		logger->error("GloatBeginConjuring; 0 spellId");
-		gameSystems->GetAnim().Debug();
-	}
 
 	auto aasHandle = objects.GetAnimHandle(obj);
 	auto aasId = aasHandle ? aasHandle->GetAnimId() : 0;
@@ -1320,7 +1316,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	
 	slot.path.someDelay = 33;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
-	slot.flags |= AnimSlotFlag::ASF_UNK4 | AnimSlotFlat::ASF_UNK5;
+	slot.flags |= AnimSlotFlag::ASF_UNK4 | AnimSlotFlag::ASF_UNK5;
 
 	return 1;
 }
