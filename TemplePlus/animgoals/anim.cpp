@@ -2486,7 +2486,7 @@ int AnimSystem::PushGoalHitByWeapon(objHndl attacker, objHndl defender) {
 int AnimSystem::PushGoalStunned(objHndl critter) {
 	if (!critter) return FALSE;
 	if (critterSys.IsDeadOrUnconscious(critter)) return FALSE;
-	if (!gameSystems.GetAnim().Interrupt(critter, AnimGoalPriority::AGP_4, false))
+	if (!gameSystems->GetAnim().Interrupt(critter, AnimGoalPriority::AGP_4, false))
 		return FALSE;
 
 	AnimSlotGoalStackEntry agd;
