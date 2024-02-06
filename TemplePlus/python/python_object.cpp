@@ -2225,6 +2225,17 @@ static PyObject* PyObjHandle_ContainerToggleOpen(PyObject* obj, PyObject* args) 
 	Py_RETURN_NONE;
 }
 
+// save a PC to file and delete it
+static PyObject* PyObjHandle_SaveAndDestroy(PyObject* obj, PyObject* args) {
+	auto self = GetSelf(obj);
+	if (!self->handle) return 0;
+	if (self->GetType() != obj_t_pc) return 0;
+
+	auto saveAndDestroy = temple::GetRef<int(__cdecl)(objHndl)>(0x101662C0);
+
+	return PyInt_FromLong(saveAndDestroy(self->handle));
+}
+
 static PyObject* PyObjHandle_SavingThrow(PyObject* obj, PyObject* args) {
 	auto self = GetSelf(obj);
 	if (!self->handle) {
@@ -4755,6 +4766,7 @@ static PyMethodDef PyObjHandleMethods[] = {
 	{ "runoff", PyObjHandle_RunOff, METH_VARARGS, NULL },
 	{ "run_to", PyObjHandle_RunTo, METH_VARARGS, NULL },
 
+	{ "save_and_destroy", PyObjHandle_SaveAndDestroy, METH_VARARGS, NULL },
 	{ "saving_throw", PyObjHandle_SavingThrow, METH_VARARGS, NULL },
 	{ "saving_throw_with_args", PyObjHandle_SavingThrow, METH_VARARGS, NULL },
 	{ "saving_throw_spell", PyObjHandle_SavingThrowSpell, METH_VARARGS, NULL },
