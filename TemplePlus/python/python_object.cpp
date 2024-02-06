@@ -2229,7 +2229,7 @@ static PyObject* PyObjHandle_ContainerToggleOpen(PyObject* obj, PyObject* args) 
 static PyObject* PyObjHandle_SaveAndDestroy(PyObject* obj, PyObject* args) {
 	auto self = GetSelf(obj);
 	if (!self->handle) return 0;
-	if (self->GetType() != obj_t_pc) return 0;
+	if (objects.GetType(self->handle) != obj_t_pc) return 0;
 
 	auto saveAndDestroy = temple::GetRef<int(__cdecl)(objHndl)>(0x101662C0);
 
