@@ -2495,6 +2495,9 @@ AnimationGoals::AnimationGoals()
 	// start cast animation and trigger spell begin
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTriggerSpell) // Index 5
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
+		.OnSuccess(T_GOTO_STATE(6))
+		.OnFailure(T_POP_ALL);
+	throw_spell_w_cast_anim_2ndary.AddState(GoalSetSlotFlag8) // Index 6
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_ALL);
 

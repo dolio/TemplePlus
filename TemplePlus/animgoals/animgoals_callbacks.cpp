@@ -700,7 +700,9 @@ int GoalDestroyParam1(AnimSlot &slot) {
 // Originally @ 0x10010500
 int GoalWasInterrupted(AnimSlot &slot) {
 	static auto org = temple::GetRef<std::remove_pointer<GoalCallback>::type>(0x10010500);
-	return org(slot);
+	result = org(slot);
+	logger->info("GoalWasInterrupted: {}", result);
+	return result;
 }
 
 // Originally @ 0x100105f0
@@ -1334,4 +1336,10 @@ int GoalTestSlotFlag8(AnimSlot &slot) {
 	logger->info("GoalTestSlotFlag8 flags = {}", slot.flags);
 	if (slot.flags & AnimSlotFlag::ASF_UNK4) return 1;
 	else return 0;
+}
+
+int GoalSetSlotFlag8(AnimSlot &slot) {
+	logger->info("GoalSetSlotFlag8 flags = {}", slot.flags);
+	slot.flags |= AnimSlotFlag::ASF_UNK4;
+	return 1;
 }
