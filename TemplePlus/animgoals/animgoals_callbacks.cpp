@@ -1297,7 +1297,7 @@ int AlwaysFail(AnimSlot &slot) {
  
 int GoalBeginConjuring(AnimSlot &slot) {
 	auto obj = slot.param1.obj;
-	auto prevId = slot->pCurrentGoal->animIdPrevious.number;
+	auto prevId = slot.pCurrentGoal->animIdPrevious.number;
 	logger->info("GoalBeginConjuring prevId = {}", prevId);
 
 	if (!obj) {
