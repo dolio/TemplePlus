@@ -1296,6 +1296,7 @@ int AlwaysFail(AnimSlot &slot) {
  
 int GoalBeginConjuring(AnimSlot &slot) {
 	auto obj = slot.param1.obj;
+	auto prevId = slot.param2.number;
 
 	if (!obj) {
 		logger->error("GoalBeginConjuring: Null object param.");
@@ -1310,7 +1311,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	}
 
 	auto &aas = gameSystems->GetAAS();
-	gfx::EncodedAnimId encodedId(slot.param1.number);
+	gfx::EncodedAnimId encodedId(prevId);
 	
 	objects.SetAnimId(obj, encodedId);
 	
