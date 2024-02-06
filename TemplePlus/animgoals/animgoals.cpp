@@ -2348,7 +2348,7 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(9));
 	throw_spell_w_cast_anim.AddState(GoalSetRotationToFaceTargetLoc) // Index 8
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_TARGET_TILE)
-		.OnSuccess(T_POP_GOAL | T_PUSH_GOAL(ag_attempt_spell_w_cast_anim))
+		.OnSuccess(T_POP_GOAL | T_PUSH_GOAL(ag_throw_spell_w_cast_anim_2ndary))
 		.OnFailure(T_GOTO_STATE(9));
 	throw_spell_w_cast_anim.AddState(GoalCastConjureEnd) // Index 9
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
@@ -2470,8 +2470,8 @@ AnimationGoals::AnimationGoals()
 	// check if we have an animation to play
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 0
     .SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(2))
-		.OnFailure(T_GOTO_STATE(1));
+		.OnSuccess(T_GOTO_STATE(1))
+		.OnFailure(T_GOTO_STATE(2));
 	// advance unconceal animation, unless a problem occurs
 	throw_spell_w_cast_anim_2ndary.AddState(GoalUnconcealAnimate) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ)
