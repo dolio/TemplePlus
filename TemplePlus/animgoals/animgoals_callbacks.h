@@ -153,3 +153,4 @@ int AlwaysFail(AnimSlot &slot); // Originally @ 0x10262530
 
 int GoalBeginConjuring(AnimSlot &slot);
 int GoalTestSlotFlag8(AnimSlot &slot);
+int GoalTestSlotFlag10(AnimSlot &slot);
