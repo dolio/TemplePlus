@@ -2480,8 +2480,8 @@ AnimationGoals::AnimationGoals()
 	// if we haven't completed a conjuration yet
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 2
 		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(3))
-		.OnFailure(T_GOTO_STATE(4));
+		.OnSuccess(T_GOTO_STATE(4))
+		.OnFailure(T_GOTO_STATE(3));
 	// begin conjuration animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 3
 		.SetArgs(AGDATA_SELF_OBJ)
