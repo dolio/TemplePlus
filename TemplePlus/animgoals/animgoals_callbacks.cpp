@@ -146,10 +146,16 @@ int GoalIsRotatedTowardNextPathNode(AnimSlot & slot) {
 	return 1;
 }
 
+int GoalTestSlotFlag10(AnimSlot& slot)
+{
+	logger->info("GoalTestSlotFlag10 flags = {}", slot.flags);
+	if (slot.flags & AnimSlotFlag::ASF_UNK5) return 1;
+	else return 0;
+}
+
 // Originally @ 0x10012C70
 int GoalIsSlotFlag10NotSet(AnimSlot& slot)
 { //10012C70
-	logger->info("GoalIsSlotFlag10NotSet flags = {}", slot.flags);
   /*if (slot.pCurrentGoal && slot.pCurrentGoal->goalType != ag_anim_idle) {
   logger->debug("GSF82 for {}, current goal {} ({}). Flags: {:x}, currentState: {:x}", slot.animObj, animGoalTypeNames[slot.pCurrentGoal->goalType], slot.currentGoal, slot.flags, slot.currentState);
   if(slot.pCurrentGoal->goalType == ag_hit_by_weapon)

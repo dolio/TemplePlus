@@ -2468,7 +2468,7 @@ AnimationGoals::AnimationGoals()
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.SetFlagsData(1);
 	// check if we have an animation to play
-	throw_spell_w_cast_anim_2ndary.AddState(GoalIsSlotFlag10NotSet) // Index 0
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 0
     .SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(1));
