@@ -2461,11 +2461,9 @@ AnimationGoals::AnimationGoals()
 		.OnSuccess(T_POP_GOAL)
 		.OnFailure(T_GOTO_STATE(2));
 	*/
-	/*
 	auto throw_spell_w_cast_anim_2ndary = AnimGoalBuilder(goals_[ag_throw_spell_w_cast_anim_2ndary])
-		.SetPriority(AGP_5)
-		.SetInterruptAll(true)
-		.SetFieldC(true);
+		.SetPriority(AGP_4)
+		.SetRelatedGoals(ag_attempt_spell);
 	throw_spell_w_cast_anim_2ndary.AddCleanup(GoalCastConjureEnd)
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.SetFlagsData(1);
@@ -2478,7 +2476,7 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddState(GoalUnconcealAnimate) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
-		.OnFailure(T_POP_ALL); // abort?
+		.OnFailure(T_POP_ALL);
 	// if we haven't completed a conjuration yet
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 2
 		.SetArgs(AGDATA_SELF_OBJ)
@@ -2486,8 +2484,8 @@ AnimationGoals::AnimationGoals()
 		.OnFailure(T_GOTO_STATE(4));
 	// begin conjuration animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 3
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_ALL);
 	// if we were interrupted, restart conjuration, otherwise
 	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
@@ -2498,80 +2496,6 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTriggerSpell) // Index 5
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.OnSuccess(T_REWIND)
-		.OnFailure(T_POP_ALL);
-	*/
-	auto attempt_spell_w_cast_anim_2ndary = AnimGoalBuilder(goals_[ag_throw_spell_w_cast_anim_2ndary])
-		.SetPriority(AGP_4)
-		.SetRelatedGoals(ag_throw_spell);
-	attempt_spell_w_cast_anim_2ndary.AddCleanup(GoalCastConjureEnd)
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.SetFlagsData(1);
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalIsSlotFlag10NotSet) // Index 0
-		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(10))
-		.OnFailure(T_GOTO_STATE(1));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalUnconcealAnimate) // Index 1
-		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(3))
-		.OnFailure(T_GOTO_STATE(7), DELAY_SLOT);
-	attempt_spell_w_cast_anim_2ndary.AddState(AlwaysSucceed) // Index 2
-		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_REWIND)
-		.OnFailure(T_GOTO_STATE(12));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalSlotFlagSet8If4AndNotSetYet) // Index 3
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_GOTO_STATE(13))
-		.OnFailure(T_REWIND, DELAY_SLOT);
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalReturnFalse) // Index 4
-		.SetArgs(AGDATA_SKILL_DATA)
-		.OnSuccess(T_GOTO_STATE(5))
-		.OnFailure(T_GOTO_STATE(8));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalSpawnFireball) // Index 5
-		.SetArgs(AGDATA_SELF_OBJ, SELF_OBJ_PRECISE_LOC)
-		.SetFlagsData(5)
-		.OnSuccess(T_GOTO_STATE(6))
-		.OnFailure(T_GOTO_STATE(7));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalStateCallback1) // Index 6
-		.SetArgs(AGDATA_SCRATCH_OBJ, AGDATA_SELF_OBJ)
-		.SetFlagsData(38)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
-		.OnFailure(T_POP_ALL, DELAY_SLOT);
-	attempt_spell_w_cast_anim_2ndary.AddState(AlwaysSucceed) // Index 7
-		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_POP_GOAL)
-		.OnFailure(T_POP_ALL);
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalAttemptSpell) // Index 8
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.OnSuccess(T_REWIND)
-		.OnFailure(T_GOTO_STATE(7));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalActionPerform3) // Index 9
-		.SetArgs(AGDATA_SELF_OBJ)
-		.SetFlagsData(1)
-		.OnSuccess(T_POP_ALL)
-		.OnFailure(T_POP_ALL);
-	attempt_spell_w_cast_anim_2ndary.AddState(AlwaysSucceed) // Index 10
-		.SetArgs(AGDATA_SKILL_DATA)
-		.OnSuccess(T_GOTO_STATE(11))
-		.OnFailure(T_GOTO_STATE(12));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalTriggerSpell) // Index 11
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.OnSuccess(T_GOTO_STATE(2))
-		.OnFailure(T_GOTO_STATE(12));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalAttemptSpell) // Index 12
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
-		.OnSuccess(T_POP_ALL)
-		.OnFailure(T_POP_ALL);
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 13
-		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(10))
-		.OnFailure(T_GOTO_STATE(14));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalIsAnimatingConjuration) // Index 14
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_GOTO_STATE(15))
-		.OnFailure(T_GOTO_STATE(4));
-	attempt_spell_w_cast_anim_2ndary.AddState(GoalStartConjurationAnim) // Index 15
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_POP_ALL);
 
 	// ag_back_off_from

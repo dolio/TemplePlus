@@ -149,6 +149,7 @@ int GoalIsRotatedTowardNextPathNode(AnimSlot & slot) {
 // Originally @ 0x10012C70
 int GoalIsSlotFlag10NotSet(AnimSlot& slot)
 { //10012C70
+	logger->info("GoalIsSlotFlag10NotSet flags = {}", slot.flags);
   /*if (slot.pCurrentGoal && slot.pCurrentGoal->goalType != ag_anim_idle) {
   logger->debug("GSF82 for {}, current goal {} ({}). Flags: {:x}, currentState: {:x}", slot.animObj, animGoalTypeNames[slot.pCurrentGoal->goalType], slot.currentGoal, slot.flags, slot.currentState);
   if(slot.pCurrentGoal->goalType == ag_hit_by_weapon)
@@ -1296,7 +1297,8 @@ int AlwaysFail(AnimSlot &slot) {
  
 int GoalBeginConjuring(AnimSlot &slot) {
 	auto obj = slot.param1.obj;
-	auto prevId = slot.param2.number;
+	auto prevId = slot->pCurrentGoal->animIdPrevious.number;
+	logger->info("GoalBeginConjuring prevId = {}", prevId);
 
 	if (!obj) {
 		logger->error("GoalBeginConjuring: Null object param.");
@@ -1323,6 +1325,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 }
 
 int GoalTestSlotFlag8(AnimSlot &slot) {
+	logger->info("GoalTestSlotFlag8 flags = {}", slot.flags);
 	if (slot.flags & AnimSlotFlag::ASF_UNK4) return 1;
 	else return 0;
 }
