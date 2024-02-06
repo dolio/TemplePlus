@@ -700,7 +700,7 @@ int GoalDestroyParam1(AnimSlot &slot) {
 // Originally @ 0x10010500
 int GoalWasInterrupted(AnimSlot &slot) {
 	static auto org = temple::GetRef<std::remove_pointer<GoalCallback>::type>(0x10010500);
-	result = org(slot);
+	auto result = org(slot);
 	logger->info("GoalWasInterrupted: {}", result);
 	return result;
 }
