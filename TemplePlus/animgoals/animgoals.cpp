@@ -2485,7 +2485,7 @@ AnimationGoals::AnimationGoals()
 	// begin conjuration animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 3
 		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_REWIND)
+		.OnSuccess(T_GOTO_STATE(7))
 		.OnFailure(T_POP_ALL);
 	// if we were interrupted, restart conjuration, otherwise
 	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
@@ -2497,9 +2497,15 @@ AnimationGoals::AnimationGoals()
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.OnSuccess(T_GOTO_STATE(6))
 		.OnFailure(T_POP_ALL);
+	// mark that we've done a conjure animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalSetSlotFlag8) // Index 6
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_ALL);
+	// animation loop
+	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 7
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(7), DELAY_SLOT)
+		.OnFailure(T_GOTO_STATE(2), DELAY_SLOT);
 
 	// ag_back_off_from
 	auto back_off_from = AnimGoalBuilder(goals_[ag_back_off_from])
