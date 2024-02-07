@@ -1144,6 +1144,7 @@ int GoalStartFidgetAnimIfCloseToParty(AnimSlot &slot) {
 // Originally @ 0x100188f0
 int GoalContinueWithAnim(AnimSlot &slot) {
 	static auto org = temple::GetRef<std::remove_pointer<GoalCallback>::type>(0x100188f0);
+	logger->info("GoalContinueWithAnim: flags = {}", slot.flags);
 	return org(slot);
 }
 
