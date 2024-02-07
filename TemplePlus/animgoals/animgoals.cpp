@@ -2472,7 +2472,7 @@ AnimationGoals::AnimationGoals()
 		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(1));
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 1
-		.SetArgs(AG_DATA_SELF_OBJ)
+		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 2
