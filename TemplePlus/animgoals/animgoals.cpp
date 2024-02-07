@@ -2504,6 +2504,10 @@ AnimationGoals::AnimationGoals()
 	// animation loop
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 7
 		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(8), DELAY_SLOT)
+		.OnFailure(T_GOTO_STATE(2), DELAY_SLOT);
+	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 8
+		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(7), DELAY_SLOT)
 		.OnFailure(T_GOTO_STATE(2), DELAY_SLOT);
 
