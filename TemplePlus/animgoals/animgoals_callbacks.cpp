@@ -1307,6 +1307,7 @@ int AlwaysFail(AnimSlot &slot) {
 int GoalBeginConjuring(AnimSlot &slot) {
 	auto obj = slot.param1.obj;
 	auto prevId = slot.pCurrentGoal->animIdPrevious.number;
+	logger->info("GoalBeginConjuring param2 = {}", slot.pCurrentGoal->param2.number);
 	logger->info("GoalBeginConjuring prevId = {}", prevId);
 
 	if (!obj) {
@@ -1322,7 +1323,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	}
 
 	auto &aas = gameSystems->GetAAS();
-	gfx::EncodedAnimId encodedId(prevId);
+	gfx::EncodedAnimId encodedId(prevId - 64);
 	
 	objects.SetAnimId(obj, encodedId);
 	

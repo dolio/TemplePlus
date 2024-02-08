@@ -2476,7 +2476,7 @@ AnimationGoals::AnimationGoals()
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 2
-		.SetArgs(AGDATA_SELF_OBJ)
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_REWIND, DELAY_SLOT);
 	/*
