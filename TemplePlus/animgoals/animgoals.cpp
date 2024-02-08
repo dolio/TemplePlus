@@ -2472,11 +2472,11 @@ AnimationGoals::AnimationGoals()
 		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(1));
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 1
-		.SetArgs(AGDATA_SELF_OBJ)
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 2
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
+		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_REWIND, DELAY_SLOT);
 	/*

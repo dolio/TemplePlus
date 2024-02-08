@@ -1327,6 +1327,8 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	
 	objects.SetAnimId(obj, encodedId);
 	
+	static auto PlayRipples = temple::GetRef<char(__cdecl)(objHndl)>(0x100166F0);
+	PlayRipples(obj);
 	slot.path.someDelay = 33;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
 	slot.flags |= AnimSlotFlag::ASF_UNK4 | AnimSlotFlag::ASF_UNK5;
