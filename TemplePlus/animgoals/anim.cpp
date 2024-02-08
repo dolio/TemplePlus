@@ -460,15 +460,15 @@ int AnimSystem::PushAnimate(objHndl obj, int anim) {
 int AnimSystem::PushAnimateLoop(objHndl obj, int animId) {
 	if (!obj) return FALSE;
 
-	AnimSloatGoalStackEntry goalData;
-	if (!goalData.InitWithInterrupt(spellPkt.caster, ag_animate_loop))
+	AnimSlotGoalStackEntry goalData;
+	if (!goalData.InitWithInterrupt(obj, ag_animate_loop))
 		return FALSE;
 
 	auto otype = objects.GetType(obj);
 	auto realAnimId = animId;
 
 	if ((otype == obj_t_pc || otype == obj_t_npc) && animId < 63)
-		realAnimId = (int)critterSys.GetAnimId(obj, animId);
+		realAnimId = (int)critterSys.GetAnimId(obj, (gfx::WeaponAnim)animId);
 	else if (64 <= animId && animId <= 190)
     realAnimId = animId - 64;
 
