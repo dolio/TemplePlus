@@ -2930,7 +2930,7 @@ static PyObject* PyObjHandle_AnimGoalPushLoop(PyObject* obj, PyObject* args) {
 	}
 
 	int animId;
-	if (!PyArg_ParseTuple(args, "i:objhndl.anim_goal_push", &animId)) {
+	if (!PyArg_ParseTuple(args, "i:objhndl.anim_goal_push_loop", &animId)) {
 		return 0;
 	}
 
@@ -4595,6 +4595,7 @@ static PyMethodDef PyObjHandleMethods[] = {
 	{ "anim_callback", PyObjHandle_AnimCallback, METH_VARARGS, NULL },
 	{ "anim_goal_interrupt", PyObjHandle_AnimGoalInterrupt, METH_VARARGS, NULL },
 	{ "anim_goal_push", PyObjHandle_AnimGoalPush, METH_VARARGS, NULL },
+	{ "anim_goal_push_loop", PyObjHandle_AnimGoalPushLoop, METH_VARARGS, NULL },
 	{ "anim_goal_push_attack", PyObjHandle_AnimGoalPushAttack, METH_VARARGS, NULL },
 	{ "anim_goal_push_dodge", PyObjHandle_AnimGoalPushDodge, METH_VARARGS, NULL },
 	{ "anim_goal_push_hit_by_weapon", PyObjHandle_AnimGoalPushHitByWeapon, METH_VARARGS, NULL },
