@@ -457,6 +457,25 @@ int AnimSystem::PushAnimate(objHndl obj, int anim) {
   return addresses.PushAnimate(obj, anim);
 }
 
+int AnimSystem::PushAnimateLoop(objHndl obj, int animId) {
+	if (!obj) return FALSE;
+
+	AnimSloatGoalStackEntry goalData;
+	if (!goalData.InitWithInterrupt(spellPkt.caster, ag_animate_loop))
+		return FALSE;
+
+	auto otype = objects.GetType(obj);
+	auto realAnimId = animId;
+
+	if ((otype == obj_t_pc || otype == obj_t_npc) && animId < 63)
+		realAnimId = (int)critterSys.GetAnimId(obj, animId);
+	else if (64 <= animId && animId <= 190)
+    realAnimId = animId - 64;
+
+	goalData.animIdPrevious.number = realAnimId;
+	return goalData.Push(nullptr);
+}
+
 void AnimSystem::SetGoalDataForSpellPacket(SpellPacketBody & pkt, AnimSlotGoalStackEntry & goalData, bool wand, bool conjure)
 {
     auto caster = pkt.caster;

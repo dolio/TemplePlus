@@ -2923,6 +2923,28 @@ static PyObject* PyObjHandle_AnimGoalPushStun(PyObject* obj, PyObject* args) {
 	return PyInt_FromLong(gameSystems->GetAnim().PushGoalStunned(self->handle));
 }
 
+static PyObject* PyObjHandle_AnimGoalPushLoop(PyObject* obj, PyObject* args) {
+	auto self = GetSelf(obj);
+	if (!self->handle) {
+		return PyInt_FromLong(0);
+	}
+
+	int animId;
+	if (!PyArg_ParseTuple(args, "i:objhndl.anim_goal_push", &animId)) {
+		return 0;
+	}
+
+	// Guard against bad animIds, since they crash the game pretty hard
+	if (animId <= 0) return PyInt_FromLong(-1);
+	if (46 <= animId && animId <= 63) return PyInt_FromLong(-1);
+	if (99 <= animId && animId <= 102) return PyInt_FromLong(-1);
+	if (120 <= animId && animId <= 123) return PyInt_FromLong(-1);
+	if (142 <= animId) return PyInt_FromLong(-1);
+
+	return PyInt_FromLong(gameSystems->GetAnim().PushAnimateLoop(self->handle, animId));
+
+}
+
 static PyObject* PyObjHandle_AnimGoalPushUseObject(PyObject* obj, PyObject* args) {
 	auto self = GetSelf(obj);
 	if (!self->handle) {
