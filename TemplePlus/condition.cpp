@@ -3304,7 +3304,10 @@ void ConditionSystem::RegisterNewConditions()
 	{
 		// 0 - poison id
 		// 1 - primary or secondary
-		static CondStructNew delayedPoison("Delayed Poison", 3);
+		// 2 - optional dc
+		//
+		// allow duplicates
+		static CondStructNew delayedPoison("Delayed Poison", 3, false);
 		auto neutral = conds.GetByName("sp-Neutralize Poison");
 		auto heal = conds.GetByName("sp-Heal");
 
