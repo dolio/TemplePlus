@@ -16,6 +16,7 @@
 #include <gamesystems\gamesystems.h>
 #include <combat.h>
 #include <gamesystems\d20\d20stats.h>
+#include "config\config.h"
 
 static class PoisonFixes : public TempleFix
 {
@@ -142,6 +143,13 @@ int PoisonFixes::PoisonedOnAdd(DispatcherCallbackArgs args) {
 
 	if (d20Sys.d20QueryWithData(args.objHndCaller, DK_QUE_Critter_Has_Condition, conds.GetByName("sp-Delay Poison"), 0)) {
 		floatSys.FloatSpellLine(args.objHndCaller, 20033, FloatLineColor::White); // Effects delayed due to Delay Poison!
+
+		// If strict rules, remove this condition and add one that will re-apply the
+		// poison when Delay Poison runs out.
+		if (config.stricterRulesEnforcement) {
+			conds.AddTo(args.objHndCaller, "Delayed Poison", poisonId, 0);
+			conds.ConditionRemove(args.objHndCaller, args.subDispNode->condNode);
+		}
 		return 0;
 	}
 

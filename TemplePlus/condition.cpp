@@ -954,6 +954,36 @@ int DivineMightEffectTooltipCallback(DispatcherCallbackArgs args)
 	return 0;
 };
 
+int DelayedPoisonBeginRound(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
+	auto delay = conds.GetByName("sp-Delay Poison");
+	auto dk = DK_QUE_Critter_Has_Condition;
+	auto target = args.objHndCaller;
+
+	if (d20Sys.d20QueryWithData(target, DK_QUE_Critter_Has_Condition, delay, 0)) {
+		return 0;
+	}
+
+	auto ptype = args.GetCondArg(0);
+
+	conds.AddTo(target, "Poisoned", { ptype });
+
+	args.RemoveCondition();
+	return 0;
+}
+
+int DelayedPoisonEffectTip(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType24(args.dispIO);
+	auto ptype = args.GetCondArg(0);
+	auto line = combatSys.GetCombatMesLine(300 + ptype);
+	auto text = fmt::format("Delayed Poison: {}", line);
+
+	dispIo->Append(130, -1, text.c_str());
+	return 0;
+}
+
 /*
 gets a tooltip string from combat.mes
 */
@@ -3269,6 +3299,21 @@ void ConditionSystem::RegisterNewConditions()
 	
 	
 	*/
+
+	{
+		// 0 - poison id
+		// 1 - primary or secondary
+		static CondStructNew delayedPoison("Delayed Poison", 3);
+		auto neutral = conds.GetByName("sp-Neutralize Poison");
+		auto heal = conds.GetByName("sp-Heal");
+
+		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, &neutral, 0);
+		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, &heal, 0);
+		delayedPoison.AddHook(dispTypeBeginRound, DK_NONE, DelayedPoisonBeginRound);
+		delayedPoison.AddHook(dispTypeD20Query, DK_QUE_Critter_Is_Poisoned, genericCallbacks.QuerySetReturnVal1);
+		delayedPoison.AddHook(dispTypeTooltip, DK_NONE, genericCallbacks.TooltipUnrepeated, 55, 0);
+		delayedPoison.AddHook(dispTypeEffectTooltip, DK_NONE, DelayedPoisonEffectTip);
+	}
 
 	conditions.AddConditionsToTable();
 
