@@ -63,4 +63,6 @@ private:
 	eastl::hash_map<int, PoisonSpec> mPoisonSpecs;
 };
 
+int ApplyPoisonSecondary(DispatcherCallbackArgs args);
+
 extern PoisonSystem* poisonSystem;

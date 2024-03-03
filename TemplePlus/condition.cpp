@@ -37,6 +37,7 @@
 #include "gamesystems/d20/d20stats.h"
 #include "d20_race.h"
 #include "ai.h"
+#include "poison.h"
 
 #define CB int(__cdecl)(DispatcherCallbackArgs)
 using DispCB = int(__cdecl )(DispatcherCallbackArgs);
@@ -967,9 +968,16 @@ int DelayedPoisonBeginRound(DispatcherCallbackArgs args)
 
 	auto ptype = args.GetCondArg(0);
 
-	conds.AddTo(target, "Poisoned", { ptype });
+	switch (args.GetCondArg(1))
+	{
+	// primary poison
+	case 0:
+		conds.AddTo(target, "Poisoned", { ptype, 0, args.GetCondArg(2) });
+		args.RemoveCondition();
+	case 1:
+		ApplyPoisonSecondary(args);
+	}
 
-	args.RemoveCondition();
 	return 0;
 }
 
