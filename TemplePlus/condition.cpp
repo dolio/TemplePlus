@@ -978,8 +978,9 @@ int DelayedPoisonEffectTip(DispatcherCallbackArgs args)
 	auto dispIo = dispatch.DispIoCheckIoType24(args.dispIO);
 	auto ptype = args.GetCondArg(0);
 	auto line = combatSys.GetCombatMesLine(300 + ptype);
-	auto text = fmt::format("Delayed Poison: {}", line);
+	auto text = fmt::format("(Delayed): {}", line);
 
+	// Poisoned {}
 	dispIo->Append(130, -1, text.c_str());
 	return 0;
 }
