@@ -67,7 +67,7 @@ int PoisonFixes::PoisonedOnBeginRound(DispatcherCallbackArgs args) {
 
 int ApplyPoisonSecondary(DispatcherCallbackArgs args) {
 	auto poisonId = args.GetCondArg(0);
-	auto pspec = GetPoisonSpec(poisonId);
+	auto pspec = poisonFixes.GetPoisonSpec(poisonId);
 	if (pspec == nullptr) {
 		conds.ConditionRemove(args.objHndCaller, args.subDispNode->condNode);
 		return 0;
