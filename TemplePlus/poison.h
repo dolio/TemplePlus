@@ -1,5 +1,6 @@
 #pragma once
 #include "dice.h"
+#include "dispatcher.h"
 #include <EASTL/vector.h>
 #include <EASTL/string.h>
 #include <EASTL/hash_map.h>
