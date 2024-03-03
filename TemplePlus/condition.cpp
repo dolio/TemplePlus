@@ -3307,8 +3307,8 @@ void ConditionSystem::RegisterNewConditions()
 		auto neutral = conds.GetByName("sp-Neutralize Poison");
 		auto heal = conds.GetByName("sp-Heal");
 
-		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, &neutral, 0);
-		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, &heal, 0);
+		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, neutral, 0);
+		delayedPoison.AddHook(dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, heal, 0);
 		delayedPoison.AddHook(dispTypeBeginRound, DK_NONE, DelayedPoisonBeginRound);
 		delayedPoison.AddHook(dispTypeD20Query, DK_QUE_Critter_Is_Poisoned, genericCallbacks.QuerySetReturnVal1);
 		delayedPoison.AddHook(dispTypeTooltip, DK_NONE, genericCallbacks.TooltipUnrepeated, 55, 0);

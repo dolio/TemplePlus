@@ -147,7 +147,7 @@ int PoisonFixes::PoisonedOnAdd(DispatcherCallbackArgs args) {
 		// If strict rules, remove this condition and add one that will re-apply the
 		// poison when Delay Poison runs out.
 		if (config.stricterRulesEnforcement) {
-			conds.AddTo(args.objHndCaller, "Delayed Poison", poisonId, 0);
+			conds.AddTo(args.objHndCaller, "Delayed Poison", { poisonId, 0 });
 			conds.ConditionRemove(args.objHndCaller, args.subDispNode->condNode);
 		}
 		return 0;
