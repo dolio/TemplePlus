@@ -72,6 +72,7 @@ CondStructNew ConditionSystem::mCondHezrouStench;
 CondStructNew ConditionSystem::mCondHezrouStenchHit;
 
 int ConditionPreventWithArg(DispatcherCallbackArgs args);
+int ConditionPreventNonStrict(DispatcherCallbackArgs args);
 int ConditionOverrideBy(DispatcherCallbackArgs args);
 
 
@@ -853,6 +854,15 @@ int ConditionPreventWithArg(DispatcherCallbackArgs args)
 	
 	if (dispIo->condStruct == refCond && dispIo->arg1 == arg1)
 		dispIo->outputFlag = 0;
+
+	return 0;
+}
+
+// for when one condition preventing another isn't strictly by the rules
+int ConditionPreventNonStrict(DispatcherCallbackArgs args)
+{
+	if (!config.stricterRulesEnforcement)
+		return ConditionPreventWithArg(args);
 
 	return 0;
 }
@@ -3199,6 +3209,18 @@ void ConditionSystem::RegisterNewConditions()
 	DispatcherHookInit(cond, 13, dispTypeD20Query, DK_QUE_Critter_Has_Condition, spCallbacks.HasCondition, (uint32_t)cond, 0);
 	DispatcherHookInit(cond, 14, dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, (uint32_t)conds.GetByName("sp-Neutralize Poison"), 0); // make neutralie poison remove existing stench effect
 	DispatcherHookInit(cond, 15, dispTypeConditionAddPre, DK_NONE, ConditionOverrideBy, (uint32_t)conds.GetByName("sp-Delay Poison"), 0); // also delay poison
+
+	{
+		static CondStructNew vrockSpores;
+		vrockSpores.ExtendExisting("sp-Vrock Spores");
+		vrockSpores.subDispDefs[5].dispCallback = VrockSporesCountdown; // begin round
+		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
+
+		static CondStructNew delayPoison;
+		delayPoison.ExtendExisting("sp-Delay Poison");
+		// vrock spore prevention only on non-strict rules
+		delayPoison.subDispDefs[0].dispCallback = ConditionPreventNonStrict;
+	}
 #pragma endregion
 
 #pragma region Items
@@ -5046,6 +5068,46 @@ int SpellCallbacks::HezrouStenchCureNausea(DispatcherCallbackArgs args)
 	else if (args.GetCondArg(4) == 0)
 		combatSys.FloatCombatLine(args.objHndCaller, 207, FloatLineColor::White);
 	args.SetCondArg(4, 2);
+	return 0;
+}
+
+int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
+{
+	auto target = args.objHndCaller;
+	auto delay = conds.GetByName("sp-Delay Poison");
+	auto hasDelay = dispatch.d20QueryWithData(target, DK_QUE_Critter_Has_Condition, delay, 0);
+	auto strict = config.stricterRulesEnforcement;
+
+	// delay poison is only postponing the countdown
+	if (strict && hasDelay) return 0;
+
+	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
+
+	// new duration
+	int duration = args.GetCondArg(1);
+	int newDuration = duration - (int)dispIo->data1;
+	args.SetCondArg(1, durationRem);
+
+	auto damage = !hasDelay;
+	if (!strict) {
+		damage = damage && !dispatch.d20Query(target, DK_QUE_Critter_Is_Immune_Poison);
+	}
+
+	if (damage) {
+		auto dice = Dice(std::min(duration, dispIo->data1), 4);
+		auto spellId = args.GetCondArg(0);
+		SpellPacketBody spPkt(spellId);
+		auto dmgTy = D20DT_Poison;
+		auto vrock = spPkt.caster;
+		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, spellId, 0);
+	} else {
+		spellSys.PlayFizzle(target);
+		floatSys.FloatSpellLine(target, 0x7d00, FloatLineColor::White);
+	}
+
+	if (durationRem < 0){
+		args.RemoveCondition();
+	}
 	return 0;
 }
 
