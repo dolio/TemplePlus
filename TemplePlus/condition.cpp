@@ -3217,7 +3217,7 @@ void ConditionSystem::RegisterNewConditions()
 	{
 		static CondStructNew vrockSpores;
 		vrockSpores.ExtendExisting("sp-Vrock Spores");
-		vrockSpores.subDispDefs[5].dispCallback = VrockSporesCountdown; // begin round
+		vrockSpores.subDispDefs[5].dispCallback = spCallbacks.VrockSporesCountdown; // begin round
 		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
 
 		static CondStructNew delayPoison;
@@ -5102,7 +5102,7 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 		auto dice = Dice(std::min(duration, ticks), 4);
 		auto spellId = args.GetCondArg(0);
 		SpellPacketBody spPkt(spellId);
-		auto dmgTy = D20DT_Poison;
+		auto dmgTy = DamageType::Poison;
 		auto vrock = spPkt.caster;
 		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, spellId, 0);
 	} else {
@@ -5110,7 +5110,7 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 		floatSys.FloatSpellLine(target, 0x7d00, FloatLineColor::White);
 	}
 
-	if (durationRem < 0){
+	if (newDuration < 0){
 		args.RemoveCondition();
 	}
 	return 0;
