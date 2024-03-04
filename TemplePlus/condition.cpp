@@ -38,6 +38,7 @@
 #include "d20_race.h"
 #include "ai.h"
 #include "poison.h"
+#include "config/config.h"
 
 #define CB int(__cdecl)(DispatcherCallbackArgs)
 using DispCB = int(__cdecl )(DispatcherCallbackArgs);
@@ -120,6 +121,9 @@ public:
 	static int __cdecl HezrouStenchToHit2(DispatcherCallbackArgs args);
 	static int __cdecl HezrouStenchEffectTooltip(DispatcherCallbackArgs args);
 	static int __cdecl HezrouStenchCureNausea(DispatcherCallbackArgs args);
+
+	static int __cdecl VrockSporesCountdown(DispatcherCallbackArgs args);
+
 	static int __cdecl RemoveSpell(DispatcherCallbackArgs args);
 	static int __cdecl HasCondition(DispatcherCallbackArgs args);
 	static int __cdecl HasSpellEffectActive(DispatcherCallbackArgs args);
@@ -5075,7 +5079,7 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 {
 	auto target = args.objHndCaller;
 	auto delay = conds.GetByName("sp-Delay Poison");
-	auto hasDelay = dispatch.d20QueryWithData(target, DK_QUE_Critter_Has_Condition, delay, 0);
+	auto hasDelay = d20Sys.d20QueryWithData(target, DK_QUE_Critter_Has_Condition, delay, 0);
 	auto strict = config.stricterRulesEnforcement;
 
 	// delay poison is only postponing the countdown
@@ -5085,16 +5089,17 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 
 	// new duration
 	int duration = args.GetCondArg(1);
-	int newDuration = duration - (int)dispIo->data1;
-	args.SetCondArg(1, durationRem);
+	int ticks = dispIo->data1;
+	int newDuration = duration - ticks;
+	args.SetCondArg(1, newDuration);
 
 	auto damage = !hasDelay;
 	if (!strict) {
-		damage = damage && !dispatch.d20Query(target, DK_QUE_Critter_Is_Immune_Poison);
+		damage = damage && !d20Sys.d20Query(target, DK_QUE_Critter_Is_Immune_Poison);
 	}
 
 	if (damage) {
-		auto dice = Dice(std::min(duration, dispIo->data1), 4);
+		auto dice = Dice(std::min(duration, ticks), 4);
 		auto spellId = args.GetCondArg(0);
 		SpellPacketBody spPkt(spellId);
 		auto dmgTy = D20DT_Poison;
