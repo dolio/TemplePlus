@@ -5087,11 +5087,17 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 
 	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
 
+	auto spellId = args.GetCondArg(0);
+	SpellPacketBody spPkt(spellId);
+
 	// do countdown
 	int duration = args.GetCondArg(1);
 	int ticks = dispIo->data1;
 	int newDuration = duration - ticks;
 	args.SetCondArg(1, newDuration);
+	spellPkt.durationRemaining = newDuration;
+	spellPkt.UpdateSpellsCastRegistry();
+	spellPkt.UpdatePySpell();
 
 	auto avoid = hasDelay;
 	if (!strict) {
@@ -5102,8 +5108,6 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 
 	if (!avoid) {
 		auto dice = Dice(std::min(duration, ticks), 4);
-		auto spellId = args.GetCondArg(0);
-		SpellPacketBody spPkt(spellId);
 		auto dmgTy = DamageType::Poison;
 		auto vrock = spPkt.caster;
 		floatSys.FloatSpellLine(target, 0x5015, FloatLineColor::Red);
@@ -5114,7 +5118,8 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	}
 
 	if (newDuration < 0){
-		args.RemoveCondition();
+		args.RemoveSpell();
+		args.RemoveSpellMod();
 	}
 	return 0;
 }
