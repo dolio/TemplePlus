@@ -5128,7 +5128,7 @@ int SpellCallbacks::VrockSporesEffectTip(DispatcherCallbackArgs args)
 {
 	auto dispIo = dispatch.DispIoCheckIoType24(args.dispIO);
 
-	dispIo->Append(dispIo->data1, -1, "");
+	dispIo->Append(args.GetData1(), -1, "");
 	return 0;
 }
 
