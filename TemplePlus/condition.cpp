@@ -123,6 +123,7 @@ public:
 	static int __cdecl HezrouStenchCureNausea(DispatcherCallbackArgs args);
 
 	static int __cdecl VrockSporesCountdown(DispatcherCallbackArgs args);
+	static int __cdecl VrockSporesEffectTip(DispatcherCallbackArgs args);
 
 	static int __cdecl RemoveSpell(DispatcherCallbackArgs args);
 	static int __cdecl HasCondition(DispatcherCallbackArgs args);
@@ -3219,6 +3220,7 @@ void ConditionSystem::RegisterNewConditions()
 		vrockSpores.ExtendExisting("sp-Vrock Spores");
 		vrockSpores.subDispDefs[5].dispCallback = spCallbacks.VrockSporesCountdown; // begin round
 		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
+		vrockSpores.subDispDefs[10].dispCallback = spCallbacks.VrockSporesEffectTip;
 
 		static CondStructNew delayPoison;
 		delayPoison.ExtendExisting("sp-Delay Poison");
@@ -5116,6 +5118,14 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	if (newDuration < 0){
 		args.RemoveCondition();
 	}
+	return 0;
+}
+
+int SpellCallbacks::VrockSporesEffectTip(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType24(args.dispIO);
+
+	dispIo->Append(dispIo->data1, -1, "");
 	return 0;
 }
 
