@@ -5087,17 +5087,11 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 
 	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
 
-	auto spellId = args.GetCondArg(0);
-	SpellPacketBody spPkt(spellId);
-
 	// do countdown
 	int duration = args.GetCondArg(1);
 	int ticks = dispIo->data1;
 	int newDuration = duration - ticks;
 	args.SetCondArg(1, newDuration);
-	spellPkt.durationRemaining = newDuration;
-	spellPkt.UpdateSpellsCastRegistry();
-	spellPkt.UpdatePySpell();
 
 	auto avoid = hasDelay;
 	if (!strict) {
@@ -5109,17 +5103,18 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	if (!avoid) {
 		auto dice = Dice(std::min(duration, ticks), 4);
 		auto dmgTy = DamageType::Poison;
-		auto vrock = spPkt.caster;
+		auto dmgDesc = 127;
+
 		floatSys.FloatSpellLine(target, 0x5015, FloatLineColor::Red);
-		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, D20A_CAST_SPELL, spellId, 0);
+
+		damage.DealDamage(target, objHndl::null, dice, dmgTy, 1, 100, dmgDesc, D20A_CAST_SPELL);
 	} else {
 		spellSys.PlayFizzle(target);
 		floatSys.FloatSpellLine(target, 0x7d00, FloatLineColor::White);
 	}
 
 	if (newDuration < 0){
-		args.RemoveSpell();
-		args.RemoveSpellMod();
+		args.RemoveCondition();
 	}
 	return 0;
 }
