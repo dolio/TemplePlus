@@ -5107,7 +5107,7 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 		auto dmgTy = DamageType::Poison;
 		auto vrock = spPkt.caster;
 		floatSys.FloatSpellLine(target, 0x5015, FloatLineColor::Red);
-		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, spellId, 0);
+		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, D20A_CAST_SPELL, spellId, 0);
 	} else {
 		spellSys.PlayFizzle(target);
 		floatSys.FloatSpellLine(target, 0x7d00, FloatLineColor::White);
