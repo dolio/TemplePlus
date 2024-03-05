@@ -5087,23 +5087,26 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 
 	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
 
-	// new duration
+	// do countdown
 	int duration = args.GetCondArg(1);
 	int ticks = dispIo->data1;
 	int newDuration = duration - ticks;
 	args.SetCondArg(1, newDuration);
 
-	auto damage = !hasDelay;
+	auto avoid = hasDelay;
 	if (!strict) {
-		damage = damage && !d20Sys.d20Query(target, DK_QUE_Critter_Is_Immune_Poison);
+		// strict rules don't say anything about poison immunity preventing the
+		// damage.
+		avoid = avoid || d20Sys.d20Query(target, DK_QUE_Critter_Is_Immune_Poison);
 	}
 
-	if (damage) {
+	if (!avoid) {
 		auto dice = Dice(std::min(duration, ticks), 4);
 		auto spellId = args.GetCondArg(0);
 		SpellPacketBody spPkt(spellId);
 		auto dmgTy = DamageType::Poison;
 		auto vrock = spPkt.caster;
+		floatSys.FloatSpellLine(target, 0x5015, FloatLineColor::Red);
 		damage.DealSpellDamageFullUnk(target, vrock, dice, dmgTy, 1, spellId, 0);
 	} else {
 		spellSys.PlayFizzle(target);
