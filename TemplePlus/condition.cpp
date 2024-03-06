@@ -3222,9 +3222,10 @@ void ConditionSystem::RegisterNewConditions()
 		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
 		vrockSpores.subDispDefs[10].dispCallback = spCallbacks.VrockSporesEffectTip;
 
-		static CondStruct *delayPoison = cond.GetByName("sp-Delay Poison");
+		static CondStructNew delayPoison;
+		delayPoison.ExtendExisting("sp-Delay Poison");
 		// vrock spore prevention only on non-strict rules
-		delayPoison->subDispDefs[0].dispCallback = ConditionPreventNonStrict;
+		delayPoison.subDispDefs[0].dispCallback = ConditionPreventNonStrict;
 	}
 #pragma endregion
 
