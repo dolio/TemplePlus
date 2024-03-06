@@ -5080,9 +5080,6 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	auto hasDelay = d20Sys.d20QueryWithData(target, DK_QUE_Critter_Has_Condition, delay, 0);
 	auto strict = config.stricterRulesEnforcement;
 
-	auto istr = fmt::format("VrockSporesCountdown !!delay: {}, hasDelay: {}", !!delay, hasDelay);
-	logger->info(istr);
-
 	// delay poison is only postponing the countdown
 	if (strict && hasDelay) return 0;
 
