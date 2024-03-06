@@ -3221,6 +3221,7 @@ void ConditionSystem::RegisterNewConditions()
 		vrockSpores.subDispDefs[5].dispCallback = spCallbacks.VrockSporesCountdown; // begin round
 		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
 		vrockSpores.subDispDefs[10].dispCallback = spCallbacks.VrockSporesEffectTip;
+		vrockSpores.AddHook(dispTypeConditionRemove, DK_NONE, genericCallbacks.EndParticlesFromArg, 2, 0);
 	}
 #pragma endregion
 
@@ -5114,11 +5115,6 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	}
 
 	if (newDuration < 0){
-		auto partId = args.GetCondArg(2);
-		if (partId) {
-			gameSystems->GetParticleSys().End(partId);
-			args.SetCondArg(2, 0);
-		}
 		args.RemoveCondition();
 	}
 	return 0;
