@@ -3221,11 +3221,6 @@ void ConditionSystem::RegisterNewConditions()
 		vrockSpores.subDispDefs[5].dispCallback = spCallbacks.VrockSporesCountdown; // begin round
 		vrockSpores.subDispDefs[6].dispCallback = genericCallbacks.NoOp; // TBS init
 		vrockSpores.subDispDefs[10].dispCallback = spCallbacks.VrockSporesEffectTip;
-
-		static CondStructNew delayPoison;
-		delayPoison.ExtendExisting("sp-Delay Poison");
-		// vrock spore prevention only on non-strict rules
-		delayPoison.subDispDefs[0].dispCallback = ConditionPreventNonStrict;
 	}
 #pragma endregion
 
@@ -7679,6 +7674,14 @@ void Conditions::AddConditionsToTable(){
 			neutPoisonCondExtend.AddHook(dispTypeEffectTooltip, DK_NONE, spCallbacks.SpellEffectTooltipDuration, 19, 0); // Delay Poison indicator icon
 			neutPoisonCondExtend.AddHook(dispTypeD20Query, DK_QUE_Critter_Is_Immune_Poison, genericCallbacks.QuerySetReturnVal1);
 		}
+	}
+
+	{
+		static CondStructNew delayPoison;
+		delayPoison.ExtendExisting("sp-Delay Poison");
+		// vrock spore prevention only on non-strict rules
+		delayPoison.subDispDefs[0].dispCallback = ConditionPreventNonStrict;
+		delayPoison.subDispDefs[2].dispCallback = genericCallbacks.HasCondition;
 	}
 
 	// New Conditions!
