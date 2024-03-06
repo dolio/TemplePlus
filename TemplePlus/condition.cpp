@@ -5114,6 +5114,11 @@ int SpellCallbacks::VrockSporesCountdown(DispatcherCallbackArgs args)
 	}
 
 	if (newDuration < 0){
+		auto partId = args.GetCondArg(2);
+		if (partId) {
+			gameSystems->GetParticleSys().End(partId);
+			args.SetCondArg(2, 0);
+		}
 		args.RemoveCondition();
 	}
 	return 0;
