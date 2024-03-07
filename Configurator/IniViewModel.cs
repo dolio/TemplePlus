@@ -517,6 +517,8 @@ namespace TemplePlusConfig
                 }
             }
 
+            RollHpFirstLevel = TryReadBool("rollHpFirstLevel");
+
             if (tpData["HpForNPCHd"] != null)
             {
                 switch (tpData["HpForNPCHd"].ToLowerInvariant())

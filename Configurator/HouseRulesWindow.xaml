@@ -55,6 +55,7 @@
                         <StackPanel Orientation="Horizontal">
                             <Label VerticalAlignment="Center" Content="HP on Level Up" Height="27" />
                             <ComboBox VerticalAlignment="Center" SelectedValue="{Binding HpOnLevelUp}"  ItemsSource="{Binding HpOnLevelUpTypes}"/>
+														<CheckBox VerticalAlignment="Center" Content="Roll HP on First Level" IsChecked="{Binding RollHpFirstLevel}" Margin="0,5,35,5" ToolTip="Enables old school 1HP first level characters" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"  Margin="0,5,10,5">
