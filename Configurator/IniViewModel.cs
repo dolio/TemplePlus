@@ -44,6 +44,9 @@ namespace TemplePlusConfig
             "HpOnLevelUp", typeof (HpOnLevelUpType), typeof (IniViewModel),
             new PropertyMetadata(default(HpOnLevelUpType)));
 
+        public static readonly DependencyProperty RollHpFirstLevelProperty = DependencyProperty.Register(
+            "RollHpFirstLevel", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
+
         public static readonly DependencyProperty HpForNPCHdProperty = DependencyProperty.Register(
             "HpForNPCHd", typeof(HpForNPCHdType), typeof(IniViewModel),
             new PropertyMetadata(default(HpForNPCHdType)));
@@ -249,6 +252,13 @@ namespace TemplePlusConfig
         {
             get { return (HpOnLevelUpType) GetValue(HpOnLevelUpProperty); }
             set { SetValue(HpOnLevelUpProperty, value); }
+        }
+
+
+        public bool RollHpFirstLevel
+        {
+            get { return (bool)GetValue(RollHpFirstLevelProperty); }
+            set { SetValue(RollHpFirstLevelProperty, value); }
         }
 
         public HpForNPCHdType HpForNPCHd
@@ -516,6 +526,8 @@ namespace TemplePlusConfig
                         break;
                 }
             }
+
+            RollHpFirstLevel = TryReadBool("rollHpFirstLevel");
 
             if (tpData["HpForNPCHd"] != null)
             {
