@@ -45,7 +45,7 @@ namespace TemplePlusConfig
             new PropertyMetadata(default(HpOnLevelUpType)));
 
         public static readonly DependencyProperty RollHpFirstLevelProperty = DependencyProperty.Register(
-            "RollHpFirstLevel", typeOf(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
+            "RollHpFirstLevel", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
 
         public static readonly DependencyProperty HpForNPCHdProperty = DependencyProperty.Register(
             "HpForNPCHd", typeof(HpForNPCHdType), typeof(IniViewModel),
