@@ -940,7 +940,7 @@ void LegacyCritterSystem::GenerateHp(objHndl handle){
 	{
 		auto classType = (Stat)obj->GetInt32(obj_f_critter_level_idx, i);
 		auto classHd = d20ClassSys.GetClassHitDice(classType);
-		if (i == 0){
+		if (i == 0 && !config.rollHpFirstLevel){
 			hpPts = classHd; // first class level gets full HP
 		}
 		else

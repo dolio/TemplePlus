@@ -64,10 +64,11 @@
             </TabItem>
             <TabItem Header="Ruleset">
                 <Canvas>
-                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="188" Canvas.Left="10" Canvas.Top="10">
+                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="300" Canvas.Left="10" Canvas.Top="10">
                         <StackPanel Orientation="Horizontal">
                             <Label VerticalAlignment="Center" Content="HP on Level Up" Height="27" />
                             <ComboBox VerticalAlignment="Center" SelectedValue="{Binding HpOnLevelUp}"  ItemsSource="{Binding HpOnLevelUpTypes}"/>
+                            <CheckBox VerticalAlignment="Center" Content="Use for First Level" IsChecked="{Binding RollHpFirstLevel}" Margin="5,5,35,5" ToolTip="Apply setting for first level; 3E gives maximum for first level" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal"  Margin="0,5,10,5">

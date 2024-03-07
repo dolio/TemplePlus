@@ -243,6 +243,7 @@ static ConfigSetting configSettings[] = {
 	CONF_INT(screenshotQuality),
 	CONF_BOOL(debugPartSys),
 	CONF_STRING(hpOnLevelup),
+	CONF_BOOL(rollHpFirstLevel),
 	CONF_STRING(HpForNPCHd),
 	CONF_BOOL(maxHpForNpcHitdice),
 	CONF_BOOL(autoUpdate),
