@@ -4365,3 +4365,7 @@ SCF_GP = 8
 FEAT_INFO_NO_FEAT_INFO_FLAG = 0
 FEAT_INFO_DISREGARD_PREREQS = 4
 FEAT_INFO_BONUS_ONLY = 8
+
+LEVEL_NEGATIVE = 1 # temporary negative level
+LEVEL_DRAINED = 2  # permanent negative level
+LEVEL_LOST = 4     # lost level from resurrection

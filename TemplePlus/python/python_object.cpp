@@ -3143,6 +3143,23 @@ static PyObject* PyObjHandle_GetHandleLower(PyObject* obj, PyObject* args) {
 	return PyInt_FromLong(self->handle.GetHandleLower());
 }
 
+static PyObject* PyObjHandle_GetEffectiveLevel(PyObject* obj, PyObject* args) {
+	auto self = GetSelf(obj);
+	if (!self->handle) {
+		return PyInt_FromLong(0);
+	}
+
+	int iincl = 0;
+	if (!PyArg_ParseTuple(args, "|i:objhndl.get_effective_level", &iincl)) {
+		return PyInt_FromLong(0);
+	}
+
+	auto incl = static_cast<LevelDrainType>(iincl);
+	auto result = critterSys.GetEffectiveDrainedLevel(self->handle, incl);
+
+	return PyInt_FromLong(result);
+}
+
 static PyObject* PyObjHandle_GetHandleUpper(PyObject* obj, PyObject* args) {
 	auto self = GetSelf(obj);
 	if (!self->handle) {
@@ -4656,6 +4673,7 @@ static PyMethodDef PyObjHandleMethods[] = {
 	{ "get_category_type", PyObjHandle_GetCategoryType, METH_VARARGS, NULL },
 	{ "get_character_classes", PyObjHandle_GetCharacterAllClassesSet, METH_VARARGS, "Get tuple with classes enums" },
 	{ "get_character_base_classes", PyObjHandle_GetCharacterBaseClassesSet, METH_VARARGS, "Get tuple with base classes enums" },
+	{ "get_effective_level", PyObjHandle_GetEffectiveLevel, METH_VARARGS, "gets effective level, optionally including drained levels" }
 	{ "get_initiative", PyObjHandle_GetInitiative, METH_VARARGS, NULL },
 	{ "get_item_wear_flags", PyObjHandle_GetItemWearFlags, METH_VARARGS, NULL },
 	{ "get_level_for_spell_selection", PyObjHandle_GetLevelForSpellSelection, METH_VARARGS, NULL },
