@@ -69,6 +69,7 @@ public:
 		replaceFunction(0x100EF540, TempNegativeLevelOnAdd); // fixes NPCs with no class levels instantly dying due to temp negative level
 		replaceFunction(0x100EB620, TempNegativeLevelNewday); // fixes NPCs with no class levels instantly dying due to temp negative level
 		replaceFunction(0x100EB6A0, PermanentNegativeLevelOnAdd); // fixes NPCs with no class levels instantly dying due to temp negative level
+		replaceFunction(0x100EB760, PermanentNegativeLevelOnXPGain);
 		replaceFunction(0x100FFD20, WeaponKeenCritHitRange); // fixes Weapon Keen stacking (Keen Edge spell / Keen enchantment)
 		replaceFunction(0x100F8320, ImprovedCriticalGetCritThreatRange); // fixes stacking with Keen Edge spell / Keen enchantment
 		
@@ -238,6 +239,32 @@ int GeneralConditionFixes::PermanentNegativeLevelOnAdd(DispatcherCallbackArgs ar
 	args.SetCondArg(1, effLv+1);
 	
 	return 0;
+}
+
+// This changes the criterion for removing a permanent negative level.
+// Rather than remembering the creature's level when the negative level was
+// added, and removing when the creature gains that much XP, just check if
+// the XP gained is sufficient to advance one beyond the current drained
+// level. This removes the conditions in a somewhat arbitrary order, based
+// on how the callbacks are sequenced. But, it ensures that drained levels
+// are removed before levels lost from resurrection.
+//
+// Then, for restoration to work properly, it merely needs to count how
+// many drained levels have been applied and add a corresponding amount of
+// XP. Levels lost from resurrection will never be restored, but the
+// ordering may be rearranged, so that you can only restore the lowest
+// levels via the spells.
+int GeneralConditionFixes::PermanentNegativeLevelOnXPGain(DispatcherCallbackArgs args)
+{
+	GET_DISPIO(dispIoTypeSendSignal);
+
+	auto critter = args.objHndCaller;
+	auto newXp = dispIo->data1;
+	auto drainLvl = critterSys.GetEffectiveDrainedLevel(critter);
+
+	if (newXp >= d20LevelSys.GetXPRequireForLevel(drainLvl + 1)) {
+		conds.ConditionRemove(critter, args.subDispNode->condNode);
+	}
 }
 
 int GeneralConditionFixes::WeaponKeenCritHitRange(DispatcherCallbackArgs args)
