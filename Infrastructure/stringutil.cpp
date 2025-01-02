@@ -22,12 +22,11 @@ std::string ucs2_to_local(const std::wstring&s) {
 
 std::wstring local_to_ucs2(const std::string &s) {
 
-	auto slength = (int)s.length() + 1;
+	auto slength = (int)s.length();
 	auto len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, nullptr, 0);
 
 	std::wstring result(len, '\0');
 	MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, &result[0], len);
-	result.resize(result.length());
 	return result;
 
 }
