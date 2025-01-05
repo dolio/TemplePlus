@@ -9,6 +9,7 @@
 #include "python/python_integration_obj.h"
 #include "python/python_header.h"
 
+#include "config/config.h"
 #include "dungeon_master.h"
 
 
