@@ -120,6 +120,8 @@ void DungeonMaster::RenderEditedObj() {
 	if (!obj)
 		return;
 
+	ImGui::SetWindowFontScale(config.dmGuiScale);
+
 	ImGui::Text(fmt::format("Name: {} , Proto: {}", critEditor.name, objSystem->GetProtoId(mEditedObj)).c_str());
 
 	ImGui::SameLine();
