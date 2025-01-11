@@ -20,6 +20,7 @@ public:
 	static int ParseCondition(int colIdx, objHndl handle, char* content, int condIdx, int stage, int unused, int unused2);
 	static int ParseMonsterSubcategory(int colIdx, objHndl handle, char* content, obj_f field, int arrayLen, char** strings);
 	static int ParseType(int colIdx, objHndl handle, char* content, obj_f field, int arrayLen, char** strings);
+	static int ParseFlags(int colIdx, objHndl handle, char *content, obj_f field, int arrayLen, char **strings);
 	static int ParseRace(int colIdx, objHndl handle, char* content, obj_f field, int arrayLen, char** strings);
 	static int ParseSpell(int colIdx, objHndl handle, char* content, obj_f field);
 
@@ -72,6 +73,8 @@ public:
 		replaceFunction<int(__cdecl)(int, objHndl, char*, obj_f, int, char**)>(0x10039B40, ParseRace);
 
 		replaceFunction<int(__cdecl)(int, objHndl, char*, obj_f)>(0x1003A8C0, ParseSpell);
+
+		replaceFunction(0x10039560, ParseFlags);
 
 		// Hook into weapon parsing for e.g. shield bash stats
 		replaceFunction(0x100397D0, ParseWeaponDamageType);
@@ -436,6 +439,38 @@ int ProtosHooks::ParseType(int colIdx, objHndl handle, char * content, obj_f fie
 	}
 	
 	return foundType ? TRUE : FALSE;
+}
+
+int ProtosHooks::ParseFlags(int colIdx, objHndl handle, char *content, obj_f field, int arrayLen, char **strings)
+{
+	if (!content || !*content) return 1;
+
+	StringTokenizer tok(content);
+
+	auto obj = objSystem->GetObject(handle);
+	auto flags = obj->GetInt32(field);
+
+	while (tok.next()) {
+		auto & tokItem = tok.token();
+
+		// Parse new OIF flag
+		if (field == obj_f_item_wear_flags) {
+			if(!_strcmpi("OIF_WEAR_WEAPON", tokItem.text)) {
+				flags |= OIF_WEAR_WEAPON;
+				continue;
+			}
+		}
+
+		for (int i = 0; i < arrayLen; ++i) {
+			if (!_strcmpi(strings[i], tokItem.text)) {
+				flags |= 1 << i;
+			}
+		}
+	}
+
+	objSystem->GetObject(handle)->SetInt32(field, flags);
+
+	return 1;
 }
 
 int ProtosHooks::GenericNumber(int colIdx, objHndl handle, char *content, obj_f field) {
