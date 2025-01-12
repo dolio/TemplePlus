@@ -48,6 +48,7 @@ public:
 	static int (__cdecl*orgItemInsertGetLocation)(objHndl, objHndl, int*, objHndl, int);
 	static int(__cdecl*orgIsProficientWithArmor)(objHndl, objHndl);
 	static bool(__cdecl*orgIsIncompatibleWithDruid)(objHndl, objHndl);
+	static ItemErrorCode (__cdecl*orgCheckSlotAndWieldFlags)(objHndl, objHndl, int);
 
 	void apply() override 	{
 
@@ -85,6 +86,10 @@ public:
 
 		orgItemInsertGetLocation = replaceFunction<int(__cdecl)(objHndl, objHndl, int*, objHndl, int)>(0x10069000, [](objHndl item, objHndl receiver, int* itemInsertLoc, objHndl bag, int flags){
 			return inventory.ItemInsertGetLocation(item, receiver, itemInsertLoc, bag, flags);
+		});
+
+		orgCheckSlotAndWieldFlags = replaceFunction<ItemErrorCode(__cdecl)(objHndl,objHndl,int)>(0x10067680, [](objHndl item, objHndl receiver, int slot) {
+				return inventory.CheckSlotAndWieldFlags(item, receiver, slot);
 		});
 
 		replaceFunction<void(__cdecl)(objHndl, objHndl, int)>(0x100694B0, [](objHndl item, objHndl receiver, int itemInsertLocation){
@@ -215,6 +220,7 @@ public:
 int(__cdecl*InventoryHooks::orgItemInsertGetLocation)(objHndl, objHndl, int*, objHndl, int);
 int(__cdecl*InventoryHooks::orgIsProficientWithArmor)(objHndl, objHndl);
 bool(__cdecl* InventoryHooks::orgIsIncompatibleWithDruid)(objHndl, objHndl);
+ItemErrorCode (__cdecl* InventoryHooks::orgCheckSlotAndWieldFlags)(objHndl, objHndl, int);
 
 
 
@@ -897,7 +903,6 @@ int InventorySystem::ItemInsertGetLocation(objHndl item, objHndl receiver, int* 
 	auto isUseWieldSlots = (flags & IIF_Use_Wield_Slots) != 0;
 
 	auto itemSthg_10067F90 = temple::GetRef<ItemErrorCode(__cdecl)(objHndl, int, objHndl)>(0x10067F90);
-	auto itemCheckSlotAndWieldFlags = temple::GetRef<ItemErrorCode(__cdecl)(objHndl, objHndl, int)>(0x10067680);
 
 	if (parentObj->IsCritter() && hasLocationOutput){
 		
@@ -907,7 +912,7 @@ int InventorySystem::ItemInsertGetLocation(objHndl item, objHndl receiver, int* 
 				for (auto equipSlot=0; equipSlot < INVENTORY_WORN_IDX_COUNT; equipSlot++){
 
 					auto itemWornAtSlot = ItemWornAt(receiver, equipSlot);
-					auto itemFlagCheck = itemCheckSlotAndWieldFlags(item, receiver, InvIdxForSlot(equipSlot)) == IEC_OK;
+					auto itemFlagCheck = CheckSlotAndWieldFlags(item, receiver, InvIdxForSlot(equipSlot)) == IEC_OK;
 					auto slotIsOccupied = 
 						*itemInsertLocation == INVENTORY_IDX_UNDEFINED 
 					    && isUseWieldSlots
@@ -1401,7 +1406,30 @@ void InventorySystem::PcInvLocationSet(objHndl parent, int itemInvLocation, int 
 }
 
 ItemErrorCode InventorySystem::CheckSlotAndWieldFlags(objHndl item, objHndl receiver, int invIdx){
-	return temple::GetRef<ItemErrorCode(__cdecl)(objHndl, objHndl, int)>(0x10067680)(item, receiver, invIdx);
+	auto itemType = objects.GetType(item);
+	auto flags = objects.getInt32(item, obj_f_item_wear_flags);
+
+	// Check for holding non-weapon objects in hands.
+	if (itemType != obj_t_weapon) {
+		switch (invIdx)
+		{
+		case 204: // left hand
+			if (flags & OIF_WEAR_2HAND_REQUIRED)
+				return IEC_No_Free_Hand;
+			if (GetWieldType(receiver, item) >= 2)
+				return IEC_No_Free_Hand;
+			// fall through
+		case 203: // right hand
+			// non-weapon object
+			if (flags & OIF_WEAR_WEAPON) {
+				return IEC_OK;
+			}
+		default:
+			break;
+		}
+	}
+
+	return InventoryHooks::orgCheckSlotAndWieldFlags(item, receiver, invIdx);
 }
 
 ItemErrorCode InventorySystem::TransferToEquippedSlot(objHndl parent, objHndl receiver, objHndl item, int* unk,
