@@ -1635,9 +1635,6 @@ void LegacyCritterSystem::UpdateModelEquipment(objHndl obj)
 		auto item = GetWornItem(obj, slot);
 		if (item) {
 			auto materialSlot = objects.getInt32(item, obj_f_item_material_slot);
-			if (slotId == 3) {
-				logger->info("Primary weapon material slot: {}", materialSlot);
-			}
 			if (materialSlot != -1) {
 				ApplyReplacementMaterial(model, materialSlot + raceOffset, materialSlot + baseRaceOffset);
 			}

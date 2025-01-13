@@ -1664,8 +1664,7 @@ int InventorySystem::GetWieldType(objHndl wielder, objHndl item, bool regardEnla
 bool InventorySystem::IsWieldedTwoHanded(objHndl weapon, objHndl wielder, bool special){
 	if (!weapon) return false;
 
-	auto weapObj = gameSystems->GetObj().GetObject(weapon);
-	auto weapType = (WeaponTypes)weapObj->GetInt32(obj_f_weapon_type);
+	auto weapType = objects.GetWeaponType(weapon);
 
 	// special case - rapiers are always wielded one handed
 	if (weapType == wt_rapier){
@@ -1744,9 +1743,9 @@ bool InventorySystem::IsWieldedTwoHanded(objHndl weapon, objHndl wielder, bool s
 gfx::WeaponAnimType InventorySystem::GetWeaponAnimId(objHndl item, objHndl wielder, bool special){
 	auto weap = objSystem->GetObject(item);
 	auto wieldType = GetWieldType(wielder, item, false);
-	WeaponTypes wtype = (WeaponTypes)weap->GetInt32(obj_f_weapon_type);
+	WeaponTypes wtype = objects.GetWeaponType(item);
 
-	if (wieldType == 4) return gfx::WeaponAnimType::Unarmed;
+	if (wieldType == 4 || wtype == wt_none) return gfx::WeaponAnimType::Unarmed;
 	if (IsWieldedTwoHanded(item, wielder, special)) {
 		switch (wtype)
 		{
