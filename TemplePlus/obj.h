@@ -113,7 +113,12 @@ struct Objects : temple::AddressTable {
 		return (OIF_WEAR)_GetInternalFieldInt32(handle, obj_f_item_wear_flags);
 	}
 	WeaponTypes GetWeaponType(objHndl handle) {
-		return (WeaponTypes)_GetInternalFieldInt32(handle, obj_f_weapon_type);
+		if (GetType(handle) == obj_t_weapon) {
+			auto val = _GetInternalFieldInt32(handle, obj_f_weapon_type);
+			return static_cast<WeaponTypes>(val);
+		} else {
+			return wt_none;
+		}
 	}
 	int GetItemInventoryLocation(objHndl handle) {
 		return _GetInternalFieldInt32(handle, obj_f_item_inv_location);
