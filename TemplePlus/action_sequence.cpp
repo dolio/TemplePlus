@@ -2824,6 +2824,11 @@ void ActionSequenceSystem::ActionPerform()
 		} 
 
 		else{
+			if (d20a->d20ActType == D20A_CAST_SPELL) {
+				gfx::EncodedAnimId anim(d20a->animID);
+				objects.SetAnimId(d20a->d20APerformer, anim);
+			}
+
 			bool preempted = false;
 			switch (d20->D20ActionTriggersAoO(d20a, &tbStatus))
 			{
