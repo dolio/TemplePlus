@@ -514,6 +514,21 @@ BOOL AnimSystem::PushSpellDismiss(SpellPacketBody & pkt)
     return goalData.Push(nullptr);
 }
 
+int AnimSystem::GetNormalCastingAnimId(int school, bool conjure, bool wand) {
+	auto base = 16; // abjuration casting
+	if (wand) {
+		base = 61; // wand abjuration casting
+	}
+
+	// if school is not None, offset by 1
+	if (school > 0) school--;
+
+	int index = base + school*2;
+	if (conjure) index++; // conjuration animations are 1 after casting
+
+	return index;
+}
+
 int AnimSystem::GetWandAnimId(int school, bool conjure) {
     auto dec = conjure ? 1 : 0;
     return temple::GetRef<int(__cdecl)(int)>(0x100757C0)(school) - dec;

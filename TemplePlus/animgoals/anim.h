@@ -188,6 +188,7 @@ public:
 	 pushes an animation for dismissing an active spell
 	 */
 	BOOL PushSpellDismiss(SpellPacketBody &spellPkt);
+	int GetNormalCastingAnimId(int school, bool conjure = false, bool wand = false);
 	int GetWandAnimId(int school, bool conjure = false);
 	int GetCastingAnimId(int school, bool conjure = false);
 	void SetGoalDataForSpellPacket(SpellPacketBody &pkt, AnimSlotGoalStackEntry &goalData, bool wand, bool conjure=false);
