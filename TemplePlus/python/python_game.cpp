@@ -1147,6 +1147,16 @@ PyObject* PyGame_IsSpellHarmful(PyObject*, PyObject* args) {
 	return PyInt_FromLong(result);
 }
 
+PyObject* PyGame_IsSpellActive(PyObject*, PyObject* args) {
+	int spellEnum = 0;
+	if (!PyArg_ParseTuple(args, "i:game.is_spell_active", &spellEnum)) {
+		return PyInt_FromLong(0);
+	}
+
+	auto active = spellSys.IsSpellActive(spellEnum);
+	return PyInt_FromLong(active ? 1 : 0);
+}
+
 PyObject* PyGame_Shake(PyObject*, PyObject* args) {
 	float amount, duration;
 
@@ -1522,6 +1532,7 @@ static PyMethodDef PyGameMethods[]{
 	{"gametime_add", PyGame_GametimeAdd, METH_VARARGS, NULL},
 	{"is_outdoor", PyGame_IsOutdoor, METH_VARARGS, NULL},
 	{"is_spell_harmful", PyGame_IsSpellHarmful, METH_VARARGS, NULL },
+	{"is_spell_active", PyGame_IsSpellActive, METH_VARARGS, NULL },
 	{"keypress", PyGame_Keypress, METH_VARARGS, NULL},
 	{ "scroll_to", PyGame_ScrollTo, METH_VARARGS, NULL },
 	{"mouse_move_to", PyGame_MouseMoveTo, METH_VARARGS, NULL },
