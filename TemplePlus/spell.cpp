@@ -3366,6 +3366,18 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 		return 0;
 	}
 	
+	// see if we've already checked previously
+	switch (d20Sys.D20QueryPython(handle, "Spell Resistance Result", spellPkt->spellId))
+	{
+	case 1: // spell not resisted
+		return 0;
+	case 2: // spell resisted
+		return 1;
+	case 0:
+	default:
+		break;
+	}
+
 	// obtain bonuses
 
 	// Defender bonus
@@ -3394,6 +3406,9 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 	// New Spell resistance mod
 	dispatch.DispatchSpellResistanceCasterLevelCheck(caster, handle, &bonlist, spellPkt);
 
+	// Condition for already checked spell resistance
+	auto checked = conds.GetByName("Spell Resistance Checked");
+
 	// do the roll and log the result to the D20 window
 	int dispelSpellResistanceResult = 0;
 	if (srMod > 0){
@@ -3406,11 +3421,18 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 			logger->info("CheckSpellResistance: Spell {} cast by {} resisted by target {}.", spellName, spellPkt->caster, handle);
 			floatSys.FloatSpellLine(handle, 30008, FloatLineColor::White);
 			PlayFizzle(handle);
+
+			// remember success
+			conds.AddTo(handle, checked, { static_cast<int>(spellPkt->spellId), 2 });
+
 			outcomeText1 = combatSys.GetCombatMesLine(119); // Spell ~fails~[ROLL_
 			outcomeText2 = combatSys.GetCombatMesLine(120); // ] to overcome Spell Resistance
 
 		} else
 		{
+			// remember failure
+			conds.AddTo(handle, checked, { static_cast<int>(spellPkt->spellId), 1 });
+
 			floatSys.FloatSpellLine(handle, 30009, FloatLineColor::Red);
 			outcomeText1 = combatSys.GetCombatMesLine(121); // Spell ~overcomes~[ROLL_
 			outcomeText2 = combatSys.GetCombatMesLine(122); // ] Spell Resistance

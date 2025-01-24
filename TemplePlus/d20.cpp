@@ -336,6 +336,15 @@ int LegacyD20System::CastSpellProcessTargets(D20Actn* d20a, SpellPacketBody& spe
 			continue;
 		}
 
+		// see if we've already checked SR previously
+		auto prevSR = d20Sys.D20QueryPython(tgt, "Spell Resistance Result", spellPkt.spellId);
+		if (prevSR == 1) {
+			targets.push_back(tgt);
+			continue;
+		} else if (prevSR == 2) {
+			continue;
+		}
+
 		DispIOBonusListAndSpellEntry dispIoSr;
 		BonusList casterLvlBonlist;
 		auto casterLvl = spellPkt.casterLevel; //dispatch.Dispatch35CasterLevelModify(d20a->d20APerformer, &spellPkt);  the caster level has already been modified at this point!
@@ -356,6 +365,8 @@ int LegacyD20System::CastSpellProcessTargets(D20Actn* d20a, SpellPacketBody& spe
 			targets.push_back(tgt);
 			continue;
 		}
+		// Condition for already checked spell resistance
+		auto checked = conds.GetByName("Spell Resistance Checked");
 		auto rollHistId = 0;
 		if (spellSys.DispelRoll(d20a->d20APerformer, &casterLvlBonlist, 0, dispelDc, combatSys.GetCombatMesLine(5048), &rollHistId) < 0){
 			logger->info("CastSpellProcessTargets: spell {} cast by {} resisted by target {}", spellPkt.GetName(), d20a->d20APerformer, tgt );
@@ -365,12 +376,18 @@ int LegacyD20System::CastSpellProcessTargets(D20Actn* d20a, SpellPacketBody& spe
 			auto text = fmt::format("{}{}{}\n\n", combatSys.GetCombatMesLine(119), rollHistId, combatSys.GetCombatMesLine(120)); // Spell ~fails~ to overcome Spell Resistance
 			histSys.CreateFromFreeText(text.c_str());
 
+			// remember success
+			conds.AddTo(tgt, checked, { static_cast<int>(spellPkt.spellId), 2 });
+
 			spellSys.UpdateSpellPacket(spellPkt);
 			pySpellIntegration.UpdateSpell(spellPkt.spellId);
 			continue;
 		}
 		auto text = fmt::format("{}{}{}\n\n", combatSys.GetCombatMesLine(121), rollHistId, combatSys.GetCombatMesLine(122)); // Spell ~overcomes~ Spell Resistance
 		histSys.CreateFromFreeText(text.c_str());
+
+		// remember failure
+		conds.AddTo(tgt, checked, { static_cast<int>(spellPkt.spellId), 1 });
 
 		floatSys.FloatSpellLine(tgt, 30009, FloatLineColor::Red);
 		targets.push_back(tgt);
@@ -3523,7 +3540,9 @@ ActionErrorCode D20ActionCallbacks::PerformCastSpell(D20Actn* d20a){
 	}
 
 
-	
+	// Pre-allocate spell id for SR tracking
+	auto spellId = spellSys.GetNewSpellId();
+	spellPkt.spellId = spellId;
 
 	if (spellPkt.targetCount > 0) {
 		auto filterResult = d20a->FilterSpellTargets(spellPkt);
@@ -3549,7 +3568,6 @@ ActionErrorCode D20ActionCallbacks::PerformCastSpell(D20Actn* d20a){
 		}
 	}
 
-	auto spellId = spellSys.GetNewSpellId();
 	spellSys.RegisterSpell(spellPkt, spellId);
 
 	if (gameSystems->GetAnim().PushSpellCast(spellPkt, item)){
