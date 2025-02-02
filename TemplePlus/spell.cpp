@@ -3346,7 +3346,7 @@ BOOL LegacySpellSystem::PlayFizzle(objHndl handle)
 	return 1;
 }
 
-int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl handle, bool forceCheck)
+int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl handle, bool forceCheck, bool regardFriendly)
 {
 	// check spell immunity
 	DispIoImmunity dispIo;
@@ -3365,7 +3365,7 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 	{
 		return 0;
 	}
-	
+
 	// see if we've already checked previously
 	switch (d20Sys.D20QueryPython(handle, "Spell Resistance Result", spellPkt->spellId))
 	{
@@ -3376,6 +3376,13 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 	case 0:
 	default:
 		break;
+	}
+
+	// Friendly targets assumed to lower their SR
+	//
+	// TODO: this is not exactly by the book
+	if (regardFriendly && critterSys.IsFriendly(spellPkt->caster, handle)) {
+		return 0;
 	}
 
 	// obtain bonuses
@@ -3391,7 +3398,8 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 	BonusList bonlist;
 	auto caster = spellPkt->caster;
 
-	auto casterLvlMod = dispatch.Dispatch35CasterLevelModify(caster, spellPkt);
+	// Caster level mod has already been set
+	auto casterLvlMod = spellPkt->casterLevel;
 	bonlist.AddBonus(casterLvlMod, 0, 203);
 
 	if (feats.HasFeatCountByClass(caster, FEAT_SPELL_PENETRATION)){

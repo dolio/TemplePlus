@@ -262,7 +262,7 @@ struct LegacySpellSystem : temple::AddressTable
 		Plays the Fizzle particles and does a sound
 	*/
 	BOOL PlayFizzle(objHndl handle);
-	int CheckSpellResistance(SpellPacketBody* spellPkt, objHndl obj, bool forceCheck = false);
+	int CheckSpellResistance(SpellPacketBody* spellPkt, objHndl obj, bool forceCheck = false, bool regardFriendly = false);
 
 	void SpellBeginRound(objHndl); // plays the OnBeginRound python script
 	objHndl mSpellBeginRoundObj = objHndl::null; // supplemental info for the OnBeginRound invocation to identify whose round is beginning...

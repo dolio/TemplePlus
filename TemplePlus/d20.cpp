@@ -317,82 +317,11 @@ int LegacyD20System::CastSpellProcessTargets(D20Actn* d20a, SpellPacketBody& spe
 			continue;
 		}
 
-		// check target spell immunity
-		DispIoImmunity dispIoImmunity;
-		dispIoImmunity.flag = 1;
-		dispIoImmunity.spellPkt = &spellPkt;
-		if (dispatch.Dispatch64ImmunityCheck(tgt, &dispIoImmunity))
-			continue;
-		
-		// check spell resistance for hostiles
-		if (critterSys.IsFriendly(d20a->d20APerformer, tgt)){
+		if (!spellSys.CheckSpellResistance(&spellPkt, tgt)) {
 			targets.push_back(tgt);
-			continue;
 		}
-
-		SpellEntry spEntry(spellPkt.spellEnum);
-		if (spEntry.spellResistanceCode != 1){
-			targets.push_back(tgt);
-			continue;
-		}
-
-		// see if we've already checked SR previously
-		auto prevSR = d20Sys.D20QueryPython(tgt, "Spell Resistance Result", spellPkt.spellId);
-		if (prevSR == 1) {
-			targets.push_back(tgt);
-			continue;
-		} else if (prevSR == 2) {
-			continue;
-		}
-
-		DispIOBonusListAndSpellEntry dispIoSr;
-		BonusList casterLvlBonlist;
-		auto casterLvl = spellPkt.casterLevel; //dispatch.Dispatch35CasterLevelModify(d20a->d20APerformer, &spellPkt);  the caster level has already been modified at this point!
-		casterLvlBonlist.AddBonus(casterLvl, 0, 203);
-		if (feats.HasFeatCountByClass(d20a->d20APerformer, FEAT_SPELL_PENETRATION))	{
-			casterLvlBonlist.AddBonusFromFeat(2, 0, 114, FEAT_SPELL_PENETRATION);
-		}
-		if (feats.HasFeatCountByClass(d20a->d20APerformer, FEAT_GREATER_SPELL_PENETRATION)) {
-			casterLvlBonlist.AddBonusFromFeat(2, 0, 114, FEAT_GREATER_SPELL_PENETRATION);
-		}
-
-		// New Spell resistance mod
-		dispatch.DispatchSpellResistanceCasterLevelCheck(spellPkt.caster, tgt, &casterLvlBonlist, &spellPkt);
-
-		dispIoSr.spellEntry = &spEntry;
-		auto dispelDc = dispatch.Dispatch45SpellResistanceMod(tgt, &dispIoSr);
-		if (dispelDc <=0){
-			targets.push_back(tgt);
-			continue;
-		}
-		// Condition for already checked spell resistance
-		auto checked = conds.GetByName("Spell Resistance Checked");
-		auto rollHistId = 0;
-		if (spellSys.DispelRoll(d20a->d20APerformer, &casterLvlBonlist, 0, dispelDc, combatSys.GetCombatMesLine(5048), &rollHistId) < 0){
-			logger->info("CastSpellProcessTargets: spell {} cast by {} resisted by target {}", spellPkt.GetName(), d20a->d20APerformer, tgt );
-			floatSys.FloatSpellLine(tgt, 30008, FloatLineColor::White);
-			gameSystems->GetParticleSys().CreateAtObj("Fizzle", tgt);
-
-			auto text = fmt::format("{}{}{}\n\n", combatSys.GetCombatMesLine(119), rollHistId, combatSys.GetCombatMesLine(120)); // Spell ~fails~ to overcome Spell Resistance
-			histSys.CreateFromFreeText(text.c_str());
-
-			// remember success
-			conds.AddTo(tgt, checked, { static_cast<int>(spellPkt.spellId), 2 });
-
-			spellSys.UpdateSpellPacket(spellPkt);
-			pySpellIntegration.UpdateSpell(spellPkt.spellId);
-			continue;
-		}
-		auto text = fmt::format("{}{}{}\n\n", combatSys.GetCombatMesLine(121), rollHistId, combatSys.GetCombatMesLine(122)); // Spell ~overcomes~ Spell Resistance
-		histSys.CreateFromFreeText(text.c_str());
-
-		// remember failure
-		conds.AddTo(tgt, checked, { static_cast<int>(spellPkt.spellId), 1 });
-
-		floatSys.FloatSpellLine(tgt, 30009, FloatLineColor::Red);
-		targets.push_back(tgt);
-
 	}
+
 	if (targets.size() > 0){
 		memcpy(spellPkt.targetListHandles, &targets[0], min(sizeof spellPkt.targetListHandles, targets.size() * sizeof(objHndl)));
 	}
