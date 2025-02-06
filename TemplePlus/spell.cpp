@@ -3407,6 +3407,7 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 	// Defender bonus
 	DispIOBonusListAndSpellEntry dispIoBon;
 	dispIoBon.spellEntry = &dispIo.spellEntry;
+	dispIoBon.spellId = spellPkt->spellId;
 	int srMod = dispatch.Dispatch45SpellResistanceMod(handle, &dispIoBon);
 	if (srMod <= 0){
 		return 0;

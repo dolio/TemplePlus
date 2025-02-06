@@ -1144,6 +1144,7 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 	py::class_<DispIOBonusListAndSpellEntry, DispIO>(m, "EventObjSpellEntry", "Used for Spell DC and Spell Resistance Mod")
 		.def_readwrite("bonus_list", &DispIOBonusListAndSpellEntry::bonList)
 		.def_readwrite("spell_entry", &DispIOBonusListAndSpellEntry::spellEntry)
+		.def_readwrite("spell_id", &DispIOBonusListAndSpellEntry::spellId)
 		;
 
 	py::class_<DispIoReflexThrow, DispIO>(m, "EventObjReflexSaveThrow", "Used for Reflex Save throws that reduce damage")

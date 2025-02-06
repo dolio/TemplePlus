@@ -440,12 +440,12 @@ struct DispIoMoveSpeed : DispIO  // dispIoType = 13, matches dispTypes 40,41
 struct DispIOBonusListAndSpellEntry: DispIO { // Type 14
 	BonusList * bonList;
 	SpellEntry * spellEntry;
-	uint32_t field_C; // unused?
+	uint32_t spellId; // repurposed in Temple+
 	DispIOBonusListAndSpellEntry(){
 		dispIOType = dispIoTypeBonusListAndSpellEntry;
 		bonList = nullptr;
 		spellEntry = nullptr;
-		field_C = 0;
+		spellId = 0;
 	}
 	int Dispatch(objHndl handle, enum_disp_type evtType);
 };
