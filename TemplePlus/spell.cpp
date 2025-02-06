@@ -3366,23 +3366,40 @@ int LegacySpellSystem::CheckSpellResistance(SpellPacketBody* spellPkt, objHndl h
 		return 0;
 	}
 
-	// see if we've already checked previously
-	switch (d20Sys.D20QueryPython(handle, "Spell Resistance Result", spellPkt->spellId))
-	{
-	case 1: // spell not resisted
-		return 0;
-	case 2: // spell resisted
-		return 1;
-	case 0:
-	default:
-		break;
+	if (config.stricterRulesEnforcement) {
+		// see if we've already checked previously
+		switch (d20Sys.D20QueryPython(handle, "Spell Resistance Result", spellPkt->spellId))
+		{
+		case 1: // spell not resisted
+			return 0;
+		case 2: // spell resisted
+			return 1;
+		case 0:
+		default:
+			break;
+		}
 	}
 
-	// Friendly targets assumed to lower their SR
-	//
-	// TODO: this is not exactly by the book
-	if (regardFriendly && critterSys.IsFriendly(spellPkt->caster, handle)) {
+	// creatures are never subject to their own spell resistance
+	if (spellPkt->caster == handle) {
 		return 0;
+	}
+
+	// Lax rules: friendly targets assumed to lower their SR
+	//
+	// Strict rules: in combat, targets must voluntarily lower their SR for
+	// it to be bypassed. This costs an action and leaves the recipient more
+	// vulnerable until their next turn. Out of combat, behave the same way
+	// as lax rules becuase there's no urgency, and it'd be hard to
+	// coordinate.
+	//
+	// TODO: consider allowing the AI to cheat. Not sure how much friendly
+	// spellcasting on creatures with spell resistance there is, but making
+	// them behave according to these rules would be tough.
+	if (regardFriendly && !(config.stricterRulesEnforcement && combatSys.isCombatActive())) {
+		if (critterSys.IsFriendly(spellPkt->caster, handle)) {
+			return 0;
+		}
 	}
 
 	// obtain bonuses
