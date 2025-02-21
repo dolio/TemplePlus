@@ -98,6 +98,7 @@ public:
 
 	// Action Cost
 	static ActionErrorCode ActionCostCastSpell(D20Actn* d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp);
+	static ActionErrorCode ActionCostRun(D20Actn *d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp);
 	static ActionErrorCode ActionCostCharge(D20Actn *d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp);
 	static ActionErrorCode ActionCostFullRound(D20Actn* d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp);
 	static ActionErrorCode ActionCostFullAttack(D20Actn* d20a, TurnBasedStatus* tbStat, ActionCostPacket* acp);
@@ -480,6 +481,7 @@ void LegacyD20System::NewD20ActionsInit()
 
 	d20Type = D20A_RUN;
 	d20Defs[d20Type].flags = static_cast<D20ADF>(d20Defs[d20Type].flags | (D20ADF::D20ADF_Breaks_Concentration));
+	d20Defs[d20Type].actionCost = d20Callbacks.ActionCostRun;
 
 	d20Type = D20A_CAST_SPELL;
 	d20Defs[d20Type].addToSeqFunc = d20Callbacks.AddToSeqSpellCast;
@@ -790,7 +792,16 @@ uint32_t LegacyD20System::d20QueryHasSpellCond(objHndl obj, int spellCondId)
 	auto cond = spellSys.GetCondFromSpellCondId(spellCondId);
 	if (!cond)
 		return 0;
-	return d20QueryWithData(obj, DK_QUE_Critter_Has_Condition, (uint32_t) cond, 0);
+	return d20QueryWithData(obj, DK_QUE_Critter_Has_Condition, cond, 0);
+}
+
+uint32_t LegacyD20System::d20QueryHasNamedCond(objHndl obj, const std::string & name)
+{
+	auto cond = conds.GetByName(name);
+
+	if (!cond) return 0;
+
+	return d20QueryWithData(obj, DK_QUE_Critter_Has_Condition, cond, 0);
 }
 
 void LegacyD20System::d20SendSignal(objHndl objHnd, D20DispatcherKey dispKey, int32_t arg1, int32_t arg2)
@@ -4058,40 +4069,69 @@ ActionErrorCode D20ActionCallbacks::ActionCostStandardAttack(D20Actn* d20a, Turn
 	return AEC_OK;
 }
 
+ActionErrorCode D20ActionCallbacks::ActionCostRun(D20Actn *d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp)
+{
+	if (d20a->d20Caf & D20CAF_FREE_ACTION || !combatSys.isCombatActive()) {
+		acp->hourglassCost = 0;
+		acp->chargeAfterPicker = 0;
+		acp->moveDistCost = 0;
+		return AEC_OK;
+	}
+
+	// New: Check for various conditions that make running impossible.
+	if (!critterSys.CanRun(d20a->d20APerformer)) {
+		return AEC_INVALID_ACTION;
+	}
+
+	acp->hourglassCost = 4;
+	tbStat->surplusMoveDistance = 0;
+	tbStat->numAttacks = 0;
+	tbStat->baseAttackNumCode = 0;
+	tbStat->attackModeCode = 0;
+	tbStat->numBonusAttacks = 0;
+	tbStat->tbsFlags |= TBSF_Movement;
+
+	return AEC_OK;
+}
+
 ActionErrorCode D20ActionCallbacks::ActionCostCharge(D20Actn *d20a, TurnBasedStatus *tbStat, ActionCostPacket *acp)
 {
-	acp->hourglassCost = 0;
-	acp->chargeAfterPicker = 0;
-	acp->moveDistCost = 0;
-
-	auto inCombat = combatSys.isCombatActive();
-	bool notFree = !(d20a->d20Caf & D20CAF_FREE_ACTION);
-
-	if (notFree && inCombat) {
-		if (d20Sys.D20QueryPython(d20a->d20APerformer, "Full Attack On Charge")) {
-			acp->chargeAfterPicker = 1;
-
-			actSeqSys.FullAttackCostCalculate(
-					d20a, tbStat,
-					(int*)&tbStat->baseAttackNumCode,
-					(int*)&tbStat->numBonusAttacks,
-					(int*)&tbStat->numAttacks,
-					(int*)&tbStat->attackModeCode);
-
-			tbStat->tbsFlags |= TBSF_FullAttack;
-		} else {
-			tbStat->numAttacks = 0;
-			tbStat->baseAttackNumCode = 0;
-			tbStat->attackModeCode = 0;
-			tbStat->numBonusAttacks = 0;
-		}
-
-		tbStat->tbsFlags |= TBSF_Movement;
-
-		auto timeLeft = tbStat->hourglassState;
-
-		acp->hourglassCost = timeLeft > 2 ? timeLeft : 4;
+	if (d20a->d20Caf & D20CAF_FREE_ACTION || !combatSys.isCombatActive()) {
+		acp->hourglassCost = 0;
+		acp->chargeAfterPicker = 0;
+		acp->moveDistCost = 0;
+		return AEC_OK;
 	}
+
+	if (!critterSys.CanRun(d20a->d20APerformer)) {
+		return AEC_INVALID_ACTION;
+	}
+
+	if (d20Sys.D20QueryPython(d20a->d20APerformer, "Full Attack On Charge")) {
+		acp->chargeAfterPicker = 1;
+
+		actSeqSys.FullAttackCostCalculate(
+				d20a, tbStat,
+				(int*)&tbStat->baseAttackNumCode,
+				(int*)&tbStat->numBonusAttacks,
+				(int*)&tbStat->numAttacks,
+				(int*)&tbStat->attackModeCode);
+
+		tbStat->tbsFlags |= TBSF_FullAttack;
+	} else {
+		tbStat->numAttacks = 0;
+		tbStat->baseAttackNumCode = 0;
+		tbStat->attackModeCode = 0;
+		tbStat->numBonusAttacks = 0;
+	}
+
+	tbStat->tbsFlags |= TBSF_Movement;
+
+	auto timeLeft = tbStat->hourglassState;
+
+	// If you are limited to just one action, you can still do a partial charge.
+	acp->hourglassCost = timeLeft > 2 ? timeLeft : 4;
+
 	return AEC_OK;
 }
 

@@ -3392,6 +3392,8 @@ void ConditionSystem::RegisterNewConditions()
 		// Also, overburdened counts as being denied your dex AC, so you can be
 		// sneak attacked.
 		encumberedOver.AddHook(dispTypeD20Query, DK_QUE_SneakAttack, genericCallbacks.QuerySetReturnVal1);
+		// can't run while overburdened
+		encumberedOver.AddHook(dispTypeD20Query, DK_QUE_Critter_Is_Hampered, genericCallbacks.QuerySetReturnVal1);
 	}
 	/*
 	char mCondIndomitableWillName[100];

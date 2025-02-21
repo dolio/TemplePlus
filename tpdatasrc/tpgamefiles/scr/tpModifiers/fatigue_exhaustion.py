@@ -197,6 +197,13 @@ def FatigueOnRemove2(attachee, args, evt_obj):
 	game.particles("Barbarian Fatigue-END", attachee)
 	return 0
 	
+def DisallowActions(critter, args, evt_obj):
+	actCode = evt_obj.data1
+	if actCode == D20A_RUN or actCode == D20A_CHARGE:
+		# the exact value isn't checked, but this seems descriptive
+		evt_obj.return_val = AEC_ABILITY_ON_COOLDOWN
+	return 0
+
 Fatigue = PythonModifier("FatigueExhaust", 6) #Barbarian Fatigue Duration, Fatigue Duration, Exhaustion Duration, Upgradable, Particle System, Spare
 Fatigue.AddHook(ET_OnConditionAdd, EK_NONE, FatigueOnAdd, ())
 Fatigue.AddHook(ET_OnGetTooltip, EK_NONE, FatigueTooltip, ())
@@ -211,6 +218,7 @@ Fatigue.AddHook(ET_OnConditionAddFromD20StatusInit, EK_NONE, FatiguePlayParticle
 Fatigue.AddHook(ET_OnConditionRemove, EK_NONE, FatigueOnRemove, ())
 Fatigue.AddHook(ET_OnConditionRemove2, EK_NONE, FatigueOnRemove2, ())
 Fatigue.AddHook(ET_OnD20Query, EK_Q_Barbarian_Fatigued, BarbarianFatiguedQuery, ())
+Fatigue.AddHook(ET_OnD20Query, EK_Q_ActionAllowed, DisallowActions, ())
 Fatigue.AddHook(ET_OnD20Signal, EK_S_Killed, FatigueRemove, ())
 Fatigue.AddHook(ET_OnD20PythonQuery, "Fatigued", FatiguedQuery, ())
 Fatigue.AddHook(ET_OnD20PythonQuery, "Exhausted", ExhaustedQuery, ())

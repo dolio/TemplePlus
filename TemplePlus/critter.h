@@ -430,6 +430,7 @@ struct LegacyCritterSystem : temple::AddressTable
 	bool CanTwoWeaponFight(objHndl hndl);
 	FightingStyle GetFightingStyle(objHndl hndl);
 	bool OffhandIsLight(objHndl hndl);
+	bool CanRun(objHndl critter);
 #pragma endregion
 
 #pragma region Spellcasting

@@ -1744,6 +1744,7 @@ enum D20DispatcherKey : uint32_t {
 	DK_QUE_Is_Two_Weapon_Fighting = 0x14D,
 	DK_QUE_Left_Is_Primary = 0x14E,
 	DK_QUE_Can_Shield_Bash = 0x14F,
+	DK_QUE_Critter_Is_Hampered = 0x150, // restricted movement; can't run
 
 	DK_LVL_Stats_Activate = 100,
 	DK_LVL_Stats_Check_Complete = 101,

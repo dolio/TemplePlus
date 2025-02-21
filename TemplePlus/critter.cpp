@@ -2223,6 +2223,21 @@ bool LegacyCritterSystem::OffhandIsLight(objHndl critter)
 	return true;
 }
 
+// Checks if any conditions prevent a creature from running.
+//
+// Doubles for charging, I believe.
+bool LegacyCritterSystem::CanRun(objHndl critter)
+{
+	auto fatigued = d20Sys.d20Query(critter, DK_QUE_Barbarian_Fatigued) != 0;
+	fatigued |= d20Sys.D20QueryPython(critter, "Fatigued") != 0;
+	fatigued |= d20Sys.D20QueryPython(critter, "Exhausted") != 0;
+	auto blinded = d20Sys.d20Query(critter, DK_QUE_Critter_Is_Blinded) != 0;
+	blinded &= d20Sys.D20QueryPython(critter, "Blindsight Range") <= 0;
+	auto hampered = d20Sys.d20Query(critter, DK_QUE_Critter_Is_Hampered) != 0;
+
+	return !fatigued && !blinded && !hampered;
+}
+
 int LegacyCritterSystem::SkillBaseGet(objHndl handle, SkillEnum skill){
 	if (!handle)
 		return 0;
