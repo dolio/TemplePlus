@@ -178,6 +178,10 @@ private:
 		replaceFunction<int(__cdecl)(objHndl,objHndl,objHndl,int)>(0x10020B60, [](objHndl wielder, objHndl prim, objHndl scnd, int animId) {
 			return (int)critterSys.GetWeaponAnim(wielder, prim, scnd, (gfx::WeaponAnim)animId);
 			});
+
+		replaceFunction<long double(__cdecl)(objHndl)>(0x1004D1D0, [](objHndl critter) {
+			return static_cast<long double>(critterSys.GetRunSpeed(critter));
+		});
 	}
 
 private:
@@ -2080,6 +2084,19 @@ int LegacyCritterSystem::GetRacialSavingThrowBonus(objHndl handle, SavingThrowTy
 		return d20RaceSys.GetSavingThrowBonus( critterSys.GetRace(handle, false) ,saveType);
 	}
 	return 0;
+}
+
+float LegacyCritterSystem::GetRunSpeed(objHndl critter)
+{
+	auto base = dispatch.Dispatch29hGetMoveSpeed(critter);
+	auto heavy_enc = d20Sys.d20Query(critter, DK_QUE_Critter_Is_Encumbered_Heavy);
+	auto armor = inventory.ItemWornAt(critter, EquipSlot::Armor);
+
+	if (heavy_enc || inventory.GetArmorType(armor) == ARMOR_TYPE_HEAVY) {
+		return base * 3.0;
+	} else {
+		return base * 4.0;
+	}
 }
 
 FightingStyle operator|(FightingStyle l, FightingStyle r)
