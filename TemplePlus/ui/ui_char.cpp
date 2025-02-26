@@ -2439,7 +2439,7 @@ void UiCharImpl::SkillsWidgetsInit()
 	skillsScrollbar = uiManager->GetScrollBar(scrollbar.widgetId);
 
 	
-	for (auto i = 0; i < SKILL_BTN_COUNT; ++i) {
+	for (auto i = 0; i < skill_count; ++i) {
 		auto btnId = wnd.AddChildButton("char_skills_ui_skill_button",
 			skillsBtnX, skillsBtnY + i * skillsBtnH, skillsBtnW, skillsBtnH,
 			[](int widId) {
