@@ -119,6 +119,10 @@ namespace TemplePlusConfig
         public static readonly DependencyProperty ForgottenRealmsRacesProperty = DependencyProperty.Register(
           "ForgottenRealmsRacesRaces", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
 
+        public static readonly DependencyProperty NonCoreSourcesProperty =
+          DependencyProperty.Register(
+              "NonCoreSources", typeof(IList), typeof(IniViewModel), new PropertyMetadata(default(IList)));
+
         public static readonly DependencyProperty LaxRulesProperty = DependencyProperty.Register(
           "LaxRules", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
 
@@ -386,6 +390,12 @@ namespace TemplePlusConfig
         {
             get { return (bool)GetValue(NonCoreProperty); }
             set { SetValue(NonCoreProperty, value); }
+        }
+
+        public IList NonCoreSources
+        {
+            get { return (List)GetValue(NonCoreSourcesProperty); }
+            set { SetValue(NonCoreSourcesProperty, value); }
         }
 
         public bool NewRaces
