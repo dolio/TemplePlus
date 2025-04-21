@@ -326,6 +326,8 @@ int HelplessCapStatBonus(DispatcherCallbackArgs args);
 int CombatExpertiseRadialMenu(DispatcherCallbackArgs args);
 int CombatExpertiseSet(DispatcherCallbackArgs args);
 
+int CleaveDroppedEnemy(DispatcherCallbackArgs args);
+int GreatCleaveDroppedEnemy(DispatcherCallbackArgs args);
 
 int BarbarianRageStatBonus(DispatcherCallbackArgs args);
 int BarbarianRageSaveBonus(DispatcherCallbackArgs args);

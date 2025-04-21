@@ -478,6 +478,10 @@ public:
 		replaceFunction(0x100F7F00, CombatExpertiseSet);
 		replaceFunction(0x100F88C0, TwoWeaponFightingBonus);
 		replaceFunction(0x100F8940, TwoWeaponFightingBonusRanger);
+
+		replaceFunction(0x100F86B0, CleaveDroppedEnemy);
+		replaceFunction(0x100F87D0, GreatCleaveDroppedEnemy);
+
 		replaceFunction(0x100FEBA0, BarbarianDamageResistance);
 		
 		//Subdual and lethal damage checkboxes
@@ -3897,8 +3901,97 @@ int HeldCapStatBonus(DispatcherCallbackArgs args)
 	return 0;
 }
 
+#pragma region General Combat
 
-#pragma region Barbarian Stuff
+objHndl SelectCleaveEnemy(objHndl attacker, objHndl victim)
+{
+	auto len = combatSys.GetInitiativeListLength();
+
+	objHndl result = objHndl::null;
+	// distance from original victim to result; we'll select the lowest
+	float rdist = 0.0;
+
+	float minReach = 0.0;
+	float reach = critterSys.GetReach(attacker, D20A_UNSPECIFIED_ATTACK, &minReach);
+
+	for (int i = 0; i < len; i++) {
+		auto critter = combatSys.GetInitiativeListMember(i);
+
+		// invalid targets
+		if (combatSys.AffiliationSame(attacker, critter)) continue;
+		if (victim == critter) continue;
+		if (critterSys.IsDeadOrUnconscious(critter)) continue;
+		if (actSeqSys.IsObjCurrentActorRegardSimuls(critter)) continue;
+
+		float dist = locSys.DistanceToObj(attacker, critter);
+
+		// can't hit
+		if (dist < minReach || reach < dist) continue;
+
+		float proximity = locSys.DistanceToObj(victim, critter);
+
+		// find first or closest
+		if (result == objHndl::null || proximity < dist) {
+			result = critter;
+			dist = proximity;
+		}
+	}
+
+	return result;
+}
+
+// Common cleaving code. Cleave and Great Cleave only differ by `cap`
+void DoCleave(DispatcherCallbackArgs & args, bool cap)
+{
+	int prevUsed = args.GetCondArg(0);
+	auto attacker = args.objHndCaller;
+	auto dispIo = dispatch.DispIoCheckIoType6(args.dispIO);
+	if (!dispIo) return;
+
+	auto dispIoDmg = reinterpret_cast<DispIoDamage*>(dispIo->data1);
+	auto & atk = dispIoDmg->attackPacket;
+	auto weap = atk.weaponUsed;
+
+	// for normal cleave, check if we still have uses left
+	if (cap) {
+		if (d20Sys.d20QueryWithData(attacker, DK_QUE_Weapon_Is_Mighty_Cleaving, weap)) {
+			if (prevUsed > 1) return;
+		} else {
+			if (prevUsed > 0) return;
+		}
+	}
+
+	// can't cleave on a ranged attack
+	if (atk.flags & D20CAF_RANGED) return;
+
+	auto target = SelectCleaveEnemy(attacker, atk.victim);
+	if (!target) return;
+
+	auto loc = objects.GetLocationFull(target);
+	d20Sys.InsertAction(attacker, D20A_CLEAVE, atk.flags, target, loc, 0);
+
+	// great cleave has different messages on subsequent uses
+	uint32_t mesline = prevUsed > 0 && !cap ? 24 : 23;
+	uint32_t floatline = prevUsed > 0 && !cap ? 37 : 36;
+	histSys.CreateRollHistoryLineFromMesfile(mesline, attacker, objHndl::null);
+	objects.floats->FloatCombatLine(attacker, floatline);
+	args.SetCondArg(0, prevUsed+1);
+}
+
+int CleaveDroppedEnemy(DispatcherCallbackArgs args)
+{
+	DoCleave(args, true);
+
+	return 0;
+}
+
+int GreatCleaveDroppedEnemy(DispatcherCallbackArgs args)
+{
+	DoCleave(args, false);
+
+	return 0;
+}
+
 
 int __cdecl CombatExpertiseRadialMenu(DispatcherCallbackArgs args)
 {
@@ -3927,6 +4020,8 @@ int CombatExpertiseSet(DispatcherCallbackArgs args)
 	conds.CondNodeSetArg(args.subDispNode->condNode, 0, bonus);
 	return 0;
 }
+
+#pragma region Barbarian Stuff
 
 int BarbarianRageStatBonus(DispatcherCallbackArgs args)
 {
