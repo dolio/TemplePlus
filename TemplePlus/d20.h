@@ -122,6 +122,8 @@ struct LegacyD20System : temple::AddressTable
 	int CastSpellProcessTargets(D20Actn *d20a, SpellPacketBody &spellPkt);
 	ActionErrorCode CombatActionCostFromSpellCastingTime(uint32_t spellCastingTime, int & actionCostOut); // gets action cost (in the context of combat mode) based on spell casting time
 
+  int (__cdecl *InsertAction)(objHndl, D20ActionType, int, objHndl, LocAndOffsets, int);
+
 	void (__cdecl *CreateRollHistory)(int idx);
 
 	//char **ToEEd20ActionNames;

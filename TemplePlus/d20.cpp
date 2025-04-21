@@ -720,6 +720,7 @@ LegacyD20System::LegacyD20System()
 	rebase(_tumbleCheck, 0x1008AA90);
 	rebase(_d20aTriggersAOO, 0x1008A9C0);
 	rebase(CreateRollHistory, 0x100DFFF0);
+	rebase(InsertAction, 0x10094B40);
 	
 
 }
@@ -3216,8 +3217,7 @@ BOOL D20ActionCallbacks::ActionFrameTripAttack(D20Actn* d20a){
 			{
 				return FALSE;
 			}*/
-			auto insertD20Action = temple::GetRef<void(__cdecl)(objHndl, D20ActionType, int, objHndl, LocAndOffsets, int)>(0x10094B40);
-			insertD20Action(performer, D20A_STANDARD_ATTACK, d20a->data1, d20a->d20ATarget, d20a->destLoc, 0);
+			d20Sys.InsertAction(performer, D20A_STANDARD_ATTACK, d20a->data1, d20a->d20ATarget, d20a->destLoc, 0);
 			auto curSeq = *actSeqSys.actSeqCur;
 			curSeq->d20ActArray[curSeq->d20aCurIdx + 1].d20Caf |= D20CAF_FREE_ACTION;
 			return FALSE;
