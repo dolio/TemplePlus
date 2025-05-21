@@ -1125,7 +1125,6 @@ uint32_t ActionSequenceSystem::MoveSequenceParse(D20Actn* d20aIn, ActnSeq* actSe
 		pathQ.flags = static_cast<PathQueryFlags>(PathQueryFlags::PQF_TO_EXACT | PathQueryFlags::PQF_HAS_CRITTER | PathQueryFlags::PQF_800
 			| PathQueryFlags::PQF_TARGET_OBJ | PathQueryFlags::PQF_ADJUST_RADIUS | PathQueryFlags::PQF_ADJ_RADIUS_REQUIRE_LOS);
 		
-		
 		if (reach < 0.1){ reach = 3.0; }
 		actSeq->targetObj = d20a->d20ATarget;
 		pathQ.distanceToTargetMin = distToTgtMin * INCH_PER_FEET;
@@ -2138,6 +2137,20 @@ int32_t ActionSequenceSystem::DoAoosByAdjcentEnemies(objHndl obj)
 	// return _AOOSthg2_100981C0(obj);
 }
 
+int32_t ActionSequenceSystem::ProvokeAooFrom(objHndl provoker, objHndl enemy)
+{
+	if (objects.GetFlags(enemy) & OF_INVULNERABLE) // see above
+		return 0;
+
+	if (!combatSys.CanMeleeTarget(enemy, provoker)) return 0;
+	if (critterSys.IsFriendly(provoker, enemy)) return 0;
+	if (!d20Sys.d20QueryWithData(enemy, DK_QUE_AOOPossible, provoker)) return 0;
+	if (!d20Sys.d20QueryWithData(enemy, DK_QUE_AOOWillTake, provoker)) return 0;
+
+	DoAoo(enemy, provoker);
+	return 1;
+}
+
 bool ActionSequenceSystem::SpellTargetsFilterInvalid(D20Actn& d20a){
 	
 	auto valid = true;
@@ -2810,13 +2823,25 @@ void ActionSequenceSystem::ActionPerform()
 		} 
 
 		else{
+			bool preempted = false;
+			switch (d20->D20ActionTriggersAoO(d20a, &tbStatus))
+			{
+			case 0:
+				break;
+			case 2:
+				preempted = ProvokeAooFrom(d20a->d20APerformer, d20a->d20ATarget);
+				break;
+			case 1:
+			default:
+				preempted = DoAoosByAdjcentEnemies(d20a->d20APerformer);
+				break;
+			}
 
-			if ( d20->D20ActionTriggersAoO(d20a, &tbStatus) && DoAoosByAdjcentEnemies(d20a->d20APerformer))	{
+			if (preempted) {
 				logger->debug("ActionPerform: \t Sequence Preempted {}", d20a->d20APerformer);
 				--*(curIdx);
 				sequencePerform();
-			} 
-			else{
+			} else {
 				curSeq->tbStatus = tbStatus;
 				*(uint32_t*)(&curSeq->tbStatus.tbsFlags) |= TBSF_HasActedThisRound;
 				InterruptCounterspell(d20a);
@@ -3390,11 +3415,14 @@ int ActionSequenceSystem::ActionCostFullAttack(D20Actn* d20, TurnBasedStatus* tb
 {
 	acp->chargeAfterPicker = 0;
 	acp->moveDistCost = 0;
-	acp->hourglassCost = 4;
+
+	auto cheap = d20Sys.D20QueryPython(d20->d20APerformer, "Full Attack As Standard");
+	acp->hourglassCost = cheap == 1 ? 2 : 4;
+
 	int flags = d20->d20Caf;
 	if (d20->d20Caf & D20CAF_FREE_ACTION || !combat->isCombatActive() )  
 		acp->hourglassCost = 0;
-	if (tbStat->attackModeCode >= tbStat->baseAttackNumCode && tbStat->hourglassState >= 4 && !tbStat->numBonusAttacks)
+	if (tbStat->attackModeCode >= tbStat->baseAttackNumCode && tbStat->hourglassState >= 2 && !tbStat->numBonusAttacks)
 	{
 		FullAttackCostCalculate(d20, tbStat, (int*)&tbStat->baseAttackNumCode, (int*) &tbStat->numBonusAttacks,
 			(int*)&tbStat->numAttacks,(int*) &tbStat->attackModeCode);

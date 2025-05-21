@@ -117,6 +117,8 @@ public:
 	void DamageCritter(objHndl attacker, objHndl tgt, DispIoDamage & evtObjDam);
 
 
+	void FastHeal(objHndl critter, int amount);
+
 	void Heal(objHndl target, objHndl healer, const Dice &dice, D20ActionType actionType);
 	
 	void HealSpell(objHndl target, objHndl healer, const Dice &dice, D20ActionType actionType, int spellId);
@@ -141,6 +143,9 @@ public:
 	int AddDamageDice(DamagePacket *dmgPkt, int dicePacked, DamageType damType, unsigned int damageMesLine);
 	int AddDamageDiceWithDescr(DamagePacket *dmgPkt, int dicePacked, DamageType damType, unsigned int damageMesLine, char* descr);
 	BOOL DamageTypeMatch(DamageType reduction, DamageType attackType);
+
+	Dice ModifyDamageDiceForSize(Dice &base, int steps);
+
 	Damage();
 private:
 	void Init();

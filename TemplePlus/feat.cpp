@@ -1104,6 +1104,7 @@ char* LegacyFeatSystem::GetFeatDescription(feat_enums feat)
 	MesLine mesLine(5000 + feat); 
 
 	if (feat >= FEAT_NONE
+		|| feat == FEAT_IMPROVED_SHIELD_BASH
 		|| feat == FEAT_IMPROVED_DISARM
 		|| feat ==  FEAT_GREATER_WEAPON_SPECIALIZATION
 		|| feat == FEAT_IMPROVED_SUNDER
@@ -1126,7 +1127,9 @@ char* LegacyFeatSystem::GetFeatPrereqDescription(feat_enums feat)
 	MesLine mesLineFeatDesc(10000 + feat); 
 	MesLine mesLineNone(9998);
 	MesHandle * mesHnd = feats.featMes;
+
 	if (feat >= FEAT_NONE
+		|| feat == FEAT_IMPROVED_SHIELD_BASH
 		|| feat == FEAT_IMPROVED_DISARM
 		|| feat == FEAT_GREATER_WEAPON_SPECIALIZATION
 		|| feat == FEAT_IMPROVED_SUNDER
@@ -1572,8 +1575,6 @@ int _IsWeaponSpecializationFeat(feat_enums feat)
 
 uint32_t _WeaponFeatCheck(objHndl objHnd, feat_enums * featArray, uint32_t featArrayLen, Stat classBeingLeveled, WeaponTypes wpnType)
 {
-	if (templeFuncs.sub_100664B0(objHnd, wpnType) == 3){ return 0; } // 3 means weapon size is more than wielder size+1
-
 	if (weapons.IsSimple(wpnType))
 	{
 		if (feats.HasFeatCountByClass(objHnd, FEAT_SIMPLE_WEAPON_PROFICIENCY, classBeingLeveled, 0))
