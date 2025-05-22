@@ -244,6 +244,8 @@ static ConfigSetting configSettings[] = {
 	CONF_BOOL(debugPartSys),
 	CONF_STRING(hpOnLevelup),
 	CONF_BOOL(rollHpFirstLevel),
+	CONF_INT(statRollMethod),
+	CONF_BOOL(ironmanFudgeFactor),
 	CONF_STRING(HpForNPCHd),
 	CONF_BOOL(maxHpForNpcHitdice),
 	CONF_BOOL(autoUpdate),

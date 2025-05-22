@@ -50,6 +50,12 @@ namespace TemplePlusConfig
         public static readonly DependencyProperty RollHpFirstLevelProperty = DependencyProperty.Register(
             "RollHpFirstLevel", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
 
+        public static readonly DependencyProperty StatRollMethodProperty = DependencyProperty.Register(
+            "StatRollMethod", typeof(StatRollMethodType), typeof(IniViewModel), new PropertyMetadata(StatRollMethodType.Roll4d6DropLow));
+
+        public static readonly DependencyProperty IronmanFudgeFactorProperty = DependencyProperty.Register(
+            "IronmanFudgeFactor", typeof(bool), typeof(IniViewModel), new PropertyMetadata(default(bool)));
+
         public static readonly DependencyProperty HpForNPCHdProperty = DependencyProperty.Register(
             "HpForNPCHd", typeof(HpForNPCHdType), typeof(IniViewModel),
             new PropertyMetadata(default(HpForNPCHdType)));
@@ -163,10 +169,8 @@ namespace TemplePlusConfig
         public IEnumerable<HpOnLevelUpType> HpOnLevelUpTypes => Enum.GetValues(typeof (HpOnLevelUpType))
             .Cast<HpOnLevelUpType>();
 
-        public IEnumerable<KeyValuePair<StatRollMethodType, string>> StatRollMethodTypes =>
-          Enum.GetValues(typeof(StatRollMethodType))
-            .Cast<StatRollMethodType>()
-            .Select(n => new KeyValuePair<StatRollMethodType, string>(n, n.Description()));
+        public IEnumerable<StatRollMethodType> StatRollMethodTypes => Enum.GetValues(typeof(StatRollMethodType))
+          .Cast<StatRollMethodType>();
 
         public IEnumerable<HpForNPCHdType> HpForNPCHdTypes => Enum.GetValues(typeof(HpForNPCHdType))
             .Cast<HpForNPCHdType>();
@@ -281,6 +285,18 @@ namespace TemplePlusConfig
         {
             get { return (bool)GetValue(RollHpFirstLevelProperty); }
             set { SetValue(RollHpFirstLevelProperty, value); }
+        }
+
+        public StatRollMethodType StatRollMethod
+        {
+            get { return (StatRollMethodType)GetValue(StatRollMethodProperty); }
+            set { SetValue(StatRollMethodProperty, value); }
+        }
+
+        public bool IronmanFudgeFactor
+        {
+            get { return (bool)GetValue(IronmanFudgeFactorProperty); }
+            set { SetValue(IronmanFudgeFactorProperty, value); }
         }
 
         public HpForNPCHdType HpForNPCHd
@@ -580,6 +596,14 @@ namespace TemplePlusConfig
 
             RollHpFirstLevel = TryReadBool("rollHpFirstLevel");
 
+            int rollMethod;
+            if (int.TryParse(tpData["statRollMethod"], out rollMethod))
+            {
+                StatRollMethod = (StatRollMethodType)rollMethod;
+            }
+
+            IronmanFudgeFactor = TryReadBool("ironmanFudgeFactor");
+
             if (tpData["HpForNPCHd"] != null)
             {
                 switch (tpData["HpForNPCHd"].ToLowerInvariant())
@@ -809,6 +833,10 @@ namespace TemplePlusConfig
                     tpData["hpOnLevelup"] = "normal";
                     break;
             }
+
+						tpData["rollHpFirstLevel"] = RollHpFirstLevel ? "true" : "false";
+						tpData["statRollMethod"] = ((int)StatRollMethod).ToString();
+						tpData["ironmanFudgeFactor"] = IronmanFudgeFactor ? "true" : "false";
 
             switch (HpForNPCHd)
             {

@@ -2726,11 +2726,14 @@ void UiPcCreation::GenderFinalize(CharEditorSelectionPacket& selPkt, objHndl& ha
 	auto animParams = objects.GetAnimParams(handle);
 	animHandle->Advance(1.0, 0, 0, animParams);
 
-	if (selPkt.isPointbuy){
-		objects.setInt32(handle, obj_f_pc_roll_count, -25);
+	if (selPkt.isPointbuy) {
+		// set rerolls to negative of pointbuy points
+		objects.setInt32(handle, obj_f_pc_roll_count, -config.pointBuyPoints);
 	}
-	else{
-		objects.setInt32(handle, obj_f_pc_roll_count, selPkt.numRerolls);
+	else {
+		// pack stat roll method into rerolls
+		int packedRerolls = config.statRollMethod << 17 | selPkt.numRerolls;
+		objects.setInt32(handle, obj_f_pc_roll_count, packedRerolls);
 	}
 
 }

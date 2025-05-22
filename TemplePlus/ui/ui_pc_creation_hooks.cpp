@@ -10,6 +10,7 @@
 #include "ui_pc_creation.h"
 #include "config/config.h"
 #include "gamesystems/d20/d20stats.h"
+#include "dice.h"
 #include "mod_support.h"
 #include "party.h"
 #include "ui_systems.h"
@@ -38,6 +39,7 @@ public:
 	static BOOL StatsDecreaseBtnMsg(int widId, TigMsg* msg);
 	static BOOL StatsUpdateBtns();
 	static void AutoAddSpellsMemorizedToGroup();
+	static void RollStats();
 
 	void apply() override
 	{
@@ -60,6 +62,8 @@ public:
 		replaceFunction<BOOL(__cdecl)(int, TigMsg*)>(0x1011c1c0, [](int widgetId, TigMsg* msg) { 
 			return uiPcCreation.MainWndMsg(widgetId, msg);
 		});
+
+		replaceFunction(0x1018B860, RollStats);
 
 		// Chargen Race System
 		replaceFunction<void(__cdecl)()>(0x1018A7D0, [](){	uiSystems->GetPcCreation().GetRace().Show();	});
@@ -499,6 +503,190 @@ void PcCreationHooks::AutoAddSpellsMemorizedToGroup() {
 		auto dude = party.GroupPCsGetMemberN(i);
 		temple::GetRef<void(__cdecl)(objHndl)>(0x1011E920)(dude);
 	}
+}
+
+// rolls 3d6 the specified number of times for each stat,
+// keeping the best.
+void Roll3d6Repeated(int *rolledStats, int repetitions) {
+	for (int i = 0; i < 6; i++) {
+		int roll = 0;
+		for (int j = 0; j < repetitions; j++) {
+			roll = std::max(roll, Dice::Roll(3, 6));
+		}
+		rolledStats[i] = roll;
+	}
+}
+
+// rolls 4d6, keeping the highest 3 dice, for each stat.
+void Roll4d6DropLow(int *rolledStats) {
+	for (auto i = 0; i < 6; i++) {
+		int min = 7;
+		int tot = 0;
+		for (int j = 0; j < 4; j++) {
+			int r = Dice::Roll(1, 6);
+			tot += r;
+			min = std::min(min, r);
+		}
+		rolledStats[i] = tot - min;
+	}
+}
+
+// roll 3d6 `trials` times, and keep the best 6
+void Roll3d6Best6Of(int *rolledStats, int trials) {
+	// we need at least 6
+	trials = max(6, trials);
+
+	// reset rolledStats to 0, just in case
+	for (auto i = 0; i < 6; i++) rolledStats[i] = 0;
+
+	// rolledStats sorted high->low, bubble down values
+	for (auto i = 0; i < trials; i++) {
+		int r = Dice::Roll(3, 6);
+		for (auto j = 0; j < 6; j++) {
+			if (rolledStats[j] < r) {
+				auto tmp = rolledStats[j];
+				rolledStats[j] = r;
+				r = tmp;
+			}
+		}
+	}
+}
+
+// Dark Sun characters get 4d4+4 for stats.
+void DarkSun(int *rolledStats) {
+	for (auto i = 0; i < 6; i++) {
+		rolledStats[i] = 4 + Dice::Roll(4,4);
+	}
+}
+
+// 1E commoner, select from [2,3,3,4,4,5]
+void Commoner1E(int *rolledStats) {
+	for (auto i = 0; i < 6; i++) {
+		rolledStats[i] = 0;
+		for (auto j = 0; j < 3; j++) {
+			rolledStats[i] += Dice::Roll(1,6)%4 + 2;
+		}
+	}
+}
+
+// 3E ability arrays
+void AbilityArray(int *rolledStats, int which) {
+	// arrays and equivalent point buys
+	const int nonelite[6] = { 13, 12, 11, 10, 9, 8 }; // 15 pts
+	const int elite[6] = { 15, 14, 13, 12, 10, 8 }; // 25 pts
+	const int heroic[6] = { 17, 15, 13, 12, 10, 8 }; // 32 pts
+
+	for (auto i = 0; i < 6; i++) {
+		switch (which)
+		{
+		case 0:
+			rolledStats[i] = nonelite[i];
+			break;
+		case 1:
+		default:
+			rolledStats[i] = elite[i];
+			break;
+		case 2:
+			rolledStats[i] = heroic[i];
+			break;
+		case 3:
+			// standard array, 3 11s, 3 10s
+			rolledStats[i] = 10 + i%2;
+			break;
+		case 18:
+			rolledStats[i] = 18;
+			break;
+		}
+	}
+}
+
+// Decides whether the roll is bad enough to reroll during
+// iron man mode. Presumably there are no auto rerolls outside
+// of ironman because you can just reroll yourself.
+bool IronmanFudgeFactor(int *rolledStats) {
+	auto isIronman = temple::GetRef<BOOL(__cdecl)()>(0x10003860)();
+
+	// don't do a fudge factor for some of the quirky methods
+	if (config.statRollMethod > 100) return false;
+	if (!isIronman || !config.ironmanFudgeFactor) return false;
+
+	int totalMod = 0;
+	int maxRoll = 0;
+	for (int i = 0; i < 6; i++) {
+		maxRoll = std::max(maxRoll, rolledStats[i]);
+		totalMod += (rolledStats[i] - 10) >> 1;
+	}
+
+	return maxRoll < 14 || totalMod <= 0;
+}
+
+void PcCreationHooks::RollStats() {
+	auto rolledStats = chargen.GetRolledStats();
+	int rep = 2;
+
+	// reset selected stats
+	auto &selPkt = GetCharEdSelPkt();
+	for (auto i = 0; i < 6; i++) {
+		selPkt.abilityStats[i] = -1;
+	}
+
+	do {
+		// numbering based on 1E DMG
+		switch (config.statRollMethod)
+		{
+		case 0:
+			// 3d6; 2E DMG Method I
+			Roll3d6Repeated(rolledStats, 1);
+			break;
+		case 1:
+		default:
+			// 4d6 drop lowest
+			// 1E DMG Method I, ToEE default
+			Roll4d6DropLow(rolledStats);
+			break;
+		case 2:
+			// roll 3d6 12 times, pick 6 highest
+			// 1E DMG Method II
+			Roll3d6Best6Of(rolledStats, 12);
+			break;
+		case 3:
+			// roll 3d6 6 times for each score, keep highest
+			// 1E DMG Method III
+			Roll3d6Repeated(rolledStats, 6);
+			break;
+		case 4:
+			// roll 3d6 twice for each score, keep highest
+			// 2E DMG Method IV
+			Roll3d6Repeated(rolledStats, 2);
+			break;
+		case 0xd5:
+			DarkSun(rolledStats);
+			break;
+		case 0xc0:
+			Commoner1E(rolledStats);
+			break;
+		case 0xa15:
+			// non-elite array
+			AbilityArray(rolledStats, 0);
+			break;
+		case 0xa25:
+			// elite array
+			AbilityArray(rolledStats, 1);
+			break;
+		case 0xa32:
+			// heroic array
+			AbilityArray(rolledStats, 2);
+			break;
+		case 0xa11:
+			// standard array
+			AbilityArray(rolledStats, 3);
+			break;
+		case 0xa18:
+			// straight 18s
+			AbilityArray(rolledStats, 18);
+			break;
+		}
+	} while (IronmanFudgeFactor(rolledStats));
 }
 
 int __declspec(naked) PcCreationFeatUiPrereqCheckUsercallWrapper()
