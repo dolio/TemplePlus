@@ -917,6 +917,38 @@ namespace TemplePlusConfig
         Average
     }
 
+    public class EnumDescriptionConverter : System.ComponentModel.EnumConverter
+    {
+        using System.ComponentModel;
+        using System.Globalization;
+        using System.Reflection;
+        public EnumDescriptionConverter(Type type) : base(type)
+        {
+        }
+
+        public override object ConvertTo(ITypeDescriptorContext ctx, CultureInfo culture, object value, Type destType)
+        {
+            if (destType != typeof(string))
+                return base.ConvertTo(ctx, culture, value, destType);
+
+            if (value == null) return string.Empty;
+
+            FieldInfo fi = value.GetType().GetField(value.ToString());
+            if (fi == null) return string.Empty;
+
+            var attrs =
+              (DescriptionAttribute[])
+                fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+            if (attrs.Length <= 0) return value.ToString();
+            if (String.IsNullOrEmpty(attrs[0].Description))
+                return value.ToString();
+
+            return attrs[0].Description;
+        }
+    }
+
+    [System.ComponentModel.TypeConverter(typeof(EnumDescriptionConverter))]
     public enum StatRollMethodType
     {
         [System.ComponentModel.Description("Roll 3d6")]
