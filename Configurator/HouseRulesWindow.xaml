@@ -64,7 +64,7 @@
             </TabItem>
             <TabItem Header="Ruleset">
                 <Canvas>
-                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="300" Canvas.Left="10" Canvas.Top="10">
+                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="500" Canvas.Left="10" Canvas.Top="10">
                         <StackPanel Orientation="Horizontal">
                             <Label VerticalAlignment="Center" Content="HP on Level Up" Height="27" />
                             <ComboBox VerticalAlignment="Center" SelectedValue="{Binding HpOnLevelUp}"  ItemsSource="{Binding HpOnLevelUpTypes}"/>
