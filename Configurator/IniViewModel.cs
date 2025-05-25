@@ -158,8 +158,10 @@ namespace TemplePlusConfig
         public IEnumerable<HpOnLevelUpType> HpOnLevelUpTypes => Enum.GetValues(typeof (HpOnLevelUpType))
             .Cast<HpOnLevelUpType>();
 
-        public IEnumerable<StatRollMethodType> StatRollMethodTypes => Enum.GetValues(typeof(StatRollMethodType))
-          .Cast<StatRollMethodType>();
+        public IEnumerable<KeyValuePair<StatRollMethodType, string>> StatRollMethodTypes =>
+          Enum.GetValues(typeof(StatRollMethodType))
+            .Cast<StatRollMethodType>()
+            .Select(n => new KeyValuePair<StatRollMethodType, string>(n, n.Description()));
 
         public IEnumerable<HpForNPCHdType> HpForNPCHdTypes => Enum.GetValues(typeof(HpForNPCHdType))
             .Cast<HpForNPCHdType>();
@@ -929,6 +931,26 @@ namespace TemplePlusConfig
         Roll3d6SixPerScore = 3,
         [System.ComponentModel.Description("Roll 3d6 twice per ability")]
         Roll3d6TwoPerScore = 4
+    }
+
+    static class StatRollMethodExtensions {
+        public static string Description(this StatRollMethodType ty)
+        {
+            switch (ty)
+            {
+            case StatRollMethodType.Roll3d6:
+                return "Roll 3d6";
+            case StatRollMethodType.Roll4d6DropLow:
+                return "Roll 4d6 drop lowest (vanilla)";
+            case StatRollMethodType.Roll3d6TwelveTimes:
+                return "Roll 3d6, 6 highest of 12 rolls";
+            case StatRollMethodType.Roll3d6SixPerScore:
+                return "Roll 3d6 6 times per ability";
+            case StatRollMethodType.Roll3d6TwoPerScore:
+                return "Roll 3d6 twice per ability";
+            }
+            return "";
+        }
     }
 
     public enum HpForNPCHdType
