@@ -75,6 +75,10 @@
                             <Label VerticalAlignment="Center" Content="Point Buy Points:" Height="25"/>
                             <TextBox Width="50" VerticalAlignment="Center" Text="{Binding PointBuyPoints}" />
                         </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,10,5">
+                            <Label VerticalAlignment="Center" Content="Stat Roll Method:" Height="25" />
+                            <ComboBox VerticalAlignment="Center" SelectedValue="{Binding StatRollMethod}" ItemsSource="{Binding StatRollMethodTypes}" SelectedValuePath="Key" DisplayMemberPath="Value" />
+                        </StackPanel>
                         <CheckBox VerticalAlignment="Center" Content="Allow XP overflow" IsChecked="{Binding AllowXpOverflow}" Margin="0,5,35,5" ToolTip="Allows experience points to accumulate beyond the limit of the next level."/>
                         <CheckBox VerticalAlignment="Center" Content="Reach Weapons Hit Adjacents" IsChecked="{Binding DisableReachWeaponDonut}" Margin="0,5,10,5" ToolTip="Temple+ fixes reach weapons so that you cannot attack enemies within close range. This option restores the vanilla ToEE behavior, where all reach weapons behaved like Spiked Chains."/>
 
