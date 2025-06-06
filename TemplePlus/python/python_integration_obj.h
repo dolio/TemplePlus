@@ -96,6 +96,7 @@ public:
 		return mInObjInvocation;
 	}
 	void SetInObjInvocation(bool inObjInvocation) {
+		logger->trace("SetInObjInvocation {}", inObjInvocation);
 		mInObjInvocation = inObjInvocation;
 		mNewSid = -1;
 	}
@@ -117,9 +118,11 @@ public:
 
 	// Used by a script attached to an object to replace itself with something else
 	void SetNewSid(int newSid) {
+		logger->trace("setting newSid: {}", newSid);
 		mNewSid = newSid;
 	}
 	int GetNewSid() {
+		logger->trace("getting newSid: {}", mNewSid);
 		return mNewSid;
 	}
 

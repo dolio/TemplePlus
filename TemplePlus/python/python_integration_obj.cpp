@@ -172,16 +172,22 @@ static int RunPythonObjScript(ObjScriptInvocation* invoc) {
 		Py_DECREF(attachee);
 	}
 
+	logger->trace("Running script with id {}, evt {}", invoc->script->scriptId, static_cast<uint32_t>(invoc->evt));
+
 	auto result = pythonObjIntegration.RunScript(invoc->script->scriptId,
 	                                             (PythonIntegration::EventId) invoc->evt,
 	                                             args);
+
+	logger->trace("Finished running script with id {}, evt {}", invoc->script->scriptId, static_cast<uint32_t>(invoc->evt));
 	
 	Py_DECREF(args);
 
 	auto newSid = pythonObjIntegration.GetNewSid();
+	logger->trace("newSid: {}", newSid);
 	if (newSid != -1 && newSid != invoc->script->scriptId) {
 		invoc->script->scriptId = newSid;
 	}
+
 	pythonObjIntegration.SetInObjInvocation(false);
 
 	return result;
