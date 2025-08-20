@@ -177,8 +177,8 @@ void MapSystem::LoadModule() {
 		}
 	}
 
-	
 	if (config.debugObjects) {
+		logger->warn("testSizeofObjectId: {}", testSizeofObjectId);
 		// Search for duplicate mob files
 		std::map<std::string, int> objMapId;
 		for (auto& it: mMaps) {
