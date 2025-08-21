@@ -3175,6 +3175,7 @@ void ConditionSystem::InitItemCondFromCondStructAndArgs(Dispatcher * dispatcher,
 
 void ConditionSystem::RegisterNewConditions()
 {
+	DumpConditions();
 
 	CondStructNew * cond;
 	char * condName;

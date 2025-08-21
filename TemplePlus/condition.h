@@ -1,4 +1,5 @@
 #pragma once
+#include <fstream>
 
 #include "common.h"
 #include "dispatcher.h"
@@ -215,7 +216,6 @@ public:
 	void DispatcherHookInit( CondStructNew * cond , int hookIdx, enum_disp_type dispType, int key, void * callback, int data1, int data2);
 	ConditionSystem()
 	{
-
 		rebase(ConditionGlobal, 0x102E8088);
 		rebase(pCondNodeGlobal, 0x10BCADA0);
 		rebase(ConditionArraySpellEffects, 0x102E2600);
@@ -244,8 +244,22 @@ public:
 		rebase(ConditionAutoendTurn, 0x102ED6C8);
 		
 		rebase(mCondStructHashtable, 0x11868F60);
+
 			
 	}
+
+	void DumpConditions() {
+		std::ofstream dump("conditions.dump", std::fstream::trunc);
+		for (int i = 0; i < mCondStructHashtable->numItems; i++) {
+			uint32_t idx = mCondStructHashtable->idxArray[i];
+			uint32_t key = mCondStructHashtable->keyArray[idx];
+			CondStruct *cond = mCondStructHashtable->dataArray[idx];
+			if (cond == nullptr) continue;
+			dump << cond->condName << ": " << key << endl;
+		}
+		dump.close();
+	}
+
 
 	void SetPermanentModArgsFromDataFields(Dispatcher* dispatcher, CondStruct* condStruct, int *condArgs);
 	void DispatcherCondsResetFlag2(Dispatcher* dispatcher);
