@@ -18,6 +18,8 @@
 #include <gamesystems\d20\d20stats.h>
 #include "config\config.h"
 
+void DumpProtos();
+
 static class PoisonFixes : public TempleFix
 {
 public:
@@ -230,6 +232,7 @@ PoisonSystem::PoisonSystem()
 		AssignVanillaSpecs();
 	}
 	//SaveSpecsFile("d:\\temp\\vpoisons.json");
+	DumpProtos();
 	LoadSpecsFile("rules/poisons.json");
 }
 
