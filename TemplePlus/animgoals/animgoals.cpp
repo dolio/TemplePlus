@@ -2475,7 +2475,7 @@ AnimationGoals::AnimationGoals()
 	// Start animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND)
+		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_POP_GOAL);
 	// Anim playing?
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 2
@@ -2485,8 +2485,8 @@ AnimationGoals::AnimationGoals()
 	// Advance frame
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 3
 		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
-		.OnFailure(T_REWIND, DELAY_SLOT);
+		.OnSuccess(T_REWIND, DELAY_SLOT) // animation still going
+		.OnFailure(T_GOTO_STATE(4)); // animation complete
 	// 1 anim complete, was casting interrupted?
 	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
 		.SetArgs(AGDATA_SELF_OBJ)
