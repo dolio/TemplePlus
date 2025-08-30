@@ -1328,6 +1328,7 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	}
 
 	auto &aas = gameSystems->GetAAS();
+	// SpellAnimType casting -> NormalAnimType conjuring
 	gfx::EncodedAnimId encodedId(prevId - 64);
 	
 	objects.SetAnimId(obj, encodedId);
@@ -1336,7 +1337,38 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	PlayRipples(obj);
 	slot.path.someDelay = 33;
 	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
-	slot.flags |= AnimSlotFlag::ASF_UNK4 | AnimSlotFlag::ASF_UNK5;
+	slot.flags |= AnimSlotFlag::ASF_ANIMATING;
+
+	return 1;
+}
+
+int GoalBeginCasting(AnimSlot &slot) {
+	auto obj = slot.param1.obj;
+	auto prevId = slot.pCurrentGoal->animIdPrevious.number;
+
+	if (!obj) {
+		logger->error("GoalBeginCasting: Null object param.");
+		gameSystems->GetAnim().Debug();
+	}
+
+	auto aasHandle = objects.GetAnimHandle(obj);
+	auto aasId = aasHandle ? aasHandle->GetAnimId() : 0;
+	if (!aasId) {
+		logger->error("GoalBeginCasting: Null AAS handle.");
+		gameSystems->GetAnim().Debug();
+	}
+
+	auto &aas = gameSystems->GetAAS();
+	// SpellAnimType -> NomralAnimType
+	gfx::EncodedAnimId encodedId(prevId - 65);
+
+	objects.SetAnimId(obj, encodedId);
+
+	static auto PlayRipples = temple::GetRef<char(__cdecl)(objHndl)>(0x100166F0);
+	PlayRipples(obj);
+	slot.path.someDelay = 33;
+	slot.gametimeSth = gameSystems->GetTimeEvent().GetAnimTime();
+	slot.flags |= AnimSlotFlag::ASF_ANIMATING;
 
 	return 1;
 }

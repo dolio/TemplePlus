@@ -2472,11 +2472,11 @@ AnimationGoals::AnimationGoals()
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(3))
 		.OnFailure(T_GOTO_STATE(1));
-	// Anim played once?
+	// Conjuring anim done?
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(2))
-		.OnFailure(T_GOTO_STATE(2));
+		.OnSuccess(T_GOTO_STATE(7)) // yes, start casting animation
+		.OnFailure(T_GOTO_STATE(2)); // no, trigger spell and start conjuring
 	// Trigger spell
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTriggerSpell) // index 2
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
@@ -2487,22 +2487,27 @@ AnimationGoals::AnimationGoals()
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT) // animation still going
 		.OnFailure(T_GOTO_STATE(4)); // animation complete
-	// 1 anim complete, was casting interrupted?
+	// anim complete, was casting interrupted?
 	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(6)) // restart animation
-		.OnFailure(T_GOTO_STATE(5)); // mark conjuration complete
-	// if animation ended on an action (4), set anim completed once (8)
+		.OnFailure(T_GOTO_STATE(5)); // mark animation complete
+	// if animation ended on an action (4), set anim completed (8)
 	throw_spell_w_cast_anim_2ndary.AddState(GoalSlotFlagSet8If4AndNotSetYet)
-		.OnSuccess(T_GOTO_STATE(7)) // conjure animation
-		.OnFailure(T_GOTO_STATE(7)); // cast animation
+		.OnSuccess(T_GOTO_STATE(7)) // conjure animation finished
+		.OnFailure(T_GOTO_STATE(8)); // cast animation finished
 	// Restart conjuring animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 6
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_POP_GOAL);
+	// (Re)start casting animation
+	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginCasting) // Index 7
+		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
+		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.OnFailure(T_POP_GOAL);
 	// Machine complete, actually perform spell
-	throw_spell_w_cast_anim_2ndary.AddState(GoalAttemptSpell) // Index 7
+	throw_spell_w_cast_anim_2ndary.AddState(GoalAttemptSpell) // Index 8
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.OnSuccess(T_POP_ALL)
 		.OnFailure(T_POP_ALL);
