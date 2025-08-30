@@ -2467,7 +2467,7 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddCleanup(GoalCastConjureEnd)
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.SetFlagsData(1);
-	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 0
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag4) // Index 0
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(1));

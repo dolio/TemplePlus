@@ -1337,6 +1337,12 @@ int GoalBeginConjuring(AnimSlot &slot) {
 	return 1;
 }
 
+int GoalTestSlotFlag4(AnimSlot &slot) {
+	logger->info("GoalTestSlotFlag4 flags = {}", slot.flags);
+	if (slot.flags & AnimSlotFlag::ASF_UNK3) return 1;
+	else return 0;
+}
+
 int GoalTestSlotFlag8(AnimSlot &slot) {
 	logger->info("GoalTestSlotFlag8 flags = {}", slot.flags);
 	if (slot.flags & AnimSlotFlag::ASF_UNK4) return 1;
