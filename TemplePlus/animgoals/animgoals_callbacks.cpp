@@ -399,6 +399,7 @@ int GoalAttemptSpell(AnimSlot &slot) {
 	slot.flags |= 0xCu; // Sets 8 and 4
 
 	if (spellId) {
+		logger->info("GoalAttemptSpell");
 		actSeqSys.ActionFrameProcess(obj);
 		pySpellIntegration.SpellTrigger(spellId, SpellEvent::SpellEffect);
 
