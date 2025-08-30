@@ -2467,18 +2467,31 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddCleanup(GoalCastConjureEnd)
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_SKILL_DATA)
 		.SetFlagsData(1);
-	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 0
+	// Anim played once?
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag8) // Index 0
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_GOTO_STATE(2))
 		.OnFailure(T_GOTO_STATE(1));
+	// Start animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 1
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
-	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 2
+	// Anim playing?
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 2
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(3))
+		.OnFailure(T_GOTO_STATE(4));
+	// Advance frame
+	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 3
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT)
 		.OnFailure(T_REWIND, DELAY_SLOT);
+	// 1 anim complete, was casting interrupted?
+	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(1)) // restart animation
+		.OnFailure(T_POP_ALL);
 	/*
 	// check if we have an animation to play
 	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag10) // Index 0
