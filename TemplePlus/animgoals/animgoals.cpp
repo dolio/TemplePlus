@@ -2499,12 +2499,12 @@ AnimationGoals::AnimationGoals()
 	// Restart conjuring animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 6
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
 	// (Re)start casting animation
 	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginCasting) // Index 7
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND, DELAY_SLOT)
+		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
 	// Machine complete, actually perform spell
 	throw_spell_w_cast_anim_2ndary.AddState(GoalAttemptSpell) // Index 8
