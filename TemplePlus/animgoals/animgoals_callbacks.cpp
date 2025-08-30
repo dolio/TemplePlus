@@ -164,6 +164,7 @@ int GoalIsSlotFlag10NotSet(AnimSlot& slot)
   }
   }*/
   //return (slot.flags & AnimSlotFlag::ASF_UNK5) == 0? TRUE: FALSE;
+	logger->info("GoalIsSlotFlag10NotSet flags = {}", slot.flags);
 	return (~(slot.flags >> 4)) & 1;
 	//return ~(slot.flags >> 4) & 1;
 }
