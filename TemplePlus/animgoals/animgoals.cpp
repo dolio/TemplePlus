@@ -2486,23 +2486,24 @@ AnimationGoals::AnimationGoals()
 	throw_spell_w_cast_anim_2ndary.AddState(GoalContinueWithAnim) // Index 3
 		.SetArgs(AGDATA_SELF_OBJ)
 		.OnSuccess(T_REWIND, DELAY_SLOT) // animation still going
-		.OnFailure(T_GOTO_STATE(4)); // animation complete
-	// anim complete, was casting interrupted?
-	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 4
+		.OnFailure(T_GOTO_STATE(4)); // animation stopped
+	// Test stopped animation successful
+	throw_spell_w_cast_anim_2ndary.AddState(GoalTestSlotFlag4) // Index 4
 		.SetArgs(AGDATA_SELF_OBJ)
-		.OnSuccess(T_GOTO_STATE(6)) // restart animation
-		.OnFailure(T_GOTO_STATE(5)); // mark animation complete
-	// if animation ended on an action (4), set anim completed (8)
-	throw_spell_w_cast_anim_2ndary.AddState(GoalSlotFlagSet8If4AndNotSetYet)
+		.OnSuccess(T_GOTO_STATE(5)) // successful animation completion
+		.OnFailure(T_POP_GOAL); // animation terminated, abort goal
+	// anim complete, was casting interrupted?
+	throw_spell_w_cast_anim_2ndary.AddState(GoalWasInterrupted) // Index 5
+		.SetArgs(AGDATA_SELF_OBJ)
+		.OnSuccess(T_GOTO_STATE(7)) // restart animation
+		.OnFailure(T_GOTO_STATE(6)); // mark animation complete
+	// set anim completed (8), test if already set
+	throw_spell_w_cast_anim_2ndary.AddState(GoalSetSlotFlag8) // Index 6
 		.OnSuccess(T_GOTO_STATE(7)) // conjure animation finished
 		.OnFailure(T_GOTO_STATE(8)); // cast animation finished
 	// Restart conjuring animation
-	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 6
-		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
-		.OnSuccess(T_REWIND)
-		.OnFailure(T_POP_GOAL);
-	// (Re)start casting animation
-	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginCasting) // Index 7
+	// animation (conjure vs. cast) selected based on flag 8
+	throw_spell_w_cast_anim_2ndary.AddState(GoalBeginConjuring) // Index 7
 		.SetArgs(AGDATA_SELF_OBJ, AGDATA_ANIM_ID_PREV)
 		.OnSuccess(T_REWIND)
 		.OnFailure(T_POP_GOAL);
