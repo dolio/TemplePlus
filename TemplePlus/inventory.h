@@ -114,12 +114,13 @@ struct InventorySystem : temple::AddressTable
 	objHndl FindItemByProtoId(objHndl container, int protoId, bool skipWorn = false);
 
 	
-	int IsNormalCrossbow(objHndl weapon);
+	bool IsLoadableWeapon(objHndl weapon, bool strict = false);
 	int IsThrowingWeapon(objHndl weapon);
 	bool IsGrenade(objHndl weapon);
 	bool UsesWandAnim(const objHndl item);
 	static bool IsTripWeapon(objHndl weapon);
 	ArmorType GetArmorType(int armorFlags);
+	ArmorType GetArmorType(objHndl armor);
 	
 	// handling for items with quantities
 	BOOL GetQuantityField(const objHndl item, obj_f * qtyField); // gets the relevant quantity field for the item ; returns 0 if irrelevant
@@ -179,6 +180,7 @@ struct InventorySystem : temple::AddressTable
 	static bool IsIdentified(objHndl itemHandle);
 	void ItemSpellChargeConsume(const objHndl& item, int chargesUsedUp = 1);
 	static bool IsBuckler(objHndl shield);
+	static bool IsDoubleWeapon(objHndl weapon);
 	void(__cdecl*_ForceRemove)(objHndl, objHndl);
 	void ItemRemove(objHndl item); // pretty much same as ForceRemove, but also send a d20 signal for inventory update, and checks for parent first
 	BOOL ItemGetAdvanced(objHndl item, objHndl parent, int slotIdx, int flags);
@@ -246,7 +248,7 @@ struct InventorySystem : temple::AddressTable
 		rebase(GetSubstituteInventory, 0x1007F5B0);
 		//rebase(GetItemAtInvIdx, 0x100651B0);
 		rebase(_ItemWornAt,      0x10065010);
-		rebase(_GetWieldType,    0x10066580);
+		//rebase(_GetWieldType,    0x10066580);
 		//rebase(FindMatchingStackableItem, 0x10067DF0);
 
 
@@ -273,7 +275,7 @@ private:
 	int(__cdecl*_ItemRemove)(objHndl item);
 	int(__cdecl*_ItemDrop)(objHndl item);
 	objHndl(__cdecl *_ItemWornAt)(objHndl, EquipSlot nItemSlot);
-	int(__cdecl *_GetWieldType)(objHndl wielder, objHndl item);
+	//int(__cdecl *_GetWieldType)(objHndl wielder, objHndl item);
 
 	int InvIdxForSlot(EquipSlot slot); // converts EquipSlot to inventory index
 	int InvIdxForSlot(int slot); // converts EquipSlot to inventory index

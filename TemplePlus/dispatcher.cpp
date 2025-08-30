@@ -204,6 +204,39 @@ void DispatcherSystem::DispatchForItem(objHndl item, enum_disp_type dispType, D2
 	}
 }
 
+// A complicated dispatcher for wearable items.
+//
+// If the item is worn, its item conditions will be among the conditions for its
+// parent creature, so we can dispatch against the creature. If not, the item
+// conditions can only be checked by doing an item dispatch.
+//
+// This is common code for attributes like armor check penalty that might want
+// to work this way. At the moment, only item conditions (like masterwork or
+// nimbleness) influence the penalty, so we could just use an item dispatch.
+// This more complicated logic tries to allow for e.g. feats that would
+// influence the penalty for specific characters.
+void DispatcherSystem::DispatchForWearable(objHndl item, enum_disp_type dispType, D20DispatcherKey key, DispIO *dispIo) {
+	auto parent = gameSystems->GetObj().GetObject(inventory.GetParent(item));
+	auto critterParent = parent != nullptr && parent->IsCritter();
+	auto loc = inventory.GetInventoryLocation(item);
+
+	if (critterParent) {
+		auto dispatcher = parent->GetDispatcher();
+		if (dispatcher->IsValid()) {
+			DispatcherProcessor(dispatcher, dispType, key, dispIo);
+		} else {
+			// fall back to item dispatch
+			critterParent = false;
+		}
+	}
+
+	// if there is no parent critter, or the item isn't worn, we
+	// need to do item dispatch to incorporate item conditions
+	if (!critterParent || !inventory.IsInvIdxWorn(loc)) {
+		dispatch.DispatchForItem(item, dispType, key, dispIo);
+	}
+}
+
 int DispatcherSystem::Dispatch10AbilityScoreLevelGet(objHndl handle, Stat stat, DispIoBonusList * dispIo){
 	return dispatch.DispatchForCritter(handle, dispIo, dispTypeAbilityScoreLevel, (D20DispatcherKey)(stat+1));
 }
@@ -356,6 +389,11 @@ DispIoCondStruct* DispatcherSystem::DispIoCheckIoType1(DispIoCondStruct* dispIo)
 	return dispIo;
 }
 
+DispIoCondStruct* DispatcherSystem::DispIoCheckIoType1(DispIO* dispIo)
+{
+	return DispIoCheckIoType1((DispIoCondStruct*)dispIo);
+}
+
 DispIoBonusList* DispatcherSystem::DispIoCheckIoType2(DispIoBonusList* dispIo)
 {
 	if (dispIo->dispIOType != dispIOTypeBonusList) return nullptr;
@@ -474,15 +512,15 @@ DispIoD20ActionTurnBased* DispatcherSystem::DispIoCheckIoType12(DispIO* dispIo)
 	return DispIoCheckIoType12((DispIoD20ActionTurnBased*)dispIo);
 }
 
-DispIoMoveSpeed * DispatcherSystem::DispIOCheckIoType13(DispIoMoveSpeed* dispIo)
+DispIoMoveSpeed * DispatcherSystem::DispIoCheckIoType13(DispIoMoveSpeed* dispIo)
 {
 	if (dispIo->dispIOType != dispIOTypeMoveSpeed) return nullptr;
 	return dispIo;
 }
 
-DispIoMoveSpeed* DispatcherSystem::DispIOCheckIoType13(DispIO* dispIo)
+DispIoMoveSpeed* DispatcherSystem::DispIoCheckIoType13(DispIO* dispIo)
 {
-	return DispIOCheckIoType13((DispIoMoveSpeed*)dispIo);
+	return DispIoCheckIoType13((DispIoMoveSpeed*)dispIo);
 }
 
 void DispatcherSystem::Dispatch48BeginRound(objHndl obj, int numRounds) const
@@ -522,6 +560,13 @@ DispIoObjEvent* DispatcherSystem::DispIoCheckIoType17(DispIO* dispIo)
 	if (dispIo->dispIOType != dispIoTypeObjEvent)
 		return nullptr;
 	return static_cast<DispIoObjEvent*>(dispIo);
+}
+
+DispIoAttackDice* DispatcherSystem::DispIoCheckIoType20(DispIO* dispIo)
+{
+	if (dispIo->dispIOType != dispIOType20)
+		return nullptr;
+	return static_cast<DispIoAttackDice*>(dispIo);
 }
 
 DispIoImmunity* DispatcherSystem::DispIoCheckIoType23(DispIoImmunity* dispIo)
@@ -641,7 +686,7 @@ int DispatcherSystem::DispatchToHitBonusBase(objHndl objHndCaller, DispIoAttackB
 	return DispatchAttackBonus(objHndCaller, objHndl::null, dispIo, dispTypeToHitBonusBase, key);
 }
 
-int DispatcherSystem::DispatchGetSizeCategory(objHndl handle)
+int DispatcherSystem::DispatchGetSizeCategory(objHndl handle, bool base)
 {
 	auto obj = objSystem->GetObject(handle);
 	if (!obj) return 0;
@@ -651,8 +696,19 @@ int DispatcherSystem::DispatchGetSizeCategory(objHndl handle)
 
 	DispIoD20Query dispIo;
 	dispIo.return_val = obj->GetInt32(obj_f_size);
+
+	// Most size modifying spells (e.g. Enlarge Person) set these to 1 to avoid
+	// stacking, so initializing to 1 will get a 'base' value. data1 tracks
+	// enlargement, data2 tracks reduction.
+	if (base) {
+		dispIo.data1 = 1;
+		dispIo.data2 = 1;
+	} else {
+		dispIo.data1 = 0;
+		dispIo.data2 = 0;
+	}
 	
-	if (objects.IsCritter(handle) ) {
+	if (objects.IsCritter(handle)) {
 		auto polymorphHandle = critterSys.GetPolymorphedHandle(handle);
 		if (polymorphHandle) {
 			auto polyObj = objSystem->GetObject(polymorphHandle);
@@ -951,22 +1007,17 @@ int DispatcherSystem::Dispatch60GetAttackDice(objHndl obj, DispIoAttackDice* dis
 	{
 		int weaponDice = objects.getInt32(dispIo->weapon, obj_f_weapon_damage_dice);
 		dispIo->dicePacked = weaponDice;
-		dispIo->attackDamageType = (DamageType)objects.getInt32(dispIo->weapon, obj_f_weapon_attacktype);
+		auto dmgTy = static_cast<DamageType>(objects.getInt32(dispIo->weapon, obj_f_weapon_attacktype));
+		dispIo->attackDamageType = dmgTy;
 	}
 	DispatcherProcessor(dispatcher, dispTypeGetAttackDice, 0, dispIo);
-	int overallBonus = bonusSys.getOverallBonus(dispIo->bonlist);
-	Dice diceNew ;
-	diceNew = diceNew.FromPacked(dispIo->dicePacked);
-	int bonus = diceNew.GetModifier() + overallBonus;
-	int diceType = diceNew.GetSides();
-	int diceNum = diceNew.GetCount();
-	Dice diceNew2(diceNum, diceType, bonus);
-	return diceNew.ToPacked();
-
-
+	int sizeMod = bonusSys.getOverallBonus(dispIo->bonlist);
+	Dice base = Dice::FromPacked(dispIo->dicePacked);
+	Dice mod = damage.ModifyDamageDiceForSize(base, sizeMod);
+	return mod.ToPacked();
 }
 
-int DispatcherSystem::Dispatch61GetLevel(objHndl handle, Stat stat, BonusList* bonlist, objHndl someObj)
+int DispatcherSystem::Dispatch61GetLevel(objHndl handle, Stat stat, BonusList* bonlist, objHndl someObj, LevelDrainType omit)
 {
 	auto obj = objSystem->GetObject(handle);
 	if (!obj)
@@ -976,6 +1027,7 @@ int DispatcherSystem::Dispatch61GetLevel(objHndl handle, Stat stat, BonusList* b
 		return 0;
 	DispIoObjBonus evtObj;
 	evtObj.obj = someObj;
+	evtObj.flags = static_cast<uint32_t>(omit);
 	if (bonlist) {
 		evtObj.bonOut = bonlist;
 	}
@@ -1228,7 +1280,7 @@ int32_t _dispatch1ESkillLevel(objHndl objHnd, SkillEnum skill, BonusList* bonOut
 
 void DispIoEffectTooltip::Append(int effectTypeId, int spellEnum, const char* text) const
 {
-	BuffDebuffSub * bdbSub;
+	BuffDebuffSub * bdbSub = nullptr;
 	auto findSpec = uiParty.IndicatorSpecGet(effectTypeId);
 	switch (findSpec.type)
 	{
@@ -1250,14 +1302,20 @@ void DispIoEffectTooltip::Append(int effectTypeId, int spellEnum, const char* te
 	}
 
 	//copy the text
-	bdbSub->effectTypeId = effectTypeId;
-	bdbSub->spellEnum = spellEnum;
-	if (text){
-		bdbSub->text = new char[strlen(text) + 1];
-		strcpy( const_cast<char*>(bdbSub->text), text);
-	} else
-	{
-		bdbSub->text = nullptr;
+	if (bdbSub != nullptr) {
+		bdbSub->effectTypeId = effectTypeId;
+		bdbSub->spellEnum = spellEnum;
+		if (text) {
+			bdbSub->text = new char[strlen(text) + 1];
+			strcpy(const_cast<char*>(bdbSub->text), text);
+		}
+		else
+		{
+			bdbSub->text = nullptr;
+		}
+	}
+	else {
+		logger->error("Unknown tooltip effect {}", effectTypeId);
 	}
 }
 

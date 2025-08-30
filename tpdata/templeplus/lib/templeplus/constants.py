@@ -852,6 +852,15 @@ Q_Can_Perform_Disarm = 116
 Q_Craft_Wand_Spell_Level = 117
 Q_Is_Ethereal = 118
 Q_Empty_Body_Num_Rounds = 119
+Q_Quivering_Palm_Can_Perform = 120
+Q_Trip_AOO = 121
+Q_Get_Arcane_Spell_Failure = 122
+Q_Is_Preferring_One_Handed_Wield = 123
+Q_Scribe_Scroll_Level = 124
+Q_Critter_Is_Immune_Paralysis = 125
+Q_Is_Two_Weapon_Fighting = 126
+Q_Left_Is_Primary = 127
+Q_Can_Shield_Bash = 128
 
 RADIAL_MENU_PARAM_MIN_SETTING = 1
 RADIAL_MENU_PARAM_MAX_SETTING = 2
@@ -1816,6 +1825,7 @@ mc_subtype_orc = 0x1000000
 mc_subtype_reptilian = 0x2000000
 mc_subtype_slaadi = 0x4000000
 mc_subtype_water = 0x8000000
+mc_subtype_native = 0x10000000
 
 mc_type_aberration = 0
 mc_type_animal = 1
@@ -2308,6 +2318,7 @@ san_exit_combat = 14
 san_start_combat = 15
 san_end_combat = 16
 san_buy_object = 17
+san_resurrect = 18
 san_heartbeat = 19
 san_insert_item = 21
 san_will_kos = 22
@@ -3221,6 +3232,8 @@ spell_touch_of_fatigue = 1001
 spell_ray_of_exhaustion = 1002
 spell_waves_of_fatigue = 1003
 spell_waves_of_exhaustion = 1004
+spell_fire_shield_mass = 1005
+spell_prismatic_ray = 1006
 # Reserved for Sagenlicht 1050-1199
 spell_sound_lance = 1050
 spell_critical_strike = 1051
@@ -3815,7 +3828,7 @@ ET_OnGetEffectTooltip = 65 # for those little bonus flags on top of portraits
 ET_OnStatBaseGet = 66 # looks like this is intended to replace StatBaseGet function for Critters with Dispatchers
 ET_OnWeaponGlowType = 67 # Returns the ID of the weapon glow to use (0 = no glow, 1-10 are specific glow types, check mapobjrenderer)
 ET_OnItemForceRemove = 68 # has a single function associated with this - 10104410 int __cdecl ItemForceRemoveCallback_SetItemPadWielderArgs(Dispatcher_Callback_Args args);
-ET_OnGetArmorToHitPenalty = 69 # none exist apparently
+ET_OnGetArmorCheckPenalty = 69
 
 ET_OnGetMaxDexAcBonus = 70
 ET_OnGetSizeCategory = 71
@@ -4184,6 +4197,9 @@ EK_Q_Get_Arcane_Spell_Failure = 0x149 # gets arcane spell failure for (class_enu
 EK_Q_Is_Preferring_One_Handed_Wield = 0x14A # gets arcane spell failure for (class_enum, equip_slot) combo
 EK_Q_Scribe_Scroll_Spell_Level = 0x14B
 EK_Q_Critter_Is_Immune_Paralysis = 0x14C
+EK_Q_Is_Two_Weapon_Fighting = 0x14D
+EK_Q_Left_Is_Primary = 0x14E
+EK_Q_Can_Shield_Bash = 0x14F
 
 EK_LVL_Stats_Activate = 100
 EK_LVL_Stats_Check_Complete = 101

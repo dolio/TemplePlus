@@ -106,8 +106,12 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 
 	m.doc() = "Temple+ Dispatcher module, used for creating modifier extensions.";
 
-	m.def("hash", [](std::string &text){
+	m.def("hash", [](std::string& text) {
 		return ElfHash::Hash(text);
+	});
+
+	m.def("class_enum_to_casting_class", [](int class_enum) {
+		return spellSys.GetSpellClass(class_enum);
 	});
 
 	m.def("register_metamagic_feat", [](std::string &text) {
@@ -134,6 +138,10 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 
 	m.def("get_stat_short_name", [](int stat)->py::bytes {
 		return py::bytes(d20Stats.GetStatShortName((Stat)stat));
+	});
+
+	m.def("is_temple_module", []() {
+		return !modSupport.IsZMOD() && !modSupport.IsKotB() && !modSupport.IsPalCove() && !modSupport.IsIWD();
 	});
 
 	m.def("config_set_string", [](std::string& configItem, std::string& value) {
@@ -851,7 +859,7 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 		})
 		.def("level_for_spell_class", [](SpellEntry &spEntry, int spellClass)->int
 		{
-			return spellSys.GetSpellLevelBySpellClass(spEntry.spellEnum, spellClass);
+			return spellSys.GetSpellLevelBySpellClass(spEntry.spellEnum, spellClass); 
 		})
 		.def("get_lowest_spell_level", [](SpellEntry& spEntry)->int
 		{
@@ -1444,6 +1452,7 @@ int PyModHookWrapper(DispatcherCallbackArgs args){
 	case dispTypeAbilityCheckModifier:
 	case dispTypeGetAttackerConcealmentMissChance:
 	case dispTypeGetLevel:
+	case dispTypeArmorCheckPenalty:
 	case dispTypeMaxDexAcBonus:
 		pbEvtObj = py::cast(static_cast<DispIoObjBonus*>(args.dispIO));
 		break;

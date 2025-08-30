@@ -525,10 +525,13 @@ BOOL AnimSystem::PushSpellCast(SpellPacketBody & spellPkt, objHndl item)
 BOOL AnimSystem::PushSpellDismiss(SpellPacketBody & pkt)
 {
     AnimSlotGoalStackEntry goalData;
-    if (!goalData.InitWithInterrupt(pkt.caster, ag_throw_spell_w_cast_anim_2ndary))
+    if (!goalData.InitWithInterrupt(pkt.caster, ag_animate))
         return FALSE;
 
     SetGoalDataForSpellPacket(pkt, goalData, true, true);
+
+		// adjust combined numbering to normal anim type numbering
+		goalData.animIdPrevious.number -= 64;
 
     return goalData.Push(nullptr);
 }
