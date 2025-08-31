@@ -1347,20 +1347,39 @@ int GoalBeginConjuring(AnimSlot &slot) {
 }
 
 int GoalTestSlotFlag4(AnimSlot &slot) {
-	logger->info("GoalTestSlotFlag4 flags = {}", slot.flags);
+	logger->info("GoalTestSlotFlag4 flags = {:x}", slot.flags);
 	if (slot.flags & AnimSlotFlag::ASF_UNK3) return 1;
 	else return 0;
 }
 
 int GoalTestSlotFlag8(AnimSlot &slot) {
-	logger->info("GoalTestSlotFlag8 flags = {}", slot.flags);
+	logger->info("GoalTestSlotFlag8 flags = {:x}", slot.flags);
 	if (slot.flags & AnimSlotFlag::ASF_UNK4) return 1;
 	else return 0;
 }
 
 int GoalSetSlotFlag8(AnimSlot &slot) {
-	logger->info("GoalSetSlotFlag8 flags = {}", slot.flags);
+	logger->info("GoalSetSlotFlag8 flags = {:x}", slot.flags);
 	auto result = !(slot.flags & AnimSlotFlag::ASF_UNK4);
 	slot.flags |= AnimSlotFlag::ASF_UNK4;
+	return result;
+}
+
+int GoalUnsetSlotFlag4(AnimSlot &slot) {
+	slot.flags &= ~AnimSlotFlag::ASF_UNK3;
+	return 1;
+}
+
+int GoalTestAnimatingCasting(AnimSlot &slot) {
+	auto obj = slot.param1.obj;
+	assert(obj);
+	auto aasHandle = objects.GetAnimHandle(obj);
+	assert(aasHandle);
+
+	auto animId = aasHandle->GetAnimId();
+	gfx::EncodedAnimId spellAnimId(animId.GetSpellAnimType());
+	auto result = spellAnimId.IsCastingAnimation() ? TRUE : FALSE;
+	logger->info("GoalTestAnimatingCasting animId = {}", animId);
+	logger->info("GoalTestAnimatingCasting result = {}", result);
 	return result;
 }

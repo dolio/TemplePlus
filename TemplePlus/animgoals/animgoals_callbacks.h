@@ -47,6 +47,7 @@ int GoalAttemptSpell(AnimSlot &slot); // Originally @ 0x100102c0
 int GoalCastConjureEnd(AnimSlot &slot); // Originally @ 0x10010410
 int GoalDestroyParam1(AnimSlot &slot); // Originally @ 0x100104a0
 int GoalWasInterrupted(AnimSlot &slot); // Originally @ 0x10010500
+int GoalTestAnimatingCasting(AnimSlot &slot);
 int GoalIsAnimatingConjuration(AnimSlot &slot); // Originally @ 0x10010520
 int GoalStartConjurationAnim(AnimSlot &slot); // Originally @ 0x100105f0
 int GoalAreOnSameTile(AnimSlot &slot); // Originally @ 0x10010760
@@ -156,3 +157,4 @@ int GoalTestSlotFlag4(AnimSlot &slot);
 int GoalTestSlotFlag8(AnimSlot &slot);
 int GoalSetSlotFlag8(AnimSlot &slot);
 int GoalTestSlotFlag10(AnimSlot &slot);
+int GoalUnsetSlotFlag4(AnimSlot &slot);
