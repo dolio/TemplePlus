@@ -1258,6 +1258,8 @@ gfx::EncodedAnimId LegacyCritterSystem::GetWeaponAnim(objHndl wielder, objHndl w
 		sAnimId = gfx::WeaponAnimType::Monk;
 	}
 
+	pAnimId = gfx::WeaponAnimType::Shield;
+	sAnimId = gfx::WeaponAnimType::Shield;
 	return gfx::EncodedAnimId(animId, pAnimId, sAnimId);
 }
 
