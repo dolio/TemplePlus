@@ -1315,8 +1315,10 @@ ActionErrorCode D20ActionCallbacks::PerformStandardAttack(D20Actn* d20a)
 	}
 	else if (d20a->data1 >= ATTACK_CODE_NATURAL_ATTACK + 1)
 	{
-		useSecondaryAnim = rngSys.GetInt(0, 1);
-		hitAnimIdx = (d20a->data1 - (ATTACK_CODE_NATURAL_ATTACK + 1)) % 3;
+		auto atkNo = d20a->data1 - (ATTACK_CODE_NATURAL_ATTACK + 1);
+		logger->info("atkNo = {}", atkNo);
+		useSecondaryAnim = (atkNo / 3) % 2;
+		hitAnimIdx = atkNo % 3;
 	}
 
 	if (d20Sys.d20Query(d20a->d20APerformer, DK_QUE_Left_Is_Primary))
