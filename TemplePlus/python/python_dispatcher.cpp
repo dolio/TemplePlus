@@ -1151,8 +1151,8 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 		;
 
 	py::class_<DispIoReflexThrow, DispIO>(m, "EventObjReflexSaveThrow", "Used for Reflex Save throws that reduce damage")
-		.def_readwrite("attack_type", &DispIoReflexThrow::attackType)
-		.def_readwrite("effective_reduction", &DispIoReflexThrow::effectiveReduction)
+		.def_readwrite("attack_type", &DispIoReflexThrow::attackType, "D20DT_")
+		.def_readwrite("effective_reduction", &DispIoReflexThrow::effectiveReduction, "percentage of full damage actually applied")
 		.def_readwrite("reduction", &DispIoReflexThrow::reduction, "0,1,2 for None,Half,Quarter respectively")
 		.def_readwrite("damage_mesline", &DispIoReflexThrow::damageMesLine, "Line no. from damage.mes to be used")
 		.def_readwrite("attack_power", &DispIoReflexThrow::attackPower, "D20DAP_")

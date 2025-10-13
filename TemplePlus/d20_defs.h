@@ -123,9 +123,10 @@ enum D20SavingThrow : uint32_t {
 };
 
 enum D20SavingThrowReduction : uint32_t {
-	D20_Save_Reduction_None = 0,
-	D20_Save_Reduction_Half = 1,
-	D20_Save_Reduction_Quarter = 2
+	D20_Save_Reduction_None = 0,    // no damage
+	D20_Save_Reduction_Half = 1,    // half damage
+	D20_Save_Reduction_Quarter = 2, // quarter damage
+	D20_Save_Reduction_Full = 3     // full damage
 };
 
 /*
@@ -223,7 +224,7 @@ enum D20STD_F : uint32_t {
 	D20STD_F_FINAL_ROLL = 35  //New (This flag does currently get set)
 };
 
-enum D20SavingThrowFlag : uint32_t {
+enum D20SavingThrowFlag : uint64_t {
 	D20STF_MAX = 0,
 	D20STF_NONE = 0,
 	D20STF_REROLL = 0x1, 
@@ -258,8 +259,8 @@ enum D20SavingThrowFlag : uint32_t {
 	D20STF_SPELL_DESCRIPTOR_TELEPORTATION = 0x20000000,
 	D20STF_SPELL_DESCRIPTOR_AIR = 0x40000000,
 	D20STF_SPELL_DESCRIPTOR_EARTH = 0x80000000,
-	D20STF_SPELL_DESCRIPTOR_WATER = 33, // <- This one might not even work anymore...
-	D20STF_DISABLE_SLIPPERY_MIND = 34
+	D20STF_SPELL_DESCRIPTOR_WATER = 0x100000000,
+	D20STF_DISABLE_SLIPPERY_MIND = 0x200000000
 };
 
 enum D20CAF : uint32_t

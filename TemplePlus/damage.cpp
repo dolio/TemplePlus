@@ -874,7 +874,7 @@ void Damage::HealSubdual(objHndl target, int amount) {
 	addresses.HealSubdual(target, amount);
 }
 
-bool Damage::SavingThrow(objHndl handle, objHndl attacker, int dc, SavingThrowType saveType, int flags) {
+bool Damage::SavingThrow(objHndl handle, objHndl attacker, int dc, SavingThrowType saveType, uint64_t flags) {
 	auto obj = objSystem->GetObject(handle);
 	if (!obj) {
 		return false;
@@ -884,7 +884,7 @@ bool Damage::SavingThrow(objHndl handle, objHndl attacker, int dc, SavingThrowTy
 
 	DispIoSavingThrow evtObj;
 	evtObj.obj = attacker;
-	evtObj.flags = (int64_t)flags; // TODO: vanilla bug! flags input should be 64 bit (since some of the descriptor enums go beyond 32). Looks like they fixed it in the dispatcher but not this function.
+	evtObj.flags = flags;
 	evtObj.flags |= (1ull << (D20STD_F_FINAL_ROLL-1));
 	
 	// NPC special bonus from protos - moved to Global condition callback (was here in vanilla, so didn't show up on charsheet)
@@ -932,7 +932,7 @@ bool Damage::SavingThrow(objHndl handle, objHndl attacker, int dc, SavingThrowTy
 	return saveThrowMod + diceResult >= dc;
 }
 
-bool Damage::SavingThrowSpell(objHndl obj, objHndl attacker, int dc, SavingThrowType type, int flags, int spellId) {
+bool Damage::SavingThrowSpell(objHndl obj, objHndl attacker, int dc, SavingThrowType type, uint64_t flags, int spellId) {
 
 	auto result = false;
 	SpellPacketBody spPkt(spellId);
@@ -996,19 +996,61 @@ bool Damage::SavingThrowSpell(objHndl obj, objHndl attacker, int dc, SavingThrow
 	}
 	spPkt.UpdatePySpell();
 	return result;
-	// return addresses.SavingThrowSpell(obj, attacker, dc, type, flags, spellId);
 }
 
-bool Damage::ReflexSaveAndDamage(objHndl obj, objHndl attacker, int dc, int reduction, int flags, const Dice& dice, DamageType damageType, int attackPower, D20ActionType actionType, int spellId) {
+bool Damage::ReflexSaveAndDamage(objHndl tgt, objHndl attacker, int dc, int reduction, uint64_t flags, const Dice& dice, DamageType damageType, D20AttackPower attackPower, D20ActionType actionType, int spellId) {
 	SpellPacketBody spPkt(spellId);
 	BonusList bonlist;
 
 	// Gets a DC bonus based on the target of the spell
-	dispatch.DispatchTargetSpellDCBonus(attacker, obj, &bonlist, &spPkt);
+	dispatch.DispatchTargetSpellDCBonus(attacker, tgt, &bonlist, &spPkt);
 
 	int nDCBonus = bonlist.GetEffectiveBonusSum();
 
-	return addresses.ReflexSaveAndDamage(obj, attacker, dc, reduction, flags, dice.ToPacked(), damageType, attackPower, actionType, spellId);
+	dc += nDCBonus;
+
+	D20CAF caf = D20CAF_NONE;
+
+	DispIoReflexThrow evtObj;
+	evtObj.attackPower = static_cast<D20AttackPower>(attackPower);
+	evtObj.attackType = damageType;
+	evtObj.damageMesLine = 105;
+	evtObj.flags = static_cast<D20SavingThrowFlag>(flags);
+	evtObj.throwResult =
+		SavingThrow(tgt, attacker, dc, SavingThrowType::Reflex, flags);
+
+	if (evtObj.throwResult) {
+		caf = D20CAF_SAVE_SUCCESSFUL;
+		evtObj.SetReductionType(static_cast<D20SavingThrowReduction>(reduction));
+	}
+
+	auto percent = evtObj.Dispatch(tgt);
+
+	if (actionType == D20A_CAST_SPELL) {
+		DealSpellDamage(
+				tgt,
+				attacker,
+				dice,
+				evtObj.attackType,
+				evtObj.attackPower,
+				percent,
+				evtObj.damageMesLine,
+				D20A_CAST_SPELL,
+				spellId,
+				caf);
+	} else {
+		DealDamage(
+				tgt,
+				attacker,
+				dice,
+				evtObj.attackType,
+				evtObj.attackPower,
+				percent,
+				evtObj.damageMesLine,
+				actionType);
+	}
+
+	return evtObj.throwResult;
 }
 
 void Damage::DamagePacketInit(DamagePacket* dmgPkt)

@@ -457,9 +457,23 @@ struct DispIoReflexThrow : DispIO { // DispIoType = 15
 	D20SavingThrowReduction reduction;
 	int damageMesLine;
 	D20AttackPower attackPower;
-	int attackType;
+	DamageType attackType;
 	int throwResult;
 	D20SavingThrowFlag	flags;
+
+	DispIoReflexThrow() {
+		dispIOType = dispIOTypeReflexThrow;
+		effectiveReduction = 100;
+		reduction = D20_Save_Reduction_Full;
+		damageMesLine = 103;
+		attackPower = D20DAP_UNSPECIFIED;
+		attackType = DamageType::Unspecified;
+		throwResult = 0;
+		flags = D20STF_NONE;
+	}
+
+	void SetReductionType(D20SavingThrowReduction reduction);
+	int Dispatch(objHndl tgt);
 };
 
 struct DispIoObjEvent : DispIO // type 17

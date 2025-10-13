@@ -2262,9 +2262,9 @@ static PyObject* PyObjHandle_SavingThrow(PyObject* obj, PyObject* args) {
 	}
 	int dc, d20aType;
 	SavingThrowType type;
-	auto flags = (D20SavingThrowFlag) 0;
+	auto flags = D20STF_NONE;
 	objHndl attacker = objHndl::null;
-	if (!PyArg_ParseTuple(args, "iii|O&i:objhndl:saving_throw", &dc, &type, &flags, &ConvertObjHndl, &attacker, &d20aType)) {
+	if (!PyArg_ParseTuple(args, "iiL|O&i:objhndl:saving_throw", &dc, &type, &flags, &ConvertObjHndl, &attacker, &d20aType)) {
 		return 0;
 	}
 
@@ -2279,11 +2279,11 @@ static PyObject* PyObjHandle_SavingThrowSpell(PyObject* obj, PyObject* args) {
 	}
 	int dc;
 	SavingThrowType type;
-	auto flags = (D20SavingThrowFlag)0;
+	auto flags = D20STF_NONE;
 	objHndl attacker;
 	int spellId;
 	int spellId2; // seems like Python bug really, but I'd hate to break vanilla scripts
-	if (!PyArg_ParseTuple(args, "iiiO&i|i:objhndl:saving_throw_spell", &dc, &type, &flags, &ConvertObjHndl, &attacker, &spellId, &spellId2)) {
+	if (!PyArg_ParseTuple(args, "iiLO&i|i:objhndl:saving_throw_spell", &dc, &type, &flags, &ConvertObjHndl, &attacker, &spellId, &spellId2)) {
 		return 0;
 	}
 
@@ -2297,7 +2297,7 @@ static PyObject* PyObjHandle_ReflexSaveAndDamage(PyObject* obj, PyObject* args) 
 		return 0;
 	}
 	int dc;
-	auto flags = (D20SavingThrowFlag)0;
+	auto flags = D20STF_NONE;
 	objHndl attacker;
 	int reduction;
 	D20ActionType actionType;
@@ -2305,7 +2305,7 @@ static PyObject* PyObjHandle_ReflexSaveAndDamage(PyObject* obj, PyObject* args) 
 	D20AttackPower attackPower;
 	DamageType damageType;
 	int spellId;
-	if (!PyArg_ParseTuple(args, "O&iiiO&ii|ii:objhndl:reflex_save_and_damage", &ConvertObjHndl, &attacker, &dc, &reduction, &flags, &ConvertDice, &damageDice, &damageType, &attackPower, &actionType, &spellId)) {
+	if (!PyArg_ParseTuple(args, "O&iiLO&ii|ii:objhndl:reflex_save_and_damage", &ConvertObjHndl, &attacker, &dc, &reduction, &flags, &ConvertDice, &damageDice, &damageType, &attackPower, &actionType, &spellId)) {
 		return 0;
 	}
 

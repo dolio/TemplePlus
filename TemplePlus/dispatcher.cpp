@@ -1695,6 +1695,35 @@ int DispIOBonusListAndSpellEntry::Dispatch(objHndl handle, enum_disp_type evtTyp
 	return this->bonList->GetEffectiveBonusSum();
 }
 
+void DispIoReflexThrow::SetReductionType(D20SavingThrowReduction reduction)
+{
+	this->reduction = reduction;
+	switch (reduction)
+	{
+	case D20_Save_Reduction_None:
+		this->effectiveReduction = 0;
+		break;
+	case D20_Save_Reduction_Half:
+		this->effectiveReduction = 50;
+		break;
+	case D20_Save_Reduction_Quarter:
+		this->effectiveReduction = 25;
+		break;
+	default:
+		this->effectiveReduction = 100;
+		break;
+	}
+}
+
+int DispIoReflexThrow::Dispatch(objHndl target)
+{
+	auto dispatcher = objSystem->GetObject(target)->GetDispatcher();
+	if (!dispatcher->IsValid()) return 0;
+
+	dispatcher->Process(dispTypeReflexThrow, DK_NONE, this);
+	return effectiveReduction;
+}
+
 DispIoTypeImmunityTrigger::DispIoTypeImmunityTrigger()
 {
 	{
