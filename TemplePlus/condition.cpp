@@ -118,6 +118,8 @@ public:
 	static int __cdecl ReduceExponent(DispatcherCallbackArgs args);
 	static int __cdecl ReduceWeaponDice(DispatcherCallbackArgs args);
 
+	static int __cdecl FireShieldReflex(DispatcherCallbackArgs args);
+
 	static int __cdecl HezrouStenchObjEvent(DispatcherCallbackArgs args);
 	static int __cdecl HezrouStenchCountdown(DispatcherCallbackArgs args);
 	static int __cdecl HezrouStenchTurnbasedStatus(DispatcherCallbackArgs args);
@@ -152,7 +154,7 @@ public:
 
 	static int D20ModsSpellsSpellBonus(DispatcherCallbackArgs args);
 	int (*oldD20ModsSpellsSpellBonus)(DispatcherCallbackArgs) = nullptr;
-	
+
 } spCallbacks;
 
 
@@ -214,6 +216,9 @@ public:
 	static int __cdecl UpdateModelEquipment(DispatcherCallbackArgs args);
 
 	static int __cdecl EncumbranceCapAC(DispatcherCallbackArgs args);
+
+	static int __cdecl EvasionReflex(DispatcherCallbackArgs args);
+	static int __cdecl ImprovedEvasionReflex(DispatcherCallbackArgs args);
 } genericCallbacks;
 
 
@@ -522,6 +527,8 @@ public:
 		// Reduce Person/Animal weapon dice; use new scheme
 		replaceFunction<int(DispatcherCallbackArgs)>(0x100C9810, spCallbacks.ReduceWeaponDice);
 
+		replaceFunction(0x100C7B70, spCallbacks.FireShieldReflex);
+
 		// Enlarge/Reduce size category replacements to avoid stacking
 		replaceFunction<int(DispatcherCallbackArgs)>(0x100C6140, spCallbacks.EnlargeSizeCategory);
 		replaceFunction<int(DispatcherCallbackArgs)>(0x100C97F0, spCallbacks.ReduceSizeCategory);
@@ -627,6 +634,9 @@ public:
 		replaceFunction(0x100FCF50, ManyShotAttack);
 		replaceFunction(0x100FCEB0, ManyShotMenu);
 		replaceFunction(0x100FD030, ManyShotDamage);
+
+		replaceFunction(0x100FA3C0, GenericCallbacks::EvasionReflex);
+		replaceFunction(0x100FA470, GenericCallbacks::ImprovedEvasionReflex);
 
 		// Turn Undead extension
 		redirectCall(0x1004AF5F, TurnUndeadHook);
@@ -1842,6 +1852,82 @@ int GenericCallbacks::EncumbranceCapAC(DispatcherCallbackArgs args)
 		// 8 is dodge bonus
 		dispIo->bonlist.AddCap(8, cap, descline);
 	}
+
+	return 0;
+}
+
+// Tests if a creature's evasion is not disabled by various circumstances.
+bool CritterCanEvade(objHndl critter)
+{
+	if (!critter) return true;
+
+	auto armor = inventory.ItemWornAt(critter, EquipSlot::Armor);
+	if (armor) {
+		auto flags = objects.getInt32(armor, obj_f_armor_flags);
+		switch (inventory.GetArmorType(flags))
+		{
+		case ARMOR_TYPE_MEDIUM: 
+		case ARMOR_TYPE_HEAVY: 
+			// medium/heavy armor prevents evasion
+			return false;
+		default:
+			break;
+		}
+	}
+
+	if (d20Sys.d20Query(critter, DK_QUE_Critter_Is_Encumbered_Medium))
+		return false;
+	if (d20Sys.d20Query(critter, DK_QUE_Critter_Is_Encumbered_Heavy))
+		return false;
+	if (d20Sys.d20Query(critter, DK_QUE_Critter_Is_Encumbered_Overburdened))
+		return false;
+
+	return !d20Sys.d20Query(critter, DK_QUE_Helpless);
+}
+
+// Port of 0x100FA3C0 with added checks for disabled evasion.
+//
+// Note: animal companion hook delegates to this, so the replacement fixes it
+// as well.
+int GenericCallbacks::EvasionReflex(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType15(args.dispIO);
+	if (!dispIo) return 0;
+
+	auto critter = args.objHndCaller;
+
+	if (dispIo->throwResult != 1) return 0;
+	if (!CritterCanEvade(critter)) return 0;
+
+	dispIo->throwResult = 2; // mark as processed?
+	dispIo->effectiveReduction = 0;
+	dispIo->damageMesLine = 107;
+
+	return 0;
+}
+
+// Port of 0x100FA470 with added checks for disabled evasion.
+int GenericCallbacks::ImprovedEvasionReflex(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType15(args.dispIO);
+	if (!dispIo) return 0;
+
+	auto critter = args.objHndCaller;
+
+	// This seems to assume that Evasion handles the successful case. So you
+	// need to add both conditions to have the full effects of Improved
+	// Evasion.
+	if (dispIo->throwResult != 0) return 0;
+
+	if (!CritterCanEvade(critter)) return 0;
+
+	dispIo->throwResult = -1; // mark as processed?
+	dispIo->damageMesLine = 108;
+
+	// Factored out the actual percentage setting. This also fixes the Quarter
+	// case being erroneous in the DLL, although that shouldn't actually ever
+	// occur here.
+	dispIo->ApplyReductionType();
 
 	return 0;
 }
@@ -5160,6 +5246,34 @@ int SpellCallbacks::ReduceSizeCategory(DispatcherCallbackArgs args)
 	if (dispIo->return_val > 1 && !alreadyDecreased) {
 		dispIo->return_val--;
 		dispIo->data2 = 1;
+	}
+
+	return 0;
+}
+
+// Port of 0x100C7B70 to ensure compatiblity with DispIoReflexThrow.
+int SpellCallbacks::FireShieldReflex(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType15(args.dispIO);
+	if (!dispIo) return 0;
+
+	auto damType = DamageType::Unspecified;
+	switch (args.GetCondArg(2))
+	{
+	case 3:
+		damType = DamageType::Fire;
+		break;
+	case 9:
+		damType = DamageType::Cold;
+		break;
+	default:
+		return 0;
+	}
+
+	if (dispIo->attackType == damType && dispIo->throwResult == 1) {
+		dispIo->throwResult = 4;
+		dispIo->effectiveReduction = 0;
+		dispIo->damageMesLine = 109;
 	}
 
 	return 0;

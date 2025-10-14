@@ -125,8 +125,7 @@ enum D20SavingThrow : uint32_t {
 enum D20SavingThrowReduction : uint32_t {
 	D20_Save_Reduction_None = 0,    // no damage
 	D20_Save_Reduction_Half = 1,    // half damage
-	D20_Save_Reduction_Quarter = 2, // quarter damage
-	D20_Save_Reduction_Full = 3     // full damage
+	D20_Save_Reduction_Quarter = 2  // quarter damage
 };
 
 /*

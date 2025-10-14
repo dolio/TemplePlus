@@ -1013,6 +1013,7 @@ bool Damage::ReflexSaveAndDamage(objHndl tgt, objHndl attacker, int dc, int redu
 
 	DispIoReflexThrow evtObj;
 	evtObj.attackPower = static_cast<D20AttackPower>(attackPower);
+	evtObj.reduction = static_cast<D20SavingThrowReduction>(reduction);
 	evtObj.attackType = damageType;
 	evtObj.damageMesLine = 105;
 	evtObj.flags = static_cast<D20SavingThrowFlag>(flags);
@@ -1021,9 +1022,10 @@ bool Damage::ReflexSaveAndDamage(objHndl tgt, objHndl attacker, int dc, int redu
 
 	if (evtObj.throwResult) {
 		caf = D20CAF_SAVE_SUCCESSFUL;
-		evtObj.SetReductionType(static_cast<D20SavingThrowReduction>(reduction));
+		evtObj.ApplyReductionType();
 	}
 
+	// Get final percent by dispatching; applies e.g. evasion.
 	auto percent = evtObj.Dispatch(tgt);
 
 	if (actionType == D20A_CAST_SPELL) {

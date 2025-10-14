@@ -23,6 +23,7 @@ struct DispIoDispelCheck; // 11
 struct DispIoD20ActionTurnBased; // 12
 struct DispIoMoveSpeed; //13
 struct DispIOBonusListAndSpellEntry; // 14
+struct DispIoReflexThrow; // 15
 struct DispIoObjEvent; // 17
 struct DispIoSpellsPerDay; // 18
 struct DispIoAbilityLoss; // 19
@@ -102,6 +103,7 @@ struct DispatcherSystem : temple::AddressTable
 	DispIoD20ActionTurnBased* DispIoCheckIoType12(DispIO* dispIo);
 	DispIoMoveSpeed * DispIoCheckIoType13(DispIoMoveSpeed* dispIo);
 	DispIoMoveSpeed * DispIoCheckIoType13(DispIO* dispIo);
+	DispIoReflexThrow *DispIoCheckIoType15(DispIO *dispIo);
 	static DispIoObjEvent* DispIoCheckIoType17(DispIO* dispIo);
 	DispIoAttackDice* DispIoCheckIoType20(DispIO* dispIo);
 	DispIoImmunity* DispIoCheckIoType23(DispIoImmunity* dispIo);
@@ -464,7 +466,7 @@ struct DispIoReflexThrow : DispIO { // DispIoType = 15
 	DispIoReflexThrow() {
 		dispIOType = dispIOTypeReflexThrow;
 		effectiveReduction = 100;
-		reduction = D20_Save_Reduction_Full;
+		reduction = D20_Save_Reduction_None;
 		damageMesLine = 103;
 		attackPower = D20DAP_UNSPECIFIED;
 		attackType = DamageType::Unspecified;
@@ -472,7 +474,7 @@ struct DispIoReflexThrow : DispIO { // DispIoType = 15
 		flags = D20STF_NONE;
 	}
 
-	void SetReductionType(D20SavingThrowReduction reduction);
+	void ApplyReductionType();
 	int Dispatch(objHndl tgt);
 };
 

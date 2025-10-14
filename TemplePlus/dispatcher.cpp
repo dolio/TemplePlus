@@ -555,6 +555,14 @@ void DispatcherSystem::Dispatch68ItemRemove(objHndl handle){
 	}
 }
 
+DispIoReflexThrow *DispatcherSystem::DispIoCheckIoType15(DispIO *dispIo)
+{
+	if (dispIo->dispIOType != dispIOTypeReflexThrow)
+		return nullptr;
+
+	return static_cast<DispIoReflexThrow *>(dispIo);
+}
+
 DispIoObjEvent* DispatcherSystem::DispIoCheckIoType17(DispIO* dispIo)
 {
 	if (dispIo->dispIOType != dispIoTypeObjEvent)
@@ -1695,22 +1703,22 @@ int DispIOBonusListAndSpellEntry::Dispatch(objHndl handle, enum_disp_type evtTyp
 	return this->bonList->GetEffectiveBonusSum();
 }
 
-void DispIoReflexThrow::SetReductionType(D20SavingThrowReduction reduction)
+// Sets the reduction percentage corresponding to the stored reduction type.
+void DispIoReflexThrow::ApplyReductionType()
 {
-	this->reduction = reduction;
 	switch (reduction)
 	{
 	case D20_Save_Reduction_None:
-		this->effectiveReduction = 0;
+		effectiveReduction = 0;
 		break;
 	case D20_Save_Reduction_Half:
-		this->effectiveReduction = 50;
+		effectiveReduction = 50;
 		break;
 	case D20_Save_Reduction_Quarter:
-		this->effectiveReduction = 25;
+		effectiveReduction = 25;
 		break;
 	default:
-		this->effectiveReduction = 100;
+		effectiveReduction = 100;
 		break;
 	}
 }
