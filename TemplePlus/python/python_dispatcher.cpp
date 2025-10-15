@@ -1151,12 +1151,20 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 		;
 
 	py::class_<DispIoReflexThrow, DispIO>(m, "EventObjReflexSaveThrow", "Used for Reflex Save throws that reduce damage")
-		.def_readwrite("attack_type", &DispIoReflexThrow::attackType, "D20DT_")
+		.def(py::init())
+		.def_readwrite("attack_type", &DispIoReflexThrow::attackType, "D20DT_ flags")
 		.def_readwrite("effective_reduction", &DispIoReflexThrow::effectiveReduction, "percentage of full damage actually applied")
 		.def_readwrite("reduction", &DispIoReflexThrow::reduction, "0,1,2 for None,Half,Quarter respectively")
 		.def_readwrite("damage_mesline", &DispIoReflexThrow::damageMesLine, "Line no. from damage.mes to be used")
 		.def_readwrite("attack_power", &DispIoReflexThrow::attackPower, "D20DAP_")
-		.def_readwrite("flags", &DispIoReflexThrow::flags, "D20STD_ flags")
+		.def_property("flags",
+				[](DispIoReflexThrow dispIo) {
+					return static_cast<uint64_t>(dispIo.flags);
+				},
+				[](DispIoReflexThrow dispIo, uint64_t fs) {
+					dispIo.flags = static_cast<D20SavingThrowFlag>(fs);
+				},
+				"D20STD_ flags")
 		;
 
 	py::class_<DispIoObjEvent, DispIO>(m, "EventObjObjectEvent", "Used for Object Events (triggered by entering/leaveing AoE)")
