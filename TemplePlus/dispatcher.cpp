@@ -353,7 +353,7 @@ int DispatcherSystem::DispatchSavingThrow(objHndl handle, DispIoSavingThrow * ev
 	auto obj = objSystem->GetObject(handle);
 	if (!obj || !obj->IsCritter())
 		return 0;
-	
+
 	auto dispatcher = obj->GetDispatcher();
 	if (!dispatcherValid(dispatcher))
 		return 0;
@@ -370,6 +370,16 @@ int DispatcherSystem::DispatchSavingThrow(objHndl handle, DispIoSavingThrow * ev
 
 int DispatcherSystem::Dispatch13SavingThrow(objHndl handle, SavingThrowType saveType, DispIoSavingThrow * evtObj)
 {
+	if (objects.IsEquipment(handle)) {
+		auto parent = inventory.GetParent(handle);
+		if (!parent) return 0; // TODO: magic item saves
+
+		DispIoSavingThrow copy = *evtObj;
+		auto psave = Dispatch13SavingThrow(parent, saveType, &copy);
+		evtObj->bonlist.AddBonus(psave, 0, "Attended Object"s);
+		return evtObj->bonlist.GetEffectiveBonusSum();
+	}
+
 	return DispatchSavingThrow(handle, evtObj, dispTypeSaveThrowLevel, (D20DispatcherKey)((int)saveType + D20DispatcherKey::DK_SAVE_FORTITUDE) );
 }
 
