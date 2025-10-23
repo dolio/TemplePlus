@@ -927,6 +927,28 @@ void LegacyD20System::D20SignalPython(objHndl objHnd, const std::string& queryKe
 	dispatcher->Process(enum_disp_type::dispTypePythonSignal, static_cast<D20DispatcherKey>(ElfHash::Hash(queryKey)), &dispIo);
 }
 
+void LegacyD20System::D20SignalPython(objHndl recv, int queryKey, objHndl arg)
+{
+	if (!recv) {
+		auto msg =
+			"D20SignalPython called with null handle! Key was {}, arg was {}";
+		logger->warn(msg, queryKey, arg);
+		return;
+	}
+
+	Dispatcher* dispatcher = objects.GetDispatcher(recv);
+	if (!dispatch.dispatcherValid(dispatcher)) return;
+
+	DispIoD20Query dispIo;
+	dispIo.dispIOType = dispIoTypeSendSignal;
+	dispIo.return_val = 0;
+	*reinterpret_cast<objHndl *>(&dispIo.data1) = arg;
+
+	auto signal = enum_disp_type::dispTypePythonSignal;
+	auto key = static_cast<D20DispatcherKey>(queryKey);
+	dispatcher->Process(signal, key, &dispIo);
+}
+
 #pragma endregion
 
 void LegacyD20System::D20ActnInit(objHndl objHnd, D20Actn* d20a)

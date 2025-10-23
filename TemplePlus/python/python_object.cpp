@@ -4216,7 +4216,7 @@ static PyObject* PyObjHandle_D20SendSignal(PyObject* obj, PyObject* args) {
 		}
 
 		if (isPythonSig)
-			logger->error("Unimplemented D20SignalPython with handle arg");
+			d20Sys.D20SignalPython(self->handle, dispKey, hndl);
 		else
 			d20Sys.d20SendSignal(self->handle, dispKey, hndl);
 	}
