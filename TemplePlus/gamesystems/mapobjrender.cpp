@@ -907,6 +907,17 @@ bool MapObjectRenderer::IsObjectOnScreen(LocAndOffsets &location, float offsetZ,
 
 }
 
+// A square-ish function without wobble. Flattens the peaks of a sine wave.
+float squaref(float rot, uint32_t order)
+{
+	static const float HALF_PI = XM_2PI/4;
+	float total = cosf(rot);
+	for (uint32_t i = 0; i < order; i++) {
+		total = sinf(HALF_PI * total);
+	}
+	return total;
+}
+
 void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 										   const gfx::AnimatedModelParams &animParams,
 										   gfx::AnimatedModel &model,
@@ -921,6 +932,8 @@ void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 	// The rotation of the mirror images is animated
 	static uint32_t lastRenderTime = -1;
 	static float rotation = 0;
+	static const float incr = XM_2PI/12; // pi/2
+
 	if (lastRenderTime != -1)
 	{
 		float elapsedSecs = (timeGetTime() - lastRenderTime) / 1000.0f;
@@ -935,21 +948,16 @@ void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 	lastRenderTime = timeGetTime();
 
 	// The images should partially overlap the actual model
-	auto radius = objects.GetRadius(obj) * 0.75f;
+	auto radius = objects.GetRadius(obj)*0.75;
 
 	for (size_t i = 0; i < mirrorImages; ++i) {
-		// Draw one half on the left and the other on the right, 
-	    // if there are an uneven number, the excess image is drawn on the left
-		int pos = i + 1;
-		if (pos > (int) mirrorImages / 2) {
-			pos = pos - mirrorImages - 1;
-		}
-
+		auto roff = incr*i;
 		// Generate a world matrix that applies the translation
 		MdfRenderOverrides overrides;
 		overrides.useWorldMatrix = true;
-		auto xTrans = cosf(rotation) * pos * radius;
-		auto yTrans = sinf(rotation) * pos * radius;
+		float radm = radius * squaref(rotation*(2 + (2*i)%3) + roff/4, 5);
+		auto xTrans = cosf(roff) * radm;
+		auto yTrans = sinf(roff) * radm;
 		XMStoreFloat4x4(&overrides.worldMatrix, XMMatrixTranslation(xTrans, 0, yTrans));
 		overrides.alpha = 0.31f;
 
