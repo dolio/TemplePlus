@@ -918,6 +918,16 @@ float squaref(float rot, uint32_t order)
 	return total;
 }
 
+float humpsf(float rot, float exp, uint32_t order)
+{
+	static const float HALF_PI = XM_2PI/4;
+	float total = std::powf(sinf(rot), exp);
+	for (uint32_t i = 0; i < order; i++) {
+		total = sinf(HALF_PI * total);
+	}
+	return total;
+}
+
 void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 										   const gfx::AnimatedModelParams &animParams,
 										   gfx::AnimatedModel &model,
@@ -932,7 +942,7 @@ void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 	// The rotation of the mirror images is animated
 	static uint32_t lastRenderTime = -1;
 	static float rotation = 0;
-	static const float incr = XM_2PI/12; // pi/2
+	static const float incr = XM_2PI/5;
 
 	if (lastRenderTime != -1)
 	{
@@ -948,14 +958,21 @@ void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 	lastRenderTime = timeGetTime();
 
 	// The images should partially overlap the actual model
-	auto radius = objects.GetRadius(obj)*0.75;
+	auto radius = objects.GetRadius(obj)*0.8;
 
 	for (size_t i = 0; i < mirrorImages; ++i) {
-		auto roff = incr*i;
 		// Generate a world matrix that applies the translation
 		MdfRenderOverrides overrides;
 		overrides.useWorldMatrix = true;
+		/*
+		auto roff = incr*i;
 		float radm = radius * squaref(rotation*(2 + (2*i)%3) + roff/4, 5);
+		auto xTrans = cosf(roff) * radm;
+		auto yTrans = sinf(roff) * radm;
+		*/
+		float exoff = i >= 5 ? 0.5 : 0;
+		float roff = incr*(i + exoff + humpsf(2*rotation + incr/4*i, 11, 4)/2);
+		float radm = radius * squaref(3*rotation + incr/4*i, 3);
 		auto xTrans = cosf(roff) * radm;
 		auto yTrans = sinf(roff) * radm;
 		XMStoreFloat4x4(&overrides.worldMatrix, XMMatrixTranslation(xTrans, 0, yTrans));
