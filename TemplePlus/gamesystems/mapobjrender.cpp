@@ -928,6 +928,39 @@ float humpsf(float rot, float exp, uint32_t order)
 	return total;
 }
 
+// Calculates a mirror image position
+void ImagePosition(float rot, float rad, size_t ix, float & x, float & y)
+{
+	// arc length for 6 equally spaced positions per shell
+	static const float arc = XM_2PI/6;
+
+	// relative offset from indexed position
+	float reloff = 0.0;
+	// if in the second shell, bump rotation by 0.5 to fit into gaps
+	if (ix >= 6) reloff += 0.5;
+	if (ix >= 12) reloff += 0.5;
+
+	// radius of the ix-th image
+	float radix = rad * 0.7;
+	// adjust for outer shell
+	if (ix >= 6) radix *= ix >= 12 ? 2 : 1.7;
+
+	// if animating, bump the rotation by a step-ish function, and adjust
+	// the radius by a square-ish function. Adjustments are out of phase to
+	// increase random appearance.
+	if (true) {
+		float phadj = (3*ix%7)*arc/4;
+		reloff += humpsf(2*rot + phadj, 11, 4)/2;
+		radix *= squaref(3*rot + phadj, 3);
+	}
+
+	// actual rotation of the ix-th image
+	float roff = arc * (ix%6 + reloff);
+
+	x = cosf(roff) * radix;
+	y = sinf(roff) * radix;
+}
+
 void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 										   const gfx::AnimatedModelParams &animParams,
 										   gfx::AnimatedModel &model,
@@ -958,23 +991,16 @@ void MapObjectRenderer::RenderMirrorImages(objHndl obj,
 	lastRenderTime = timeGetTime();
 
 	// The images should partially overlap the actual model
-	auto radius = objects.GetRadius(obj)*0.8;
+	auto radius = objects.GetRadius(obj);
 
 	for (size_t i = 0; i < mirrorImages; ++i) {
 		// Generate a world matrix that applies the translation
 		MdfRenderOverrides overrides;
 		overrides.useWorldMatrix = true;
-		/*
-		auto roff = incr*i;
-		float radm = radius * squaref(rotation*(2 + (2*i)%3) + roff/4, 5);
-		auto xTrans = cosf(roff) * radm;
-		auto yTrans = sinf(roff) * radm;
-		*/
-		float exoff = i >= 5 ? 0.5 : 0;
-		float roff = incr*(i + exoff + humpsf(2*rotation + incr/4*i, 11, 4)/2);
-		float radm = radius * squaref(3*rotation + incr/4*i, 3);
-		auto xTrans = cosf(roff) * radm;
-		auto yTrans = sinf(roff) * radm;
+
+		float xTrans = 0.0;
+		float yTrans = 0.0;
+		ImagePosition(rotation, radius, i, xTrans, yTrans);
 		XMStoreFloat4x4(&overrides.worldMatrix, XMMatrixTranslation(xTrans, 0, yTrans));
 		overrides.alpha = 0.31f;
 
