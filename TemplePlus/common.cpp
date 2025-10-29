@@ -458,8 +458,9 @@ bool AttackPacket::IsOffhandAttack()
 	return false;
 }
 
-AttackPacket::AttackPacket(): field_1C(0) {
+AttackPacket::AttackPacket() {
 	flags = D20CAF_NONE;
+	flags2 = D20CAF2_NONE;
 	victim = 0i64;
 	attacker = 0i64;
 	weaponUsed = 0i64;

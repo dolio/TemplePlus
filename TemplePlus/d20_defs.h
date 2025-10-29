@@ -300,6 +300,13 @@ enum D20CAF : uint32_t
 	D20CAF_UNNECESSARY =       0x80000000  // affects pathfinding time allotment
 };
 
+// Additional attack flags. New in T+.
+enum D20CAF2 : uint32_t
+{
+	D20CAF2_NONE = 0,
+	D20CAF2_HIT_MIRROR_IMAGE = 0x1
+};
+
 static const char *d20ActionNames[] = {
 	"D20A_UNSPECIFIED_MOVE",
 	"D20A_UNSPECIFIED_ATTACK",

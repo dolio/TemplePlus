@@ -538,6 +538,12 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 		.def_readwrite("target", &AttackPacket::victim)
 		.def("get_flags", [](AttackPacket& pkt)->int {	return (int)pkt.flags;	}, "D20CAF flags")
 		.def("set_flags", [](AttackPacket& pkt, int flagsNew) {	pkt.flags = (D20CAF)flagsNew;	}, "sets attack packet D20CAF flags to value specified")
+		.def("get_flags2", [](AttackPacket &pkt) {
+				return static_cast<uint32_t>(pkt.flags2);
+				}, "D20CAF2 flags")
+		.def("set_flags2", [](AttackPacket &pkt, uint32_t flagsNew) {
+				pkt.flags2 = static_cast<D20CAF2>(flagsNew);
+				}, "sets D20CAF2 flags to specified value")
 		.def_readwrite("action_type", &AttackPacket::d20ActnType)
 		.def_readwrite("event_key", &AttackPacket::dispKey)
 		.def_readwrite("ammo_item", &AttackPacket::ammoItem)
@@ -658,6 +664,7 @@ PYBIND11_EMBEDDED_MODULE(tpdp, m) {
 		.def_readwrite("spell_id", &D20Actn::spellId)
 		.def_readwrite("data1", &D20Actn::data1 , "Generic piece of data used for various things depending on context.")
 		.def_readwrite("flags", &D20Actn::d20Caf, "D20CAF_ flags")
+		.def_readwrite("flags2", &D20Actn::d20Caf2, "D20CAF2_ flags")
 		.def_readwrite("path", &D20Actn::path)
 		.def_readwrite("action_type", &D20Actn::d20ActType, "See D20A_ constants")
 		.def_readwrite("loc", &D20Actn::destLoc, "Location")

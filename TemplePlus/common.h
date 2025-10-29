@@ -198,7 +198,7 @@ struct AttackPacket{
 	D20ActionType d20ActnType;
 	int dispKey;
 	D20CAF flags;
-	int field_1C;
+	D20CAF2 flags2; // previously just alignment
 	objHndl weaponUsed;
 	objHndl ammoItem;
 	

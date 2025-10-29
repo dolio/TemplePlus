@@ -180,7 +180,7 @@ struct D20Actn{
 	D20ActionType d20ActType;
 	int data1; // generic piece of data
 	int d20Caf; // Based on D20_CAF flags
-	uint32_t field_C; // unknown use
+	uint32_t d20Caf2; // repurposed to D20CAF2, was alignment
 	objHndl d20APerformer;
 	objHndl d20ATarget;
 	LocAndOffsets destLoc; // action located (usually movement destination)
@@ -202,6 +202,7 @@ struct D20Actn{
 		d20APerformer = 0;
 		d20ATarget = 0;
 		d20Caf = 0;
+		d20Caf2 = 0;
 		distTraversed = 0;
 		path = 0;
 		spellId = 0;

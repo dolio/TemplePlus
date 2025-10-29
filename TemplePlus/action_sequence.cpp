@@ -365,10 +365,6 @@ void ActionSequenceSystem::ActSeqGetPicker(){
 
 	auto d20adflags = d20Sys.GetActionFlags(d20Sys.globD20Action->d20ActType);
 	
-	if (d20Sys.globD20Action->field_C) {
-		int asd = 1;
-	}
-
 	if (tgtClassif == D20TargetClassification::D20TC_ItemInteraction)
 	{
 		if (d20adflags & D20ADF_UseCursorForPicking)
@@ -838,9 +834,6 @@ int ActionSequenceSystem::ActionAddToSeq()
 	TurnBasedStatus tbStatus = curSeq->tbStatus;
 
 
-	if (d20Sys.globD20Action->field_C) {
-		int asd = 1;
-	}
 	if (d20ActnType != D20A_UNSPECIFIED_MOVE)
 	{
 		int asd = 1;
@@ -2633,10 +2626,6 @@ uint32_t ActionSequenceSystem::curSeqNext()
 			}
 		}
 
-		if (d20a->field_C) { // for testing!
-			int asd = 1;
-		}
-
 	}
 
 	if (SequencePop()){
@@ -2936,10 +2925,6 @@ void ActionSequenceSystem::ActionPerform()
 				logger->debug("\t\t\t Callback Done. Result: {}", performResult);
 
 				InterruptNonCounterspell(d20a);
-			}
-
-			if (d20a->field_C){
-				int asd = 1;
 			}
 
 			return;
