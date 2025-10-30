@@ -2325,7 +2325,25 @@ BOOL D20ActionCallbacks::ActionFrameSpell(D20Actn * d20a) {
 	
 }
 
+// This was originally in the to hit processing logic. However, putting it
+// there results in the mirror image shattering as soon as the attack starts.
+// Instead, this factors out the messaging so that it can be called in
+// appropriate places for each action, so that it actually looks like hits
+// cause the image to break.
+void CheckMirrorImage(D20Actn *d20a) {
+	if (d20a->d20Caf2 & D20CAF2_HIT_MIRROR_IMAGE == 0) return;
+
+	auto tgt = d20a->d20ATarget;
+	auto spellId =
+		d20Sys.d20QueryReturnData(tgt, DK_QUE_Critter_Has_Mirror_Image, 0u, 0u);
+
+	d20Sys.d20SendSignal(tgt, DK_SIG_Spell_Mirror_Image_Struck, spellId, 0);
+	floatSys.FloatCombatLine(tgt, 109);
+	histSys.CreateRollHistoryLineFromMesfile(10, d20a->d20APerformer, tgt);
+}
+
 BOOL D20ActionCallbacks::ActionFrameStandardAttack(D20Actn* d20a){
+	CheckMirrorImage(d20a);
 
 	if (d20Sys.d20Query(d20a->d20APerformer, DK_QUE_Prone))	{
 		//histSys.CreateFromFreeText(fmt::format("{} aborted attack (prone).", description.getDisplayName(d20a->d20APerformer)).c_str());
@@ -3267,6 +3285,8 @@ BOOL D20ActionCallbacks::ActionFrameTripAttack(D20Actn* d20a){
 
 BOOL D20ActionCallbacks::ProjectileHitStandard(D20Actn *d20a, objHndl projectile, objHndl thrown)
 {
+	CheckMirrorImage(d20a);
+
 	return addresses.ProjectileFunc_RangedAttack(d20a, projectile, thrown);
 }
 

@@ -2481,7 +2481,10 @@ static PyObject* PyObjHandle_PerformTouchAttack(PyObject* obj, PyObject* args) {
 	} else {
 		return PyInt_FromLong(0);
 	}*/
-	return PyInt_FromLong(action.d20Caf);
+	uint64_t result = action.d20Caf;
+	result |= static_cast<uint64_t>(action.d20Caf2) << 32;
+
+	return PyInt_FromLong(result);
 }
 
 
