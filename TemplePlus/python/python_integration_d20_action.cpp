@@ -135,7 +135,7 @@ PYBIND11_EMBEDDED_MODULE(tpactions, m) {
 
 	m.def("get_cur_seq", []()->ActnSeq &{
 		return **actSeqSys.actSeqCur;
-	});
+	}, py::return_value_policy::reference);
 	
 	m.def("get_current_tb_actor", []()->objHndl {
 		auto actor = tbSys.turnBasedGetCurrentActor();
