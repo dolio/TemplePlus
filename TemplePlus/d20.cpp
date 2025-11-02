@@ -1372,7 +1372,11 @@ ActionErrorCode D20ActionCallbacks::PerformStandardAttack(D20Actn* d20a)
 }
 
 ActionErrorCode D20ActionCallbacks::PerformStopConcentration(D20Actn* d20a){
-	d20Sys.d20SendSignal(d20a->d20APerformer, DK_SIG_Remove_Concentration, d20a->d20APerformer);
+	auto caster = d20a->d20APerformer;
+	auto & curSeq = *actSeqSys.actSeqCur;
+	auto tbStatus = &curSeq->tbStatus;
+	dispatch.DispatchD20ActionCheck(d20a, tbStatus, dispTypeD20ActionPerform);
+	d20Sys.d20SendSignal(caster, DK_SIG_Remove_Concentration, caster);
 	return AEC_OK;
 }
 

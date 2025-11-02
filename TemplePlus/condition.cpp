@@ -5400,6 +5400,7 @@ int SpellCallbacks::ConcentratingActionRecipientHandler(DispatcherCallbackArgs a
 	return 0;
 }
 
+
 // Port of 0x100CE590
 int SpellCallbacks::LesserRestorationOnAdd(DispatcherCallbackArgs args)
 {
