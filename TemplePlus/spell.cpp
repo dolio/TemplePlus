@@ -3034,6 +3034,20 @@ bool LegacySpellSystem::SpellOpposesCritterAlignment(SpellStoreData& spData, obj
 	return false;
 }
 
+// Checks whether the given spell is disabled for the caster. In the base
+// game the only reason for this is cleric alignment restrictions, but this
+// function allows other checks.
+bool LegacySpellSystem::SpellDisabled(SpellStoreData &spData, objHndl handle)
+{
+	auto caster = objSystem->GetObject(handle);
+	if (!caster) return false;
+	if (!spData.spellEnum) return false;
+
+	bool byAlignment = SpellOpposesCritterAlignment(spData, handle);
+
+	return byAlignment;
+}
+
 bool LegacySpellSystem::isDomainSpell(uint32_t spellClassCode){
 	return (spellClassCode & 0x80) == 0;
 }

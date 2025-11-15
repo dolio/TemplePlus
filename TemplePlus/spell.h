@@ -211,6 +211,7 @@ struct LegacySpellSystem : temple::AddressTable
 	bool numSpellsKnownTooHigh(objHndl objHnd);
 	bool numSpellsMemorizedTooHigh(objHndl objHnd);
 	bool SpellOpposesCritterAlignment(SpellStoreData& spData, objHndl handle);
+	bool SpellDisabled(SpellStoreData & spData, objHndl handle);
 
 	// SpellClass 
 	bool isDomainSpell(uint32_t spellClassCode);

@@ -1066,7 +1066,7 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	auto &spData = uiCharSpellPkt.spellsKnown.spells[widgetIdx + scrollbarY];
 
 
-	auto alignOpposed = spellSys.SpellOpposesCritterAlignment(spData, handle);
+	auto disabled = spellSys.SpellDisabled(spData, handle);
 	
 	TigTextStyle style;
 	auto txtR = temple::GetRef<int>(0x10C81B88);
@@ -1074,7 +1074,7 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	auto txtB = temple::GetRef<int>(0x10C81B90);
 	auto txtA = temple::GetRef<int>(0x10C81B94);
 
-	ColorRect textColor = !alignOpposed ? 
+	ColorRect textColor = !disabled ? 
 		ColorRect( XMCOLOR((float)txtR, (float)txtG, (float)txtB, (float)txtA))
 		: ColorRect(XMCOLOR(0xFF5D5D5D));
 	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
