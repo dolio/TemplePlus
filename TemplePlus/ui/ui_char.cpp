@@ -208,6 +208,7 @@ public:
 	static bool(*orgCharSpellsNavClassTabMsg)(int widId, TigMsg* tigMsg);
 
 	static void SpellbookSpellsRender(int widId, TigMsg& tigMsg);
+	static void MemorizedSpellsRender(int widId, TigMsg &tigMsg);
 	static BOOL SpellbookSpellsMsg(int widId, TigMsg* tigMsg){
 		return orgSpellbookSpellsMsg(widId, tigMsg);
 	};
@@ -1069,14 +1070,14 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	auto disabled = spellSys.SpellDisabled(spData, handle);
 	
 	TigTextStyle style;
-	auto txtR = temple::GetRef<int>(0x10C81B88);
-	auto txtG = temple::GetRef<int>(0x10C81B8C);
-	auto txtB = temple::GetRef<int>(0x10C81B90);
-	auto txtA = temple::GetRef<int>(0x10C81B94);
+	auto txtR = static_cast<float>(temple::GetRef<int>(0x10C81B88));
+	auto txtG = static_cast<float>(temple::GetRef<int>(0x10C81B8C));
+	auto txtB = static_cast<float>(temple::GetRef<int>(0x10C81B90));
+	auto txtA = static_cast<float>(temple::GetRef<int>(0x10C81B94));
 
-	ColorRect textColor = !disabled ? 
-		ColorRect( XMCOLOR((float)txtR, (float)txtG, (float)txtB, (float)txtA))
-		: ColorRect(XMCOLOR(0xFF5D5D5D));
+	ColorRect textColor =
+		disabled ? ColorRect(XMCOLOR(0xFF5D5D5D))
+		         : ColorRect(XMCOLOR(txtR, txtG, txtB, txtA));
 	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
 	ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
 	ColorRect wizSpecColor(XMCOLOR(0xFFFFFF80));
@@ -1127,9 +1128,147 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	
 	
 	UiRenderer::PopFont();
-
-	
 }
+
+/* Originally 0x101B73D0 */
+void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
+{
+	auto handle = GetCurrentCritter();
+	auto obj = objSystem->GetObject(handle); if (!obj) return;
+	auto& uiCharSpellPkt = GetUiCharSpellPacket();
+	auto& uiCharSpellNav = GetUiCharSpellsNavPacket();
+
+	auto wizSpec = spellSys.getWizSchool(handle);
+	if (spellSys.GetCastingClass(uiCharSpellNav.spellClassCode) != stat_level_wizard) {
+		wizSpec = 0u;
+	}
+
+	if (uiSystems->GetChar().GetInventoryObjectState() == 1 && *uiCharAddresses.uiCharSpellsDraggedWidId  == widId) {
+		return;
+	}
+
+	auto wid = uiManager->GetWidget(widId); if (!wid) return;
+	auto wnd = uiManager->GetWindow(widId); if (!wnd) return;
+	
+	UiRenderer::PushFont(*uiCharAddresses.uiCharSpellFontName, *uiCharAddresses.uiCharSpellFontSize);
+	// look up widget's idx in list
+	auto widgetIdx = -1;
+	for (auto i = 0; i < NUM_SPELLBOOK_SLOTS; ++i) {
+		// changed here
+		if (uiCharSpellPkt.memorizeSpellWnds[i]->widgetId == widId) {
+			widgetIdx = i;
+			break;
+		}
+	}
+
+	auto scrollbarY = 0;
+	// changed here
+	if (uiManager->ScrollbarGetY(uiCharSpellPkt.memorizeScrollbar->widgetId, &scrollbarY)) {
+		scrollbarY = -1;
+	}
+	// changed here
+	auto spellIdx = widgetIdx + scrollbarY;
+	auto &spData = uiCharSpellPkt.spellsMemorized.spells[spellIdx];
+
+	auto disabled = spellSys.SpellDisabled(spData, handle);
+	
+	TigTextStyle style;
+	auto txtR = static_cast<float>(temple::GetRef<int>(0x10C81B88));
+	auto txtG = static_cast<float>(temple::GetRef<int>(0x10C81B8C));
+	auto txtB = static_cast<float>(temple::GetRef<int>(0x10C81B90));
+	auto txtA = static_cast<float>(temple::GetRef<int>(0x10C81B94));
+
+	// dark text colors
+	auto txdR = static_cast<float>(temple::GetRef<int>(0x10C81B98));
+	auto txdG = static_cast<float>(temple::GetRef<int>(0x10C81B9C));
+	auto txdB = static_cast<float>(temple::GetRef<int>(0x10C81BA0));
+	auto txdA = static_cast<float>(temple::GetRef<int>(0x10C81BA4));
+
+	// border colors
+	auto brdR = static_cast<float>(temple::GetRef<int>(0x10C81B50));
+	auto brdG = static_cast<float>(temple::GetRef<int>(0x10C81B54));
+	auto brdB = static_cast<float>(temple::GetRef<int>(0x10C81B58));
+	auto brdA = static_cast<float>(temple::GetRef<int>(0x10C81B5C));
+
+	bool usedUp = spData.spellStoreState.usedUp;
+	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
+
+	ColorRect noBookColor(XMCOLOR(0xFF7D5D5D));
+	ColorRect textColor(XMCOLOR(txtR, txtG, txtB, txtA));
+	// check if some condition modifies the text color
+	if (usedUp) {
+		if (disabled) {
+			// won't be memorized, tint red
+			textColor = ColorRect(XMCOLOR(0xFFFFCCCC));
+		} else if (isSchoolSlot) {
+			// unmemorized school spell, tint yellow
+			textColor = ColorRect(XMCOLOR(0xFFFFFF80));
+		}
+	} else { // already memorized
+		if (isSchoolSlot) {
+			// memorized school spell, faded yellow
+			textColor = ColorRect(XMCOLOR(0xFF808040));
+		} else {
+			// memorized normal, greyed out
+			textColor = ColorRect(XMCOLOR(txdR, txdG, txdB, txdA));
+		}
+	}
+	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
+	ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
+
+	style.textColor = &textColor;
+	style.shadowColor = &shadowColor;
+	style.flags = 0x4008; // drop shadow + truncate too long text with ellipsis
+	style.kerning = 1;
+	style.tracking = 2;
+
+	bool drawBorder = usedUp || spData.spellEnum == -1;
+	auto borderColor =
+		isSchoolSlot ? XMCOLOR(0xFFFFFF80)
+		             : XMCOLOR(brdR, brdG, brdB, brdA);
+
+	if (spData.spellEnum == 0) {
+		// spell label
+		if (static_cast<int>(spData.spellLevel) > -1) {
+			style.textColor = &spellLabelColor;
+			MesLine mesLine;
+			mesFuncs.ReadLineDirect(uiCharImpl->uiCharSpellsUiText, 3, &mesLine);
+			auto text = fmt::format("{} {}", mesLine.value, spData.spellLevel);
+			auto rect = TigRect(-8, 0, wnd->width, wnd->height);
+			UiRenderer::DrawTextInWidget(widId, text, rect, style);
+		}
+	} else if (spData.spellEnum != -1) {
+		std::string text;
+		auto spellText = spellSys.GetSpellMesline(spData.spellEnum);
+		if (spellSys.isDomainSpell(spData.classCode)) {
+			auto domainText = spellSys.GetDomainName(spData.classCode);
+			text = fmt::format("{} ({})", spellText, domainText);
+		} else {
+			text = fmt::format("{}", spellText);
+		}
+		
+		auto rect = TigRect(0, 0, wnd->width, wnd->height);
+		UiRenderer::DrawTextInWidget(widId, text, rect, style);
+
+		auto measRect = UiRenderer::MeasureTextSize(text, style);
+		SpellMetamagicDotsRender(wnd->x + rect.x + measRect.width + 2, wnd->y + 2, spData.metaMagicData);
+	}
+
+	if (drawBorder) {
+		auto& shapeRenderer = tig->GetShapeRenderer2d();
+		float x = static_cast<float>(wid->x);
+		float y = static_cast<float>(wid->y);
+		float width = static_cast<float>(wid->width);
+		float height = static_cast<float>(wid->height);
+		shapeRenderer.DrawRectangleOutlineVanilla(
+				{x, 2 + y},
+				{x + width, 2 + y + height},
+				borderColor);
+	}
+	
+	UiRenderer::PopFont();
+}
+
 
 /* Originally 0x101BA580 */
 BOOL UiCharHooks::SpellMetamagicBtnMsg(int widId, TigMsg& tigMsg)
@@ -2152,6 +2291,7 @@ void UiCharHooks::apply(){
 	replaceFunction(0x101B2EE0, IsSpecializationSchoolSlot);
 	orgSpellsShow = replaceFunction(0x101B5D80, SpellsShow);
 	replaceFunction(0x101B6FD0, SpellbookSpellsRender);
+	replaceFunction(0x101B73D0, MemorizedSpellsRender);
 
 	static BOOL(__cdecl* orgMetamagicBtnMsg)(int, TigMsg&) = replaceFunction<BOOL(__cdecl)(int, TigMsg&)>(0x101BA580, [](int widId, TigMsg& msg) {
 		return SpellMetamagicBtnMsg(widId, msg);
