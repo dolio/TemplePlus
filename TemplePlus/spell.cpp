@@ -3044,8 +3044,19 @@ bool LegacySpellSystem::SpellDisabled(SpellStoreData &spData, objHndl handle)
 	if (!spData.spellEnum) return false;
 
 	bool byAlignment = SpellOpposesCritterAlignment(spData, handle);
+	bool byBook = false;
 
-	return byAlignment;
+	if (GetCastingClass(spData.classCode) == stat_level_wizard) {
+		// Wizards can prepare Read Magic without a spellbook.
+		if (spData.spellEnum != 385) {
+			auto spEnum = spData.spellEnum;
+			auto spLvl = spData.spellLevel;
+			byBook =
+				!d20Sys.D20QueryPython(handle, "Check Spellbook", spEnum, spLvl);
+		}
+	}
+
+	return byAlignment || byBook;
 }
 
 bool LegacySpellSystem::isDomainSpell(uint32_t spellClassCode){
