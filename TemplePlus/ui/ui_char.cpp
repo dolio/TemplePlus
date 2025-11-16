@@ -1185,10 +1185,10 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	static auto txdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA4));
 
 	// border colors
-	static auto brdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B50));
-	static auto brdG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B54));
-	static auto brdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B58));
-	static auto brdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B5C));
+	static auto brdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B60));
+	static auto brdG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B64));
+	static auto brdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B68));
+	static auto brdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B6C));
 
 	bool usedUp = spData.spellStoreState.usedUp;
 	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
@@ -1212,7 +1212,7 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	bool drawBorder = usedUp || spData.spellEnum == -1;
 	auto borderColor =
 		isSchoolSlot ? XMCOLOR(0xFFFFFF80)
-		             : XMCOLOR(brdR, brdG, brdB, brdA);
+		             : XMCOLOR_ARGB(brdA, brdR, brdG, brdB);
 
 	if (spData.spellEnum == 0) {
 		// spell label
