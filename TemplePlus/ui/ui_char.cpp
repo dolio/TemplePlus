@@ -1190,6 +1190,12 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	static auto brdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B68));
 	static auto brdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B6C));
 
+	// header colors
+	static auto hedR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA8));
+	static auto hedG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BAC));
+	static auto hedB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB0));
+	static auto hedA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB4));
+
 	bool usedUp = spData.spellStoreState.usedUp;
 	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
 
@@ -1201,7 +1207,7 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	static ColorRect liteSchoolColor(XMCOLOR(0xFFFFFF80));
 	static ColorRect darkSchoolColor(XMCOLOR(0xFF909050));
 	static ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
-	static ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
+	static ColorRect spellLabelColor(XMCOLOR_ARGB(hedA, hedR, hedG, hedB));
 
 	style.textColor = &liteTextColor;
 	style.shadowColor = &shadowColor;
