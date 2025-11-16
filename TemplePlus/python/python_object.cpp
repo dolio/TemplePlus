@@ -3746,6 +3746,18 @@ static PyObject* PyObjHandle_GetSpell(PyObject* obj, PyObject* args) {
 	return PySpellStore_Create(value);
 }
 
+static PyObject* PyObjHandle_GetSpellCount(PyObject *obj, PyObject *args) {
+	auto self = GetSelf(obj);
+	if (!self->handle) {
+		return PyInt_FromLong(0);
+	}
+	obj_f field;
+	if (!PyArg_ParseTuple(args, "i:objHndl.obj_get_spell_count", &field)) {
+		return 0;
+	}
+	auto arr = objSystem->GetObject(self->handle)->GetSpellArray(field);
+	return PyInt_FromLong(arr.GetSize());
+}
 
 static PyObject* PyObjHandle_HasFeat(PyObject* obj, PyObject* args) {
 	auto self = GetSelf(obj);
@@ -4773,6 +4785,7 @@ static PyMethodDef PyObjHandleMethods[] = {
 	{ "obj_get_idx_obj", PyObjHandle_GetIdxObj, METH_VARARGS, "Gets Object Array field" },
 	{ "obj_get_idx_obj_size", PyObjHandle_GetIdxObjSize, METH_VARARGS, "Gets Object Array field" },
 	{ "obj_get_spell", PyObjHandle_GetSpell, METH_VARARGS, NULL },
+	{ "obj_get_spell_count", PyObjHandle_GetSpellCount, METH_VARARGS, NULL },
 	{ "obj_remove_from_all_groups", PyObjHandle_RemoveFromAllGroups, METH_VARARGS, "Removes the object from all the groups (GroupList, PCs, NPCs, AI controlled followers, Currently Selected" },
 	{ "obj_set_int", PyObjHandle_SetInt, METH_VARARGS, NULL },
 	{ "obj_set_float", PyObjHandle_SetFloat, METH_VARARGS, NULL },
