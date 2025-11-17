@@ -5253,6 +5253,26 @@ static PyObject* PyObjHandle_GetHighestArcaneCasterLevel(PyObject* obj, void*) {
 	return PyInt_FromLong(highestCasterLvl);
 }
 
+static PyObject* PyObjHandle_GetItemSpells(PyObject* obj, void*) {
+	auto self = GetSelf(obj);
+	if (!self->handle) Py_RETURN_NONE;
+
+	auto item = objSystem->GetObject(self->handle);
+
+	if (!item->IsItem()) Py_RETURN_NONE;
+
+	auto spells = item->GetSpellArray(obj_f_item_spell_idx);
+	auto numKnown = spells.GetSize();
+
+	auto result = PyTuple_New(numKnown);
+
+	for (size_t i = 0; i < numKnown; ++i) {
+		PyTuple_SET_ITEM(result, i, PySpellStore_Create(spells[i]));
+	}
+
+	return result;
+}
+
 
 static PyObject* PyObjHandle_GetSpellsKnown(PyObject* obj, void*) {
 	auto self = GetSelf(obj);
@@ -5260,6 +5280,10 @@ static PyObject* PyObjHandle_GetSpellsKnown(PyObject* obj, void*) {
 		Py_RETURN_NONE;
 
 	auto gameobj = objSystem->GetObject(self->handle);
+
+	if (!gameobj->IsCritter())
+		Py_RETURN_NONE;
+
 	auto numKnown = gameobj->GetSpellArray(obj_f_critter_spells_known_idx).GetSize();
 
 	auto result = PyTuple_New(numKnown);
@@ -5336,6 +5360,7 @@ PyGetSetDef PyObjHandleGetSets[] = {
 	{"map", PyObjHandle_GetMap, NULL, NULL, NULL},
 	{"hit_dice", PyObjHandle_GetHitDice, NULL, NULL},
 	{"hit_dice_num", PyObjHandle_GetHitDiceNum, NULL, NULL},
+	{"item_spells", PyObjHandle_GetItemSpells, NULL, NULL},
 	{"get_size", PyObjHandle_GetSize, NULL, NULL},
 	{"off_x", PyObjHandle_GetOffsetX, NULL, NULL},
 	{"off_y", PyObjHandle_GetOffsetY, NULL, NULL},
