@@ -404,10 +404,11 @@ public:
 
 	void SetTimeUntilHealed();
 
+	int GetSleepStatus();
+
 protected:
 	int GetHealingAmount(objHndl handle, int restPeriods);
 	int GetHealingAmountMod();
-	int GetSleepStatus();
 };
 
 class UiHelpInventory : public UiSystem {

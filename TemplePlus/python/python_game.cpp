@@ -1039,6 +1039,10 @@ PyObject* PyGame_TargetRandomTileNearGet(PyObject*, PyObject* args) {
 	return PyLong_FromLongLong(loc);
 }
 
+PyObject* PyGame_GetSleepStatus(PyObject*, PyObject* args) {
+	return PyInt_FromLong(uiSystems->GetCamping().GetSleepStatus());
+}
+
 PyObject* PyGame_GetStatMod(PyObject*, PyObject* args) {
 	int attributeValue;
 	if (!PyArg_ParseTuple(args, "i:game.get_stat_mod", &attributeValue)) {
@@ -1512,6 +1516,7 @@ static PyMethodDef PyGameMethods[]{
 	{"update_party_ui", PyGame_UpdatePartyUi, METH_VARARGS, NULL},
 	{"random_range", PyGame_RandomRange, METH_VARARGS, NULL},
 	{"target_random_tile_near_get", PyGame_TargetRandomTileNearGet, METH_VARARGS, NULL},
+	{"get_sleep_status", PyGame_GetSleepStatus, METH_VARARGS, NULL},
 	{"get_stat_mod", PyGame_GetStatMod, METH_VARARGS, NULL},
 	{"get_deity_favored_weapon", PyGame_GetDeityFavoredWeapon, METH_VARARGS, NULL},
 	{"ui_show_worldmap", PyGame_UiShowWorldmap, METH_VARARGS, NULL},
