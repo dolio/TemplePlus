@@ -84,6 +84,20 @@ PYBIND11_EMBEDDED_MODULE(tpactions, m) {
 		.value("PickOrigin", UiPickerType::PickOrigin)
 		;
 
+	py::enum_<UiPickerIncFlags>(m, "IncExcFlags", py::module_local())
+		.value("None", UiPickerIncFlags::UIPI_None)
+		.value("Self", UiPickerIncFlags::UIPI_Self)
+		.value("Other", UiPickerIncFlags::UIPI_Other)
+		.value("NonCritter", UiPickerIncFlags::UIPI_NonCritter)
+		.value("Dead", UiPickerIncFlags::UIPI_Dead)
+		.value("Undead", UiPickerIncFlags::UIPI_Undead)
+		.value("Unconscious", UiPickerIncFlags::UIPI_Unconscious)
+		.value("Hostile", UiPickerIncFlags::UIPI_Hostile)
+		.value("Friendly", UiPickerIncFlags::UIPI_Friendly)
+		.value("Potion", UiPickerIncFlags::UIPI_Potion)
+		.value("Scroll", UiPickerIncFlags::UIPI_Scroll)
+		;
+
 	m.def("add_to_seq", [](D20Actn & d20a, ActnSeq & actSeq){
 		actSeq.d20ActArray[actSeq.d20ActArrayNum++] = d20a;
 	});
