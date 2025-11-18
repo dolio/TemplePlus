@@ -66,14 +66,21 @@ PYBIND11_EMBEDDED_MODULE(tpactions, m) {
 
 	py::enum_<UiPickerType>(m, "ModeTarget", py::module_local())
 		.value("Single", UiPickerType::Single)
+		.value("Multi", UiPickerType::Multi)
 		.value("Cone", UiPickerType::Cone)
 		.value("Area", UiPickerType::Area)
+		.value("Location", UiPickerType::Location)
 		.value("Personal", UiPickerType::Personal)
+		.value("InventoryItem", UiPickerType::InventoryItem)
 		.value("Ray", UiPickerType::Ray)
 		.value("Wall", UiPickerType::Wall)
-		.value("EndEarlyMulti", UiPickerType::EndEarlyMulti)
+		.value("BecomeTouch", UiPickerType::BecomeTouch)
+		.value("AreaOrObj", UiPickerType::AreaOrObj)
 		.value("OnceMulti", UiPickerType::OnceMulti)
 		.value("Any30Feet", UiPickerType::Any30Feet)
+		.value("Primary30Feet", UiPickerType::Primary30Feet)
+		.value("EndEarlyMulti", UiPickerType::EndEarlyMulti)
+		.value("LocIsClear", UiPickerType::LocIsClear)
 		.value("PickOrigin", UiPickerType::PickOrigin)
 		;
 
