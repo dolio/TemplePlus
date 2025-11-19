@@ -147,6 +147,7 @@ struct DispatcherSystem : temple::AddressTable
 
 	
 	int DispatchItemQuery(objHndl item, D20DispatcherKey d20DispatcherKey);
+	int DispatchItemQuery(objHndl item, const std::string & pythonKey);
 
 	DispatcherSystem()
 	{

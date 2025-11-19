@@ -13,6 +13,7 @@
 #include "gamesystems/gamesystems.h"
 #include "ui/ui_party.h"
 #include "python/python_dispatcher.h"
+#include <infrastructure/elfhash.h>
 #include <critter.h>
 
 // Dispatcher System Function Replacements
@@ -1067,6 +1068,17 @@ int DispatcherSystem::DispatchItemQuery(objHndl item, D20DispatcherKey key)
 	DispIoD20Query evtObj;
 	*(objHndl*)(&evtObj.data1) = item;
 	DispatchForItem(item, dispTypeD20Query, key, &evtObj);
+	return evtObj.return_val;
+}
+
+int DispatcherSystem::DispatchItemQuery(objHndl item, const string& pyKey)
+{
+	auto hkey = static_cast<D20DispatcherKey>(ElfHash::Hash(pyKey));
+	DispIoD20Query evtObj;
+	*(objHndl*)(&evtObj.data1) = item;
+
+	DispatchForItem(item, dispTypePythonQuery, hkey, &evtObj);
+
 	return evtObj.return_val;
 }
 

@@ -1810,10 +1810,12 @@ static PyObject* PyObjHandle_ItemD20Query(PyObject* obj, PyObject* args) {
 	}
 
 	PyObject* arg = PyTuple_GET_ITEM(args, 0);
-	/*if (PyString_Check(arg)) {
+
+	if (PyString_Check(arg)) {
 		auto argString = fmt::format("{}", PyString_AsString(arg));
-		return PyInt_FromLong(d20Sys.D20QueryPython(self->handle, argString));
-	}*/
+		auto result = dispatch.DispatchItemQuery(self->handle, argString);
+		return PyInt_FromLong(result);
+	}
 
 	int queryKey;
 	if (!PyArg_ParseTuple(args, "i:objhndl.item_d20_query", &queryKey)) {
@@ -4737,6 +4739,7 @@ static PyMethodDef PyObjHandleMethods[] = {
 	{ "is_unconscious", PyObjHandle_IsUnconscious, METH_VARARGS, NULL },
 	{ "is_throwing_weapon", PyObjHandle_IsThrowingWeapon, METH_VARARGS, NULL },
 	{ "is_thrown_only_weapon", PyObjHandle_IsThrownOnlyWeapon, METH_VARARGS, NULL },
+	{ "item_condition_add", PyObjHandle_ItemConditionAdd, METH_VARARGS, NULL },
 	{ "item_condition_add_with_args", PyObjHandle_ItemConditionAdd, METH_VARARGS, NULL },
 	{ "item_condition_has", PyObjHandle_ItemConditionHas, METH_VARARGS, NULL },
 	{ "item_condition_remove", PyObjHandle_ItemConditionRemove, METH_VARARGS, NULL },
@@ -5272,7 +5275,6 @@ static PyObject* PyObjHandle_GetItemSpells(PyObject* obj, void*) {
 
 	return result;
 }
-
 
 static PyObject* PyObjHandle_GetSpellsKnown(PyObject* obj, void*) {
 	auto self = GetSelf(obj);
