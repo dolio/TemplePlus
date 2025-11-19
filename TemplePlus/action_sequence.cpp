@@ -868,6 +868,7 @@ int ActionSequenceSystem::ActionAddToSeq()
 		{
 			if (actnCheckResult == AEC_TARGET_INVALID)
 			{
+				curSeq->spellPktBody.caster = d20Sys.globD20Action->d20APerformer;
 				actSeqSys.ActSeqGetPicker();
 				return AEC_TARGET_INVALID;
 			}
