@@ -1080,7 +1080,9 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 		         : ColorRect(XMCOLOR(txtR, txtG, txtB, txtA));
 	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
 	ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
-	ColorRect wizSpecColor(XMCOLOR(0xFFFFFF80));
+	ColorRect wizSpecColor =
+		disabled ? ColorRect(XMCOLOR(0xFF5D5D3D))
+		         : ColorRect(XMCOLOR(0xFFFFFF80));
 	style.textColor = &textColor;
 	style.shadowColor = &shadowColor;
 	style.flags = 0x4008; // drop shadow + truncate too long text with ellipsis
