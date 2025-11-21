@@ -1067,22 +1067,31 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	auto &spData = uiCharSpellPkt.spellsKnown.spells[widgetIdx + scrollbarY];
 
 
-	auto disabled = spellSys.SpellDisabled(spData, handle);
-	
 	TigTextStyle style;
-	auto txtR = static_cast<float>(temple::GetRef<int>(0x10C81B88));
-	auto txtG = static_cast<float>(temple::GetRef<int>(0x10C81B8C));
-	auto txtB = static_cast<float>(temple::GetRef<int>(0x10C81B90));
-	auto txtA = static_cast<float>(temple::GetRef<int>(0x10C81B94));
+	auto txtR = temple::GetRef<int>(0x10C81B88);
+	auto txtG = temple::GetRef<int>(0x10C81B8C);
+	auto txtB = temple::GetRef<int>(0x10C81B90);
+	auto txtA = temple::GetRef<int>(0x10C81B94);
 
-	ColorRect textColor =
-		disabled ? ColorRect(XMCOLOR(0xFF5D5D5D))
-		         : ColorRect(XMCOLOR(txtR, txtG, txtB, txtA));
+	ColorRect textColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
 	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
 	ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
-	ColorRect wizSpecColor =
-		disabled ? ColorRect(XMCOLOR(0xFF5D5D3D))
-		         : ColorRect(XMCOLOR(0xFFFFFF80));
+	ColorRect wizSpecColor(XMCOLOR(0xFFFFFF80));
+
+	switch (spellSys.CanPrepare(spData, handle))
+	{
+	case PreparationStatus::Disabled:
+		textColor = ColorRect(XMCOLOR(0xFF5D5D5D));
+		wizSpecColor = ColorRect(XMCOLOR(0xFF6D6D3D));
+		break;
+	case PreparationStatus::Restricted:
+		textColor = ColorRect(XMCOLOR(0xFF7D7DCD));
+		wizSpecColor = ColorRect(XMCOLOR(0xFFFFBB80));
+		break;
+	default:
+		break;
+	}
+
 	style.textColor = &textColor;
 	style.shadowColor = &shadowColor;
 	style.flags = 0x4008; // drop shadow + truncate too long text with ellipsis
@@ -1172,8 +1181,6 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	auto spellIdx = widgetIdx + scrollbarY;
 	auto &spData = uiCharSpellPkt.spellsMemorized.spells[spellIdx];
 
-	auto disabled = spellSys.SpellDisabled(spData, handle);
-	
 	TigTextStyle style;
 	static auto txtR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B88));
 	static auto txtG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B8C));
@@ -1206,7 +1213,9 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	static ColorRect liteTextColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
 	static ColorRect darkTextColor(XMCOLOR_ARGB(txdA, txdR, txdG, txdB));
 	static ColorRect disabledColor(XMCOLOR(0xFFFF9090));
+	static ColorRect restrictColor(XMCOLOR(0xFF9090FF));
 	static ColorRect liteSchoolColor(XMCOLOR(0xFFFFFF80));
+	static ColorRect restSchoolColor(XMCOLOR(0xFFFFBB80));
 	static ColorRect darkSchoolColor(XMCOLOR(0xFF909050));
 	static ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
 	static ColorRect spellLabelColor(XMCOLOR_ARGB(hedA, hedR, hedG, hedB));
@@ -1244,17 +1253,32 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 		
 		// determine the text color
 		if (usedUp) {
-			if (disabled) {
+			switch (spellSys.CanPrepare(spData, handle))
+			{
+			case PreparationStatus::Disabled:
 				// won't be memorized, tint red
 				style.textColor = &disabledColor;
-			} else if (isSchoolSlot) {
-				// unmemorized school spell, tint yellow
-				style.textColor = &liteSchoolColor;
-			} else {
-				// unmemorized normal, default text color
-				style.textColor = &liteTextColor;
+				break;
+			case PreparationStatus::Enabled:
+				if (isSchoolSlot) {
+					// unmemorized school spell, tint yellow
+					style.textColor = &liteSchoolColor;
+				} else {
+					// unmemorized normal, default text color
+					style.textColor = &liteTextColor;
+				}
+				break;
+			case PreparationStatus::Restricted:
+				if (isSchoolSlot) {
+					// unmemorized school spell with some impediment
+					style.textColor = &restSchoolColor;
+				} else {
+					// unmemorized spell with some impediment
+					style.textColor = &restrictColor;
+				}
+				break;
 			}
-		} else { // already memorized
+		} else {
 			if (isSchoolSlot) {
 				// memorized school spell, faded yellow
 				style.textColor = &darkSchoolColor;

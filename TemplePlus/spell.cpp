@@ -3037,26 +3037,28 @@ bool LegacySpellSystem::SpellOpposesCritterAlignment(SpellStoreData& spData, obj
 // Checks whether the given spell is disabled for the caster. In the base
 // game the only reason for this is cleric alignment restrictions, but this
 // function allows other checks.
-bool LegacySpellSystem::SpellDisabled(SpellStoreData &spData, objHndl handle)
+PreparationStatus LegacySpellSystem::CanPrepare(SpellStoreData &spData, objHndl handle)
 {
 	auto caster = objSystem->GetObject(handle);
-	if (!caster) return false;
-	if (!spData.spellEnum) return false;
+	if (!caster) return PreparationStatus::Disabled;
+	if (!spData.spellEnum) return PreparationStatus::Disabled;
 
-	bool byAlignment = SpellOpposesCritterAlignment(spData, handle);
-	bool byBook = false;
+	if (SpellOpposesCritterAlignment(spData, handle)) {
+		return PreparationStatus::Disabled;
+	}
 
 	if (GetCastingClass(spData.classCode) == stat_level_wizard) {
 		// Wizards can prepare Read Magic without a spellbook.
 		if (spData.spellEnum != 385) {
 			auto spEnum = spData.spellEnum;
 			auto spLvl = spData.spellLevel;
-			byBook =
-				!d20Sys.D20QueryPython(handle, "Check Spellbook", spEnum, spLvl);
+			auto result =
+				d20Sys.D20QueryPython(handle, "Check Spellbook", spEnum, spLvl);
+			return static_cast<PreparationStatus>(result);
 		}
 	}
 
-	return byAlignment || byBook;
+	return PreparationStatus::Enabled;
 }
 
 bool LegacySpellSystem::isDomainSpell(uint32_t spellClassCode){

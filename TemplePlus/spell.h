@@ -25,7 +25,12 @@ struct SpellMultiOption
 enum SpellRangeType : uint32_t;
 enum Domain;
 
-
+enum class PreparationStatus : uint32_t
+{
+	Disabled = 0,
+	Enabled = 1,
+	Restricted = 2
+};
 
 struct SpellEntryExt {
 	std::vector<SpellEntryLevelSpec> levelSpecs;
@@ -211,7 +216,7 @@ struct LegacySpellSystem : temple::AddressTable
 	bool numSpellsKnownTooHigh(objHndl objHnd);
 	bool numSpellsMemorizedTooHigh(objHndl objHnd);
 	bool SpellOpposesCritterAlignment(SpellStoreData& spData, objHndl handle);
-	bool SpellDisabled(SpellStoreData & spData, objHndl handle);
+	PreparationStatus CanPrepare(SpellStoreData & spData, objHndl handle);
 
 	// SpellClass 
 	bool isDomainSpell(uint32_t spellClassCode);
