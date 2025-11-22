@@ -207,6 +207,9 @@ public:
 	static bool CharSpellsNavClassTabMsg(int widId, TigMsg* tigMsg);
 	static bool(*orgCharSpellsNavClassTabMsg)(int widId, TigMsg* tigMsg);
 
+	static ColorRect *MemorizedSpellColor(size_t spellIdx, objHndl critter);
+	static ColorRect *KnownSpellColor(size_t spellIdx, objHndl critter);
+
 	static void SpellbookSpellsRender(int widId, TigMsg& tigMsg);
 	static void MemorizedSpellsRender(int widId, TigMsg &tigMsg);
 	static BOOL SpellbookSpellsMsg(int widId, TigMsg* tigMsg){
@@ -248,6 +251,12 @@ public:
 	static void LongDescriptionPopupCreate(objHndl item);
 
 	static void TotalWeightOutputBtnTooltip(int x, int y, int *widId);
+	static void SpellbookTooltip(int x, int y, int *widId);
+	static void MemorizedTooltip(int x, int y, int *widId);
+	static void SpellTooltip(
+			int x, int y, int widId, int scrollId,
+			LgcyWindow **wnds, SpellList & spells,
+			ColorRect *(*TextColor)(size_t, objHndl));
 
 	static objHndl GetBag();
 	static void WeaponComboActivate(objHndl handle, int weapomCombo);
@@ -1039,11 +1048,6 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	auto& uiCharSpellPkt = GetUiCharSpellPacket();
 	auto& uiCharSpellNav = GetUiCharSpellsNavPacket();
 
-	auto wizSpec = spellSys.getWizSchool(handle);
-	if (spellSys.GetCastingClass(uiCharSpellNav.spellClassCode) != stat_level_wizard) {
-		wizSpec = 0u;
-	}
-
 	if (uiSystems->GetChar().GetInventoryObjectState() == 1 && *uiCharAddresses.uiCharSpellsDraggedWidId  == widId) {
 		return;
 	}
@@ -1064,35 +1068,15 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	if (uiManager->ScrollbarGetY(uiCharSpellPkt.spellbookScrollbar->widgetId, &scrollbarY)) {
 		scrollbarY = -1; // fail case
 	}
-	auto &spData = uiCharSpellPkt.spellsKnown.spells[widgetIdx + scrollbarY];
+	auto spellIdx = widgetIdx + scrollbarY;
+	auto &spData = uiCharSpellPkt.spellsKnown.spells[spellIdx];
 
 
 	TigTextStyle style;
-	auto txtR = temple::GetRef<int>(0x10C81B88);
-	auto txtG = temple::GetRef<int>(0x10C81B8C);
-	auto txtB = temple::GetRef<int>(0x10C81B90);
-	auto txtA = temple::GetRef<int>(0x10C81B94);
 
-	ColorRect textColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
 	ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
-	ColorRect spellLabelColor(XMCOLOR(0xFF4D7197));
-	ColorRect wizSpecColor(XMCOLOR(0xFFFFFF80));
 
-	switch (spellSys.CanPrepare(spData, handle))
-	{
-	case PreparationStatus::Disabled:
-		textColor = ColorRect(XMCOLOR(0xFF5D5D5D));
-		wizSpecColor = ColorRect(XMCOLOR(0xFF6D6D3D));
-		break;
-	case PreparationStatus::Restricted:
-		textColor = ColorRect(XMCOLOR(0xFF7D7DCD));
-		wizSpecColor = ColorRect(XMCOLOR(0xFFFFBB80));
-		break;
-	default:
-		break;
-	}
-
-	style.textColor = &textColor;
+	style.textColor = KnownSpellColor(spellIdx, handle);
 	style.shadowColor = &shadowColor;
 	style.flags = 0x4008; // drop shadow + truncate too long text with ellipsis
 	style.kerning = 1;
@@ -1101,7 +1085,6 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	if (!spData.spellEnum) { // spell label
 
 		if ((int)spData.spellLevel > -1) {
-			style.textColor = &spellLabelColor;
 			MesLine mesLine;
 			mesFuncs.ReadLineDirect(uiCharImpl->uiCharSpellsUiText, 3, &mesLine);
 			auto text = fmt::format("{} {}", mesLine.value, spData.spellLevel);
@@ -1117,9 +1100,6 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 			text = fmt::format("{} ({})", spellSys.GetSpellMesline(spData.spellEnum), spellSys.GetDomainName( spData.classCode) );
 		}
 		else {
-			if (wizSpec && spellSys.GetSpellSchool(spData.spellEnum) == wizSpec) {
-				style.textColor = &wizSpecColor;
-			}
 			text = fmt::format("{}", spellSys.GetSpellMesline(spData.spellEnum));
 		}
 		
@@ -1139,6 +1119,164 @@ void UiCharHooks::SpellbookSpellsRender(int widId, TigMsg& tigMsg)
 	
 	
 	UiRenderer::PopFont();
+}
+
+ColorRect *UiCharHooks::KnownSpellColor(size_t spellIdx, objHndl critter)
+{
+	auto & uiCharSpellPkt = GetUiCharSpellPacket();
+	auto & spData = uiCharSpellPkt.spellsKnown.spells[spellIdx];
+	auto & uiCharSpellNav = GetUiCharSpellsNavPacket();
+
+	auto wizSpec = spellSys.getWizSchool(critter);
+	if (spellSys.GetCastingClass(uiCharSpellNav.spellClassCode) != stat_level_wizard) {
+		wizSpec = 0u;
+	}
+
+	auto isSpecialized =
+		wizSpec && spellSys.GetSpellSchool(spData.spellEnum) == wizSpec;
+
+	// light text colors
+	static auto txtR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B88));
+	static auto txtG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B8C));
+	static auto txtB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B90));
+	static auto txtA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B94));
+
+	// dark text colors
+	static auto txdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B98));
+	static auto txdG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B9C));
+	static auto txdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA0));
+	static auto txdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA4));
+
+	// header colors
+	static auto hedR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA8));
+	static auto hedG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BAC));
+	static auto hedB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB0));
+	static auto hedA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB4));
+
+	// Note: XMCOLOR() seems to auto-promote values to float, which are
+	// expected to be in the 0-1 range, not 0-255.
+	static ColorRect liteTextColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
+	static ColorRect disabledColor(XMCOLOR(0xFF5D5D5D));
+	static ColorRect restrictColor(XMCOLOR(0xFF7D7DCD));
+	static ColorRect liteSchoolColor(XMCOLOR(0xFFFFFF80));
+	static ColorRect restSchoolColor(XMCOLOR(0xFFFFBB80));
+	static ColorRect darkSchoolColor(XMCOLOR(0xFF6D6D3D));
+	static ColorRect spellLabelColor(XMCOLOR_ARGB(hedA, hedR, hedG, hedB));
+
+	if (spData.spellEnum == 0) {
+		return &spellLabelColor;
+	} else {
+		switch (spellSys.CanPrepare(spData, critter))
+		{
+		case PreparationStatus::Incompatible:
+		case PreparationStatus::Disabled:
+			if (isSpecialized) {
+				return &darkSchoolColor;
+			} else {
+				return &disabledColor;
+			}
+		case PreparationStatus::Restricted:
+			if (isSpecialized) {
+				return &restrictColor;
+			} else {
+				return &restSchoolColor;
+			}
+		default:
+			if (isSpecialized) {
+				return &liteSchoolColor;
+			} else {
+				return &liteTextColor;
+			}
+		}
+	}
+}
+
+ColorRect *UiCharHooks::MemorizedSpellColor(size_t spellIdx, objHndl critter)
+{
+	auto & uiCharSpellPkt = GetUiCharSpellPacket();
+	auto & spData = uiCharSpellPkt.spellsMemorized.spells[spellIdx];
+	auto & uiCharSpellNav = GetUiCharSpellsNavPacket();
+
+	auto wizSpec = spellSys.getWizSchool(critter);
+	if (spellSys.GetCastingClass(uiCharSpellNav.spellClassCode) != stat_level_wizard) {
+		wizSpec = 0u;
+	}
+
+	// light text colors
+	static auto txtR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B88));
+	static auto txtG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B8C));
+	static auto txtB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B90));
+	static auto txtA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B94));
+
+	// dark text colors
+	static auto txdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B98));
+	static auto txdG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B9C));
+	static auto txdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA0));
+	static auto txdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA4));
+
+	// header colors
+	static auto hedR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA8));
+	static auto hedG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BAC));
+	static auto hedB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB0));
+	static auto hedA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB4));
+
+	bool usedUp = spData.spellStoreState.usedUp;
+	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
+
+	// Note: XMCOLOR() seems to auto-promote values to float, which are
+	// expected to be in the 0-1 range, not 0-255.
+	static ColorRect liteTextColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
+	static ColorRect darkTextColor(XMCOLOR_ARGB(txdA, txdR, txdG, txdB));
+	static ColorRect disabledColor(XMCOLOR(0xFFFF9090));
+	static ColorRect restrictColor(XMCOLOR(0xFF9090FF));
+	static ColorRect liteSchoolColor(XMCOLOR(0xFFFFFF80));
+	static ColorRect restSchoolColor(XMCOLOR(0xFFFFBB80));
+	static ColorRect darkSchoolColor(XMCOLOR(0xFF909050));
+	static ColorRect spellLabelColor(XMCOLOR_ARGB(hedA, hedR, hedG, hedB));
+
+	if (spData.spellEnum == 0) {
+		if (static_cast<int>(spData.spellLevel) > -1) {
+			return &spellLabelColor;
+		} else {
+			return &liteTextColor;
+		}
+	} else {
+		// determine the text color
+		if (usedUp) {
+			switch (spellSys.CanPrepare(spData, critter))
+			{
+			case PreparationStatus::Incompatible:
+			case PreparationStatus::Disabled:
+				// won't be memorized, tint red
+				return &disabledColor;
+			case PreparationStatus::Enabled:
+				if (isSchoolSlot) {
+					// unmemorized school spell, tint yellow
+					return &liteSchoolColor;
+				} else {
+					// unmemorized normal, default text color
+					return &liteTextColor;
+				}
+			case PreparationStatus::Restricted:
+				if (isSchoolSlot) {
+					// unmemorized school spell with some impediment
+					return &restSchoolColor;
+				} else {
+					// unmemorized spell with some impediment
+					return &restrictColor;
+				}
+				break;
+			}
+		} else {
+			if (isSchoolSlot) {
+				// memorized school spell, faded yellow
+				return &darkSchoolColor;
+			} else {
+				// memorized normal, dark text color
+				return &darkTextColor;
+			}
+		}
+	}
 }
 
 /* Originally 0x101B73D0 */
@@ -1181,17 +1319,7 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	auto spellIdx = widgetIdx + scrollbarY;
 	auto &spData = uiCharSpellPkt.spellsMemorized.spells[spellIdx];
 
-	TigTextStyle style;
-	static auto txtR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B88));
-	static auto txtG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B8C));
-	static auto txtB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B90));
-	static auto txtA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B94));
-
-	// dark text colors
-	static auto txdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B98));
-	static auto txdG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B9C));
-	static auto txdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA0));
-	static auto txdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA4));
+	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
 
 	// border colors
 	static auto brdR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B60));
@@ -1199,34 +1327,17 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	static auto brdB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B68));
 	static auto brdA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81B6C));
 
-	// header colors
-	static auto hedR = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BA8));
-	static auto hedG = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BAC));
-	static auto hedB = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB0));
-	static auto hedA = static_cast<uint8_t>(temple::GetRef<int>(0x10C81BB4));
+	TigTextStyle style;
 
-	bool usedUp = spData.spellStoreState.usedUp;
-	bool isSchoolSlot = wizSpec && IsSpecializationSchoolSlot(spellIdx);
-
-	// Note: XMCOLOR() seems to auto-promote values to float, which are
-	// expected to be in the 0-1 range, not 0-255.
-	static ColorRect liteTextColor(XMCOLOR_ARGB(txtA, txtR, txtG, txtB));
-	static ColorRect darkTextColor(XMCOLOR_ARGB(txdA, txdR, txdG, txdB));
-	static ColorRect disabledColor(XMCOLOR(0xFFFF9090));
-	static ColorRect restrictColor(XMCOLOR(0xFF9090FF));
-	static ColorRect liteSchoolColor(XMCOLOR(0xFFFFFF80));
-	static ColorRect restSchoolColor(XMCOLOR(0xFFFFBB80));
-	static ColorRect darkSchoolColor(XMCOLOR(0xFF909050));
 	static ColorRect shadowColor(XMCOLOR(0, 0, 0, 255));
-	static ColorRect spellLabelColor(XMCOLOR_ARGB(hedA, hedR, hedG, hedB));
 
-	style.textColor = &liteTextColor;
+	style.textColor = MemorizedSpellColor(spellIdx, handle);
 	style.shadowColor = &shadowColor;
 	style.flags = 0x4008; // drop shadow + truncate too long text with ellipsis
 	style.kerning = 1;
 	style.tracking = 2;
 
-	bool drawBorder = usedUp || spData.spellEnum == -1;
+	bool drawBorder = spData.spellStoreState.usedUp || spData.spellEnum == -1;
 	auto borderColor =
 		isSchoolSlot ? XMCOLOR(0xFFFFFF80)
 		             : XMCOLOR_ARGB(brdA, brdR, brdG, brdB);
@@ -1234,7 +1345,6 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 	if (spData.spellEnum == 0) {
 		// spell label
 		if (static_cast<int>(spData.spellLevel) > -1) {
-			style.textColor = &spellLabelColor;
 			MesLine mesLine;
 			mesFuncs.ReadLineDirect(uiCharImpl->uiCharSpellsUiText, 3, &mesLine);
 			auto text = fmt::format("{} {}", mesLine.value, spData.spellLevel);
@@ -1251,43 +1361,6 @@ void UiCharHooks::MemorizedSpellsRender(int widId, TigMsg& tigMsg)
 			text = fmt::format("{}", spellText);
 		}
 		
-		// determine the text color
-		if (usedUp) {
-			switch (spellSys.CanPrepare(spData, handle))
-			{
-			case PreparationStatus::Disabled:
-				// won't be memorized, tint red
-				style.textColor = &disabledColor;
-				break;
-			case PreparationStatus::Enabled:
-				if (isSchoolSlot) {
-					// unmemorized school spell, tint yellow
-					style.textColor = &liteSchoolColor;
-				} else {
-					// unmemorized normal, default text color
-					style.textColor = &liteTextColor;
-				}
-				break;
-			case PreparationStatus::Restricted:
-				if (isSchoolSlot) {
-					// unmemorized school spell with some impediment
-					style.textColor = &restSchoolColor;
-				} else {
-					// unmemorized spell with some impediment
-					style.textColor = &restrictColor;
-				}
-				break;
-			}
-		} else {
-			if (isSchoolSlot) {
-				// memorized school spell, faded yellow
-				style.textColor = &darkSchoolColor;
-			} else {
-				// memorized normal, dark text color
-				style.textColor = &darkTextColor;
-			}
-		}
-
 		auto rect = TigRect(0, 0, wnd->width, wnd->height);
 		UiRenderer::DrawTextInWidget(widId, text, rect, style);
 
@@ -2015,6 +2088,99 @@ void UiCharHooks::LongDescriptionPopupCreate(objHndl item)
 	}
 }
 
+void UiCharHooks::SpellTooltip(
+		int x, int y, int widId, int scrollId,
+		LgcyWindow **wnds, SpellList & spells,
+		ColorRect *(*TextColor)(size_t, objHndl))
+{
+	LgcyWindow *wnd = uiManager->GetWindow(widId);
+
+	auto widIdx = WidgetIdIndexOf(widId, wnds, NUM_SPELLBOOK_SLOTS);
+	if (widIdx == -1) return;
+
+	int scrollY = 0;
+	if (uiManager->ScrollbarGetY(scrollId, &scrollY)) return;
+
+	auto spellIdx = widIdx + scrollY;
+	auto & spell = spells.spells[spellIdx];
+		
+	auto target = static_cast<LgcyWindowMouseState>(9);
+	auto ienum = static_cast<int>(spell.spellEnum);
+	if (wnd->mouseState == target || ienum <= 0) return;
+
+	auto critter = charUiSys.GetCurrentCritter();
+
+	auto & fontFace = *uiCharAddresses.uiCharSpellFontName;
+	auto & fontSize = *uiCharAddresses.uiCharSpellFontSize;
+	UiRenderer::PushFont(fontFace, fontSize);
+
+	static ColorRect bgColor(XMCOLOR(0xCC111111));
+	static ColorRect shadowColor(XMCOLOR(0xFF000000));
+
+	TigTextStyle style;
+	style.flags = 3080;
+	style.textColor = TextColor(spellIdx, critter);
+	style.bgColor = &bgColor;
+	style.shadowColor = &shadowColor;
+	style.kerning = 1;
+	style.tracking = 5;
+
+	std::string note = "";
+
+	auto & state = spell.spellStoreState;
+	if (state.spellStoreType != spellStoreMemorized || state.usedUp) {
+		switch (spellSys.CanPrepare(spell, critter)) {
+		case PreparationStatus::Incompatible:
+			note = " - you cannot prepare this spell due to alignment.";
+			break;
+		case PreparationStatus::Disabled:
+			note = " - you have no spellbook for this spell.";
+			break;
+		case PreparationStatus::Restricted:
+			note = " - preparation may fail.";
+			break;
+		default:
+			break;
+		}
+	}
+
+	std::string text =
+		fmt::format("{}{}", spellSys.GetSpellName(spell.spellEnum), note);
+
+	auto measuredSize = UiRenderer::MeasureTextSize(text, style);
+	TigRect extents(x, y - measuredSize.height, measuredSize.width, measuredSize.height);
+	if (extents.y  < 0){
+		extents.y = y;
+	}
+	auto wftWidth = temple::GetRef<int>(0x103012C8);
+	if ( extents.x + measuredSize.width > wftWidth)	{
+		extents.x = wftWidth - measuredSize.width;
+	}
+	UiRenderer::RenderText(text, extents, style);
+
+	UiRenderer::PopFont();
+}
+
+void UiCharHooks::SpellbookTooltip(int x, int y, int *widId)
+{
+	auto & packets = GetUiCharSpellPacket();
+
+	SpellTooltip(
+			x, y, *widId, packets.spellbookScrollbar->widgetId,
+			&packets.spellbookSpellWnds[0], packets.spellsKnown,
+			KnownSpellColor);
+}
+
+void UiCharHooks::MemorizedTooltip(int x, int y, int *widId)
+{
+	auto & packets = GetUiCharSpellPacket();
+
+	SpellTooltip(
+			x, y, *widId, packets.memorizeScrollbar->widgetId,
+			&packets.memorizeSpellWnds[0], packets.spellsMemorized,
+			MemorizedSpellColor);
+}
+
 void UiCharHooks::TotalWeightOutputBtnTooltip(int x, int y, int* widId)
 {
 
@@ -2496,6 +2662,8 @@ void UiCharHooks::apply(){
 	});
 
 	replaceFunction(0x10155D20, TotalWeightOutputBtnTooltip);
+	replaceFunction(0x101B85A0, SpellbookTooltip);
+	replaceFunction(0x101B8870, MemorizedTooltip);
 
 	replaceFunction<void(__cdecl)(int)>(0x101BD850, [](int widId)->void {
 		return uiCharImpl->SkillsBtnRender(widId);

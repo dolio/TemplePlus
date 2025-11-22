@@ -29,7 +29,8 @@ enum class PreparationStatus : uint32_t
 {
 	Disabled = 0,
 	Enabled = 1,
-	Restricted = 2
+	Restricted = 2,
+	Incompatible = 3
 };
 
 struct SpellEntryExt {

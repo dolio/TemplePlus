@@ -3044,7 +3044,7 @@ PreparationStatus LegacySpellSystem::CanPrepare(SpellStoreData &spData, objHndl 
 	if (!spData.spellEnum) return PreparationStatus::Disabled;
 
 	if (SpellOpposesCritterAlignment(spData, handle)) {
-		return PreparationStatus::Disabled;
+		return PreparationStatus::Incompatible;
 	}
 
 	if (GetCastingClass(spData.classCode) == stat_level_wizard) {
