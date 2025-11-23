@@ -87,6 +87,24 @@ SpellComponentFlag SpellStoreData::GetSpellComponentFlags(){
 	return (SpellComponentFlag)result;
 }
 
+int SpellStoreData::BaseSpellLevel()
+{
+	SpellEntry spEntry(spellEnum);
+	return spEntry.SpellLevelForSpellClass(classCode);
+}
+
+int SpellStoreData::RequiredSlotLevel()
+{
+	return BaseSpellLevel() + metaMagicData.ExtraCost();
+}
+
+uint32_t SpellStoreData::SpellSchool()
+{
+	SpellEntry spEntry(spellEnum);
+
+	return spEntry.spellSchoolEnum;
+}
+
 bool operator<(const SpellStoreData & sp1, const SpellStoreData & sp2){
 	int levelDelta = sp1.spellLevel - sp2.spellLevel;
 	if (levelDelta < 0)

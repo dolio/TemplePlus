@@ -70,6 +70,21 @@ struct MetaMagicData{
 		metaMagicWidenSpellCount =    (raw & 0xF00000) >> 20;
 	}
 
+	int ExtraCost() {
+		int result = 0;
+		result += static_cast<int>(metaMagicEnlargeSpellCount);
+		result += static_cast<int>(metaMagicExtendSpellCount);
+		result += static_cast<int>(metaMagicHeightenSpellCount);
+		result += static_cast<int>(metaMagicEmpowerSpellCount) * 2;
+		result += static_cast<int>(metaMagicWidenSpellCount) * 3;
+
+		if (metaMagicFlags & MetaMagic_Silent) result += 1;
+		if (metaMagicFlags & MetaMagic_Still) result += 1;
+		if (metaMagicFlags & MetaMagic_Maximize) result += 3;
+		if (metaMagicFlags & MetaMagic_Quicken) result += 4;
+
+		return result;
+	}
 	
 };
 const uint32_t TestSizeOfMetaMagicData = sizeof(MetaMagicData);
@@ -176,6 +191,14 @@ struct SpellStoreData
 	}
 	bool operator < (const SpellStoreData& b);
 	SpellComponentFlag GetSpellComponentFlags(); // regards metamagic data
+
+	// Gets the actual level for the core spell, regarding the class.
+	// `spellLevel` is actually storing the level of the slot used to prepare
+	// the spell, not the level of the spell.
+	int BaseSpellLevel();
+	// As above, but includes metamagic increases.
+	int RequiredSlotLevel();
+	uint32_t SpellSchool();
 };
 
 bool operator < (const SpellStoreData& sp1, const SpellStoreData& sp2);

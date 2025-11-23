@@ -2203,15 +2203,53 @@ CondStruct * LegacySpellSystem::GetCondFromSpellEnum(int spellEnum)
 	return nullptr;
 }
 
+bool TryPrepare(objHndl caster, SpellStoreData & spell)
+{
+	auto query = "Prep Already Failed";
+	if (d20Sys.D20QueryPython(caster, query, spell.spellEnum))
+		// already failed preparation, you don't get a second chance
+		return false;
+
+	// Only restriction is wizard spellbooks right now; adjust if that
+	// changes.
+	auto dc = 15 + spell.BaseSpellLevel();
+	auto skillRollFlag = SRF_Spell_School << spell.SpellSchool();
+	auto skill = SkillEnum::skill_spellcraft;
+	if (!skillSys.SkillRoll(caster, skill, dc, nullptr, skillRollFlag)) {
+		// 14400 rounds = 1 day
+		auto ienum = static_cast<int>(spell.spellEnum);
+		conds.AddTo(caster, "Failed Preparation", { 14400, ienum });
+		return false;
+	}
+
+	return true;
+}
+
 uint32_t LegacySpellSystem::SpellsPendingToMemorized(objHndl handle){
 	auto obj = gameSystems->GetObj().GetObject(handle);
 	auto spellsMemo = obj->GetSpellArray(obj_f_critter_spells_memorized_idx);
+	auto anyFailed = false;
 	for (auto i = 0u; i < spellsMemo.GetSize(); i++) {
 		auto spData = spellsMemo[i];
 		if (spData.spellStoreState.usedUp & 1){
-			spData.spellStoreState.usedUp &= 0xFE;
-			obj->SetSpell(obj_f_critter_spells_memorized_idx, i, spData);
+			switch (CanPrepare(spData, handle)) {
+			case PreparationStatus::Restricted:
+				// if preparation fails, skip
+				if (!TryPrepare(handle, spData)) {
+					anyFailed = true;
+					break;
+				}
+			case PreparationStatus::Enabled:
+				spData.spellStoreState.usedUp &= 0xFE;
+				obj->SetSpell(obj_f_critter_spells_memorized_idx, i, spData);
+			default:
+				break;
+			}
 		}
+	}
+	if (anyFailed) {
+		const auto msg = "Spell preparation failed.";
+		floatSys.floatMesLine(handle, 1, FloatLineColor::Red, msg);
 	}
 	return TRUE;
 }
