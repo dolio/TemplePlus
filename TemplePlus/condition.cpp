@@ -3552,10 +3552,12 @@ void ConditionSystem::RegisterNewConditions()
 		};
 		condHeld.AddHook(dispTypeAbilityScoreLevel, DK_STAT_STRENGTH, HeldCapStatBonus);
 		condHeld.AddHook(dispTypeAbilityScoreLevel, DK_STAT_DEXTERITY, HeldCapStatBonus);
+		condHeld.AddHook(dispTypeGetAC, DK_NONE, HeldNoDodge, 353, 0);
 
 		static CondStructNew condSleeping;
 		condSleeping.ExtendExisting("Sleeping");
 		condSleeping.AddHook(dispTypeAbilityScoreLevel, DK_STAT_DEXTERITY, HelplessCapStatBonus);
+		condSleeping.AddHook(dispTypeGetAC, DK_NONE, HelplessNoDodge, 355, 0);
 	}
 
 	{
@@ -4046,6 +4048,35 @@ int HeldCapStatBonus(DispatcherCallbackArgs args)
 	return 0;
 }
 
+
+// When you're helpless, you do not get a dexterity bonus (in fact, your
+// dexterity is treated as 0). Ergo, you do not get dodge AC.
+//
+// Hook data1 gives the reason why the bonus is denied.
+int HelplessNoDodge(DispatcherCallbackArgs args)
+{
+	DispIoAttackBonus *dispIo = dispatch.DispIoCheckIoType5(args.dispIO);
+	if (!dispIo) return 0;
+
+	dispIo->bonlist.AddCap(8, 0, args.GetData1());
+
+	return 0;
+}
+
+// As above, but check for freedom of movement.
+int HeldNoDodge(DispatcherCallbackArgs args)
+{
+	auto critter = args.objHndCaller;
+	if (d20Sys.d20Query(critter, DK_QUE_Critter_Has_Freedom_of_Movement))
+		return 0;
+
+	DispIoAttackBonus *dispIo = dispatch.DispIoCheckIoType5(args.dispIO);
+	if (!dispIo) return 0;
+
+	dispIo->bonlist.AddCap(8, 0, args.GetData1());
+
+	return 0;
+}
 
 #pragma region Barbarian Stuff
 
@@ -8206,6 +8237,12 @@ void Conditions::AddConditionsToTable(){
 		static CondStructNew condColorSprayBlind;
 		condColorSprayBlind.ExtendExisting("sp-Color Spray Blind");
 		condColorSprayBlind.AddHook(dispTypeTurnBasedStatusInit, DK_NONE, TurnBasedStatusInitNoActions);
+
+		static CondStructNew condColorSprayUnconscious;
+		condColorSprayUnconscious.ExtendExisting("sp-Color Spray Unconscious");
+		condColorSprayUnconscious.AddHook(dispTypeAbilityScoreLevel, DK_STAT_STRENGTH, HelplessCapStatBonus);
+		condColorSprayUnconscious.AddHook(dispTypeAbilityScoreLevel, DK_STAT_DEXTERITY, HelplessCapStatBonus);
+		condColorSprayUnconscious.AddHook(dispTypeGetAC, DK_NONE, HelplessNoDodge, 352, 0);
 	}
 
 	// New Conditions!

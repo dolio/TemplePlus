@@ -322,6 +322,8 @@ int TacticalOptionAbusePrevention(DispatcherCallbackArgs args);
 
 int HeldCapStatBonus(DispatcherCallbackArgs args);
 int HelplessCapStatBonus(DispatcherCallbackArgs args);
+int HeldNoDodge(DispatcherCallbackArgs args);
+int HelplessNoDodge(DispatcherCallbackArgs args);
 
 int CombatExpertiseRadialMenu(DispatcherCallbackArgs args);
 int CombatExpertiseSet(DispatcherCallbackArgs args);
