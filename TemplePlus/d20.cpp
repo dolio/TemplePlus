@@ -1183,6 +1183,14 @@ int32_t LegacyD20System::D20ActionTriggersAoO(D20Actn* d20a, TurnBasedStatus* tb
 			return 2;
 	}
 
+	bool isMelee = d20a->d20ActType == D20A_STANDARD_ATTACK;
+	isMelee = isMelee || d20a->d20ActType == D20A_UNSPECIFIED_ATTACK;
+	isMelee = isMelee || d20a->d20ActType == D20A_CHARGE;
+
+	// If the action is not a melee action, the checks below for being armed are
+	// irrelevant. The action is the 'provoke from all surrounding' variety.
+	if (!isMelee) return 1;
+
 	if (d20a->d20Caf & D20CAF_TOUCH_ATTACK
 		|| d20Sys.GetAttackWeapon(d20a->d20APerformer, d20a->data1, (D20CAF)d20a->d20Caf) 
 		|| dispatch.DispatchD20ActionCheck(d20a, tbStat, dispTypeGetCritterNaturalAttacksNum))
