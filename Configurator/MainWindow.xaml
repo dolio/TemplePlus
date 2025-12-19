@@ -7,7 +7,7 @@
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         Title="Temple+ Configuration" Height="478.52" Width="726.2" Icon="toee_gog_icon.ico"
-        d:DataContext="{d:DesignInstance local:IniViewModel}" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
+        d:DataContext="{d:DesignInstance local:IniViewModel}" ResizeMode="CanResize" WindowStartupLocation="CenterScreen"
         >
     <Window.Resources>
         <fa:DescriptionConverter x:Key="DescriptionConverter"/>
