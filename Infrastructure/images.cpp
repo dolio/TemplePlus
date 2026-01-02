@@ -193,11 +193,33 @@ namespace gfx {
 		return result;
 	}
 
+	void CopyScaledImage(void *dst0, uint8_t *src0, uint32_t w, uint32_t h, uint8_t scale)
+	{
+		if (scale <= 1) {
+			memcpy(dst0, src0, w * h * 4);
+			return;
+		}
+		auto dst = reinterpret_cast<uint32_t *>(dst0);
+		auto src = reinterpret_cast<uint32_t *>(src0);
+
+		auto sw = w/scale;
+
+		for (size_t i = 0; i < w; ++i) {
+			for (size_t j = 0; j < h; ++j) {
+				auto si = i/scale;
+				auto sj = j/scale;
+				dst[j*w+i] = src[sj*sw+si];
+			}
+		}
+	}
+
 	HCURSOR LoadImageToCursor(const span<uint8_t> data, uint32_t hotspotX, uint32_t hotspotY) {
 
+		const uint8_t scale = 3;
+
 		auto img(DecodeImage(data));
-		auto w = img.info.width;
-		auto h = img.info.height;
+		auto w = img.info.width * scale;
+		auto h = img.info.height * scale;
 
 		if (!img.info.hasAlpha) {
 			throw TempleException("Cursor has no alpha channel");
@@ -222,7 +244,7 @@ namespace gfx {
 		auto hBitmap = CreateDIBSection(hdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
 			(void **)&lpBits, NULL, (DWORD)0);
 
-		memcpy(lpBits, img.data.get(), w * h * 4);
+		CopyScaledImage(lpBits, img.data.get(), w, h, scale);
 
 		ReleaseDC(NULL, hdc);
 
