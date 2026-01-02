@@ -549,7 +549,7 @@ void RenderingDevice::PresentForce() {
   return false;
   }*/
 
-  D3DLOG(mSwapChain->Present(mImpl->vsync, 0));
+  D3DLOG(mSwapChain->Present(mImpl->vsync ? 3 : 0, 0));
 }
 
 void RenderingDevice::Flush()
