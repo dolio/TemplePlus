@@ -151,7 +151,7 @@ private:
 
 	void RenderCurrentLine() const {
 
-		UiRenderer::PushFont(mLine->fontname, 0, 0);
+		UiRenderer::PushFont(mLine->fontname, 200, 0);
 
 		auto extents = UiRenderer::MeasureTextSize(mLine->text, mSubtitleStyle, 700, 150);
 		
