@@ -77,9 +77,13 @@ namespace gfx {
 	// foreground and maybe a drop shadow.
 	struct LaidoutText {
 		CComPtr<IDWriteTextLayout> full;
-		ID2D1Brush *fg; // brush for foreground text
+		ID2D1Brush *fg = nullptr; // brush for foreground text
 		CComPtr<IDWriteTextLayout> plain;
-		ID2D1Brush *shadow; // brush for drop shadow
+		ID2D1Brush *shadow = nullptr; // brush for drop shadow
+
+		bool operator !() {
+			return !full || !fg;
+		}
 	};
 
 	class TextEngine {

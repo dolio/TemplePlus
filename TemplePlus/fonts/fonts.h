@@ -2,6 +2,8 @@
 #pragma once
 
 #include <gsl/gsl>
+#include <tig/tig_font.h>
+#include <graphics/textengine.h>
 
 struct ScanWordResult;
 struct GlyphVertex2d;
@@ -41,6 +43,30 @@ private:
 
 };
 
+struct ScreenText {
+	// legacy text info
+	gsl::cstring_span<> baseText;
+	TigFont font;
+	TigRect extents;
+	TigTextStyle style;
+	// new layout text info; null-ish for legacy text
+	gfx::LaidoutText layout;
+
+	ScreenText(
+			gsl::cstring_span<> b,
+			TigFont f,
+			TigRect e,
+			TigTextStyle s)
+		: baseText(b), font(f), extents(e), style(s) {}
+	ScreenText(
+			gsl::cstring_span<> b,
+			TigFont f,
+			TigRect e,
+			TigTextStyle s,
+			gfx::LaidoutText l)
+		: baseText(b), font(f), extents(e), style(s), layout(l) {}
+};
+
 /*
 Separates a block of text given flags into words split up
 on lines and renders them.
@@ -52,6 +78,9 @@ public:
 	~TextLayouter();
 
 	void LayoutAndDraw(gsl::cstring_span<> text, const TigFont &font, TigRect& extents, TigTextStyle& style);
+
+	ScreenText Layout(gsl::cstring_span<> text, const TigFont &font, TigRect& extents, TigTextStyle& style);
+	void Draw(ScreenText & stext, TigPos & pos);
 
 	void Measure(const TigFont &font, const TigTextStyle &style, TigFontMetrics &metrics);
 

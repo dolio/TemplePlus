@@ -2,8 +2,6 @@
 
 #include "stdafx.h"
 
-#include <tig/tig_font.h>
-
 #include <graphics/shaperenderer2d.h>
 #include <graphics/device.h>
 #include <graphics/textengine.h>
@@ -126,48 +124,19 @@ static FormattedText ProcessString(const TextStyle& defaultStyle, const TigTextS
 	return result;
 }
 
-void TextLayouter::LayoutAndDraw(gsl::cstring_span<> text, const TigFont& font, TigRect& extents, TigTextStyle& style) {
+void TextLayouter::Draw(ScreenText & stext, TigPos & pos)
+{
+	if (stext.baseText.length() == 0) return;
 
-	if (text.length() == 0) {
+	auto & style = stext.style;
+
+	// if there is no new style text, use the old method
+	if (!stext.layout) {
+		LayoutAndDrawVanilla(stext.baseText, stext.font, stext.extents, style);
 		return;
 	}
 
-	// Get the base text format and check if we should render using the new or old algorithms
-	auto it = mMapping->find(font.name);
-	if (it == mMapping->end()) {
-		// use the old font drawing algorithm
-		LayoutAndDrawVanilla(text, font, extents, style);
-		return;
-	}
-
-	// Use the new text engine style of drawing
-	auto tabPos = style.field4c - extents.x;
-	auto textStyle = it->second;
-	ApplyStyle(style, tabPos, textStyle);
-
-	// If the string contains an @ symbol, we need to assume it's a legacy formatted string that
-	// we need to parse into the new format.
-	bool isLegacyFormattedStr = std::find(text.begin(), text.end(), '@') != text.end();
-
-	gfx::FormattedText formatted;
-	if (isLegacyFormattedStr) {
-		formatted = ProcessString(textStyle, style, text);
-	} else {
-		formatted.text = local_to_ucs2(to_string(text));
-		formatted.defaultStyle = textStyle;
-	}
-
-	// Determine the real text width/height if necessary
-	if (extents.width <= 0 || extents.height <= 0) {
-		gfx::TextMetrics metrics;
-		mTextEngine.MeasureText(formatted, metrics);
-		if (extents.width <= 0) {
-			extents.width = metrics.width;
-		}
-		if (extents.height <= 0) {
-			extents.height = metrics.height;
-		}
-	}
+	TigRect extents(pos.x, pos.y, stext.extents.width, stext.extents.height);
 
 	// Handle drawing of border/background
 	if (style.flags & (TTSF_BACKGROUND | TTSF_BORDER)) {
@@ -183,11 +152,75 @@ void TextLayouter::LayoutAndDraw(gsl::cstring_span<> text, const TigFont& font, 
 			center.y = style.rotationCenterY;
 		}
 
-		mTextEngine.RenderTextRotated(extents, angle, center, formatted);
+		mTextEngine.RenderTextRotated(pos, angle, center, stext.layout);
 	} else {
-		mTextEngine.RenderText(extents, formatted);
+		mTextEngine.RenderText(pos, stext.layout);
+	}
+}
+
+ScreenText TextLayouter::Layout(
+		gsl::cstring_span<> text,
+		const TigFont &font,
+		TigRect &extents,
+		TigTextStyle &style)
+{
+	// Use the vanilla algorithm for empty strings, since it doesn't matter.
+	if (text.length() == 0) {
+		ScreenText result(text, font, extents, style);
+		return result;
 	}
 
+	// Get the base text format and check if we should render using the new or
+	// old algorithms.
+	auto it = mMapping->find(font.name);
+	if (it == mMapping->end()) {
+		// use the old font drawing algorithm
+		ScreenText result(text, font, extents, style);
+		return result;
+	}
+
+	// Use the new text engine style of drawing
+	auto tabPos = style.field4c - extents.x;
+	auto textStyle = it->second;
+	ApplyStyle(style, tabPos, textStyle);
+
+	// If the string contains an @ symbol, we need to assume it's a legacy
+	// formatted string that we need to parse into the new format.
+	bool isLegacyFormattedStr =
+		std::find(text.begin(), text.end(), '@') != text.end();
+
+	gfx::FormattedText formatted;
+	if (isLegacyFormattedStr) {
+		formatted = ProcessString(textStyle, style, text);
+	} else {
+		formatted.text = local_to_ucs2(to_string(text));
+		formatted.defaultStyle = textStyle;
+	}
+
+
+	// Determine the real text width/height if necessary
+	if (extents.width <= 0 || extents.height <= 0) {
+		gfx::TextMetrics metrics;
+		mTextEngine.MeasureText(formatted, metrics);
+		if (extents.width <= 0) {
+			extents.width = metrics.width;
+		}
+		if (extents.height <= 0) {
+			extents.height = metrics.height;
+		}
+	}
+
+	ScreenText result(text, font, extents, style, mTextEngine.LayoutText(extents, formatted));
+	return result;
+}
+
+void TextLayouter::LayoutAndDraw(
+		gsl::cstring_span<> text,
+		const TigFont& font,
+		TigRect& extents,
+		TigTextStyle& style)
+{
+	Draw(Layout(text, font, extents, style), extents.Pos());
 }
 
 void TextLayouter::Measure(const TigFont &font, const TigTextStyle & style, TigFontMetrics & metrics)
