@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <dwrite.h>
 #include <memory>
 #include <string>
 #include <EASTL/string.h>
@@ -8,6 +9,8 @@
 #include "math.h"
 
 struct ID3D11Device;
+struct IDWriteTextLayout;
+struct ID2D1Brush;
 
 namespace gfx {
 
@@ -70,6 +73,15 @@ namespace gfx {
 		eastl::fixed_vector<ConstrainedTextStyle, 4> formats;
 	};
 
+	// Text that has been laid out by DirectWrite, with brushes for
+	// foreground and maybe a drop shadow.
+	struct LaidoutText {
+		CComPtr<IDWriteTextLayout> full;
+		ID2D1Brush *fg; // brush for foreground text
+		CComPtr<IDWriteTextLayout> plain;
+		ID2D1Brush *shadow; // brush for drop shadow
+	};
+
 	class TextEngine {
 	friend class FontLoader;
 	public:
@@ -77,17 +89,44 @@ namespace gfx {
 		~TextEngine();
 		
 		void RenderText(const TigRect &rect, const FormattedText &formattedStr);
+		void RenderText(const TigPos &pos, const LaidoutText &text);
 
-		void RenderTextRotated(const TigRect &rect,
+		void RenderTextRotated(
+			const TigRect &rect,
 			float angle,
 			XMFLOAT2 center,
 			const FormattedText &formattedStr);
+
+		void RenderTextRotated(
+			const TigPos &pos,
+			float angle,
+			XMFLOAT2 center,
+			const LaidoutText &text);
 
 		void RenderText(const TigRect &rect, const TextStyle &style, const std::wstring &text);
 			
 		void RenderText(const TigRect &rect, const TextStyle &style, const std::string &text);
 
+		LaidoutText LayoutText(
+				const TigRect &rect,
+				const std::wstring & text,
+				const TextStyle & style,
+				const eastl::fixed_vector<ConstrainedTextStyle, 4> & formats);
+		LaidoutText LayoutText(
+				const TigRect &rect,
+				const FormattedText &formattedStr);
+		LaidoutText LayoutText(
+				const TigRect &rect,
+				const TextStyle &style,
+				const std::wstring &text);
+		LaidoutText LayoutText(
+				const TigRect &rect,
+				const TextStyle &style,
+				const std::string &text);
+
+
 		void MeasureText(const FormattedText &formattedStr, TextMetrics &metrics);
+		void MeasureText(const LaidoutText &text, TextMetrics &metrics);
 
 		void MeasureText(const TextStyle &style, const std::wstring &text, TextMetrics &metrics);
 		

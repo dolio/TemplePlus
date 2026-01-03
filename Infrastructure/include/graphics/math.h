@@ -47,6 +47,22 @@ struct ColorRect {
 struct tagRECT;
 typedef struct tagRECT RECT;
 
+struct TigPos {
+	int x;
+	int y;
+
+	TigPos() : x(0), y(0) {}
+	TigPos(int x, int y) : x(x), y(y) {}
+
+	bool operator==(const TigPos &other) const {
+		return x == other.x && y == other.y;
+	}
+
+	bool operator!=(const TigPos &other) const {
+		return x != other.x || y != other.y;
+	}
+};
+
 struct TigRect {
 	int x;
 	int y;
@@ -54,18 +70,14 @@ struct TigRect {
 	int height;
 
 	TigRect() : x(0), y(0), width(0), height(0) {}
-	TigRect(int x, int y, int w, int h) {
-		this->x = x;
-		this->y = y;
-		this->width = w;
-		this->height = h;
-	}
+	TigRect(int x, int y, int w, int h) : x(x), y(y), width(w), height(h) {}
 
 	RECT ToRect();
 	void FitInto(const TigRect &boundingRect);
 	bool Intersects(const TigRect &other);
 	bool Intersects(const TigRect &other, TigRect &intersection);
 	bool ContainsPoint(int px, int py);
+	inline TigPos Pos() const { return TigPos(x,y); }
 
 	bool operator==(const TigRect &other) const {
 		return x == other.x && y == other.y && width == other.width && height == other.height;

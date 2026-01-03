@@ -166,8 +166,23 @@ namespace gfx {
 		ID2D1Brush* GetBrush(const Brush &brush);
 
 		// Formatted strings
-		CComPtr<IDWriteTextLayout> GetTextLayout(int width, int height, const TextStyle &style, const std::wstring &text);
-		CComPtr<IDWriteTextLayout> GetTextLayout(int width, int height, const FormattedText &formatted, bool skipDrawingEffects = false);
+		CComPtr<IDWriteTextLayout> GetTextLayout(
+				int width,
+				int height,
+				const TextStyle &style,
+				const std::wstring &text);
+		CComPtr<IDWriteTextLayout> GetTextLayout(
+				int width,
+				int height,
+				const FormattedText &formatted,
+				bool skipDrawingEffects = false);
+		CComPtr<IDWriteTextLayout> GetTextLayout(
+				int width,
+				int height,
+				const std::wstring &text,
+				const TextStyle &style,
+				const eastl::fixed_vector<ConstrainedTextStyle, 4> & formats,
+				bool skipDrawingEffects);
 
 		// Clipping
 		bool enableClipRect = false;
@@ -260,33 +275,65 @@ namespace gfx {
 		mImpl->dWriteFactory->UnregisterFontCollectionLoader(mImpl->fontLoader.get());		
 	}
 
-	void TextEngine::RenderText(const TigRect &rect, const FormattedText &formattedStr)
+	void TextEngine::RenderText(const TigPos &pos, const LaidoutText & text)
 	{
-
 		mImpl->BeginDraw();
 
-		float x = (float) rect.x;
-		float y = (float) rect.y;
-
-		auto textLayout = mImpl->GetTextLayout(rect.width, rect.height, formattedStr);
+		float x = static_cast<float>(pos.x);
+		float y = static_cast<float>(pos.y);
 
 		DWRITE_TEXT_METRICS metrics;
-		D3DVERIFY(textLayout->GetMetrics(&metrics));
+		D3DVERIFY(text.full->GetMetrics(&metrics));
 
 		// Draw the drop shadow first as a simple +1, +1 shift
-		if (formattedStr.defaultStyle.dropShadow) {
-			auto shadowLayout = mImpl->GetTextLayout(rect.width, rect.height, formattedStr, true);
-
-			auto shadowBrush = mImpl->GetBrush(formattedStr.defaultStyle.dropShadowBrush);
-			mImpl->context->DrawTextLayout(
-				{ x + 1, y + 1 },
-				shadowLayout,
-				shadowBrush
-			);
+		if (text.plain && text.shadow) {
+			mImpl->context->DrawTextLayout({ x+1, y+1 }, text.plain, text.shadow);
 		}
 
-		// Get applicable brush
-		auto brush = mImpl->GetBrush(formattedStr.defaultStyle.foreground);
+		mImpl->context->DrawTextLayout({ x, y }, text.full, text.fg);
+
+		mImpl->EndDraw();
+	}
+
+
+	LaidoutText TextEngine::LayoutText(
+			const TigRect &rect,
+			const FormattedText &formattedStr)
+	{
+		return LayoutText(
+				rect,
+				formattedStr.text,
+				formattedStr.defaultStyle,
+				formattedStr.formats);
+	}
+
+	LaidoutText TextEngine::LayoutText(
+			const TigRect &rect,
+			const std::wstring & text,
+			const TextStyle &style,
+			const eastl::fixed_vector<ConstrainedTextStyle, 4> & formats)
+	{
+		LaidoutText ltext;
+
+		ltext.full =
+			mImpl->GetTextLayout(
+					rect.width, rect.height,
+					text, style, formats,
+					false);
+		ltext.fg = mImpl->GetBrush(style.foreground);
+
+		if (style.dropShadow) {
+			ltext.plain =
+				mImpl->GetTextLayout(
+						rect.width, rect.height,
+						text, style, formats,
+						true);
+			ltext.shadow =
+				mImpl->GetBrush(style.dropShadowBrush);
+		}
+
+		/* Note: this was in the existing draw function, but doesn't appear to do
+		 * anything. Possibly resurrect in the future.
 
 		// This is really unpleasant, but DirectWrite doesn't really use a well designed brush
 		// coordinate system for drawing text apparently...
@@ -296,88 +343,75 @@ namespace gfx {
 			gradientBrush->SetEndPoint({ 0, y + metrics.top + metrics.height });
 		}
 
-		mImpl->context->DrawTextLayout(
-			{ x, y },
-			textLayout,
-			brush
-		);
-
 		// Draw an outlint
 		/*D2D1_RECT_F rectOutline{
 		(float)rect.x + metrics.left, (float)rect.y + metrics.top, (float)rect.x + metrics.left + metrics.widthIncludingTrailingWhitespace,
 		(float)rect.y + metrics.top + metrics.height
 		};
-		mImpl->context->DrawRectangle(rectOutline, brush);*/
-		
-		mImpl->EndDraw();
+		mImpl->context->DrawRectangle(rectOutline, brush);
+		*/
+
+		return ltext;
 	}
 
-	void TextEngine::RenderTextRotated(const TigRect &rect, 
-		float angle,
-		XMFLOAT2 center,
-		const FormattedText &formattedStr)
+	LaidoutText TextEngine::LayoutText(
+			const TigRect &rect,
+			const TextStyle &style,
+			const std::wstring &text)
 	{
+		return LayoutText(rect, text, style, {});
+	}
 
+	LaidoutText TextEngine::LayoutText(
+			const TigRect &rect,
+			const TextStyle &style,
+			const std::string &text)
+	{
+		return LayoutText(rect, style, local_to_ucs2(text));
+	}
+
+	void TextEngine::RenderText(
+			const TigRect &rect,
+			const FormattedText &formattedStr)
+	{
+		RenderText(rect.Pos(), LayoutText(rect, formattedStr));
+	}
+
+	void TextEngine::RenderTextRotated(
+			const TigRect &rect, 
+			float angle,
+			XMFLOAT2 center,
+			const FormattedText &formattedStr)
+	{
+		RenderTextRotated(rect.Pos(), angle, center, LayoutText(rect, formattedStr));
+	}
+
+	void TextEngine::RenderTextRotated(
+			const TigPos &pos,
+			float angle,
+			XMFLOAT2 center,
+			const LaidoutText &text)
+	{
 		auto transform2d = D2D1::Matrix3x2F::Rotation(angle, { center.x, center.y });
 		mImpl->context->SetTransform(transform2d);
 
-		RenderText(rect, formattedStr);
+		RenderText(pos, text);
 
 		mImpl->context->SetTransform(D2D1::IdentityMatrix());
-
 	}
 		
-	void TextEngine::RenderText(const TigRect &rect, const TextStyle & style, const std::wstring & text)
+	void TextEngine::RenderText(
+			const TigRect &rect,
+			const TextStyle & style,
+			const std::wstring & text)
 	{
-
-		mImpl->BeginDraw();
-
-		// Draw the drop shadow first as a simple +1, +1 shift
-		if (style.dropShadow) {
-
-			auto shadowLayout = mImpl->GetTextLayout(rect.width, rect.height, style, text);
-			
-			auto shadowBrush = mImpl->GetBrush(style.dropShadowBrush);
-			mImpl->context->DrawTextLayout(
-			{ (float)rect.x + 1, (float)rect.y + 1 },
-				shadowLayout,
-				shadowBrush
-			);
-		}
-
-		auto textLayout = mImpl->GetTextLayout(rect.width, rect.height, style, text);
-
-		DWRITE_TEXT_METRICS metrics;
-		D3DVERIFY(textLayout->GetMetrics(&metrics));
-
-		// Get applicable brush
-		auto brush = mImpl->GetBrush(style.foreground);
-
-		// This is really unpleasant, but DirectWrite doesn't really use a well designed brush
-		// coordinate system for drawing text apparently...
-		CComPtr<ID2D1LinearGradientBrush> gradientBrush;
-		if (SUCCEEDED(brush->QueryInterface(&gradientBrush))) {			
-			gradientBrush->SetStartPoint({ 0, (float) rect.y });
-			gradientBrush->SetEndPoint({ 0, rect.y + metrics.height });
-		}
-
-		mImpl->context->DrawTextLayout(
-		{ (float)rect.x + metrics.left, (float)rect.y + metrics.top },
-			textLayout,
-			brush
-		);
-
-		// Draw an outlint
-		/*D2D1_RECT_F rectOutline{
-			(float)rect.x + metrics.left, (float)rect.y + metrics.top, (float)rect.x + metrics.left + metrics.widthIncludingTrailingWhitespace,
-				(float)rect.y + metrics.top + metrics.height
-		};
-		mImpl->context->DrawRectangle(rectOutline, brush);*/
-
-		mImpl->EndDraw();
+		RenderText(rect.Pos(), LayoutText(rect, text, style, {}));
 	}
 
-	void TextEngine::RenderText(const TigRect &rect, const TextStyle & style, const std::string & text)
+	void TextEngine::RenderText(
+			const TigRect &rect,
+			const TextStyle & style,
+			const std::string & text)
 	{
 		return RenderText(rect, style, local_to_ucs2(text));
 	}
@@ -629,68 +663,54 @@ namespace gfx {
 		return simpleBrush;
 	}
 	
-	CComPtr<IDWriteTextLayout> TextEngine::Impl::GetTextLayout(int width, int height, const TextStyle & style, const std::wstring & text)
+	CComPtr<IDWriteTextLayout> TextEngine::Impl::GetTextLayout(
+			int width,
+			int height,
+			const TextStyle & style,
+			const std::wstring & text)
 	{
-		// The maximum width/height of the box may or may not be specified
-		float widthF, heightF;
-		if (width > 0) {
-			widthF = (float)width;
-		} else {
-			widthF = std::numeric_limits<float>::max();
-		}
-		if (height > 0) {
-			heightF = (float)height;
-		}
-		else {
-			heightF = std::numeric_limits<float>::max();
-		}
-
-		auto textFormat = GetTextFormat(style);
-
-		CComPtr<IDWriteTextLayout> textLayout;
-		D3DVERIFY(dWriteFactory->CreateTextLayout(
-			text.c_str(),
-			text.size(),
-			textFormat,
-			widthF,
-			heightF,
-			&textLayout
-		));
-
-		if (style.trim) {
-			// Ellipsis for the end of the str
-			CComPtr<IDWriteInlineObject> trimmingSign;
-			D3DVERIFY(dWriteFactory->CreateEllipsisTrimmingSign(textFormat, &trimmingSign));
-
-			DWRITE_TRIMMING trimming;
-			trimming.granularity = DWRITE_TRIMMING_GRANULARITY_CHARACTER;
-			trimming.delimiter = 0;
-			trimming.delimiterCount = 0;
-			textLayout->SetTrimming(&trimming, trimmingSign);
-		}
-
-		return textLayout;
+		return GetTextLayout(width, height, text, style, {}, true);
 	}
 
-	CComPtr<IDWriteTextLayout> TextEngine::Impl::GetTextLayout(int width, int height, const FormattedText & formatted, bool skipDrawingEffects)
+	CComPtr<IDWriteTextLayout> TextEngine::Impl::GetTextLayout(
+			int width,
+			int height,
+			const FormattedText & formatted,
+			bool skipDrawingEffects)
+	{
+		return GetTextLayout(
+				width,
+				height,
+				formatted.text,
+				formatted.defaultStyle,
+				formatted.formats,
+				skipDrawingEffects);
+	}
+
+	CComPtr<IDWriteTextLayout> TextEngine::Impl::GetTextLayout(
+			int width,
+			int height,
+			const std::wstring & text,
+			const TextStyle & defaultStyle,
+			const eastl::fixed_vector<ConstrainedTextStyle, 4> & formats,
+			bool skipDrawingEffects)
 	{
 		// The maximum width/height of the box may or may not be specified
 		float widthF, heightF;
 		if (width > 0) {
-			widthF = (float)width;
+			widthF = static_cast<float>(width);
 		}
 		else {
 			widthF = std::numeric_limits<float>::max();
 		}
 		if (height > 0) {
-			heightF = (float)height;
+			heightF = static_cast<float>(height);
 		}
 		else {
 			heightF = std::numeric_limits<float>::max();
 		}
 
-		auto textFormat = GetTextFormat(formatted.defaultStyle);
-		auto &text = formatted.text;
+		auto textFormat = GetTextFormat(defaultStyle);
 
 		CComPtr<IDWriteTextLayout> textLayout;
 		D3DVERIFY(dWriteFactory->CreateTextLayout(
@@ -702,7 +722,7 @@ namespace gfx {
 			&textLayout
 		));
 
-		if (formatted.defaultStyle.trim) {
+		if (defaultStyle.trim) {
 			// Ellipsis for the end of the str
 			CComPtr<IDWriteInlineObject> trimmingSign;
 			D3DVERIFY(dWriteFactory->CreateEllipsisTrimmingSign(textFormat, &trimmingSign));
@@ -714,15 +734,15 @@ namespace gfx {
 			textLayout->SetTrimming(&trimming, trimmingSign);
 		}
 		
-		for (auto &range : formatted.formats) {
+		for (auto &range : formats) {
 			DWRITE_TEXT_RANGE textRange;
 			textRange.startPosition = range.startChar;
 			textRange.length = range.length;
 
-			if (range.style.bold != formatted.defaultStyle.bold) {
+			if (range.style.bold != defaultStyle.bold) {
 				textLayout->SetFontWeight(GetFontWeight(range.style), textRange);
 			}
-			if (range.style.italic != formatted.defaultStyle.italic) {
+			if (range.style.italic != defaultStyle.italic) {
 				textLayout->SetFontStyle(GetFontStyle(range.style), textRange);
 			}
 
@@ -734,7 +754,6 @@ namespace gfx {
 		}
 
 		return textLayout;
-
 	}
 
 	void TextEngine::Impl::BeginDraw()
