@@ -18,6 +18,7 @@
 #include "tig/tig_font.h"
 #include "tig/tig_startup.h"
 #include <graphics/shaperenderer2d.h>
+#include <graphics/imgfile.h>
 #include "fonts/fonts.h"
 #include "ui_tooltip.h"
 #include "ui_assets.h"
@@ -190,6 +191,7 @@ public:
 	#pragma region Main Wnd
 	static void ClassLevelBtnRender(int widId);
 	static void AlignGenderRaceBtnRender(int widId);
+	static void MainWindowRender(int widId);
 	#pragma endregion 
 
 #pragma region Stats Wnd
@@ -233,7 +235,6 @@ public:
 
 	static int SpellMetaMagicFeatGetSpellLevelModifier(feat_enums feat);
 #pragma endregion 
-
 
 #pragma region Inventory (Looting / Bartering / Applying Spell (e.g. Read Magic))
 	static objHndl GetCurrentCritter(); // gets a handle on the critter with inventory open
@@ -1543,6 +1544,116 @@ int UiCharHooks::SpellMetaMagicFeatGetSpellLevelModifier(feat_enums feat)
 	return 0;
 }
 
+std::string RollClass(int rolls)
+{
+	if (rolls < 0) {
+		return "Point Buy:"s;
+	}
+
+	auto method = 0xfff & (rolls >> 17);
+	
+	switch (method)
+	{
+	default:
+	case 0:
+		return "4d6 Rolls:"s;
+	case 1:
+		return "3d6 Rolls:"s;
+	case 2:
+		return "3d6x12 Rolls:"s;
+	case 3:
+		return "3d6b6 Rolls:"s;
+	case 4:
+		return "3d6b2 Rolls:"s;
+	case 0xd5:
+		return "Dark Sun Rolls:"s;
+	case 0xc0:
+		return "Commoner Rolls:"s;
+	case 0xa15:
+	case 0xa25:
+	case 0xa32:
+	case 0xa11:
+	case 0xa18:
+		return "Array:";
+	}
+}
+
+std::string RollDescription(int rolls)
+{
+	if (rolls < 0) {
+		return fmt::format("{}", -rolls);
+	}
+
+	auto method = 0xfff & (rolls >> 17);
+	switch (method)
+	{
+	case 0xa15:
+		return "Non-elite"s;
+	case 0xa25:
+		return "Elite"s;
+	case 0xa32:
+		return "Heroic"s;
+	case 0xa11:
+		return "Standard"s;
+	case 0xa18:
+		return "All 18"s;
+	default:
+		return fmt::format("{}", rolls & 0x1ffff);
+	}
+}
+
+void UiCharHooks::MainWindowRender(int widId)
+{
+	const std::string path = "art\\interface\\char_ui\\{}"s;
+	static CombinedImgFile normalWnd(fmt::format(path, "main_window.img"));
+	static CombinedImgFile ironWnd(fmt::format(path, "ironman_main_window.img"));
+
+	auto critter = GetCurrentCritter();
+	auto window = uiManager->GetWindow(widId);
+
+	if (gameSystems->IsIronman()) {
+		ironWnd.SetX(window->x);
+		ironWnd.SetY(window->y);
+		ironWnd.Render();
+	} else {
+		normalWnd.SetX(window->x);
+		normalWnd.SetY(window->y);
+		normalWnd.Render();
+	}
+
+	const ColorRect fg(XMCOLOR(0xffffffff));
+	const ColorRect bl(XMCOLOR(0xff5a7390));
+	const ColorRect bg(XMCOLOR(0xff000000));
+	static TigTextStyle style(nullptr, nullptr, &bg);
+	style.textColor = const_cast<ColorRect *>(&fg);
+	style.tracking = 3;
+	style.field2c = -1;
+
+	auto rolls = objects.getInt32(critter, obj_f_pc_roll_count);
+	auto rpre = RollClass(rolls);
+	auto rdesc = RollDescription(rolls);
+
+	UiRenderer::PushFont(PredefinedFont::PRIORY_12);
+	auto metrics = UiRenderer::MeasureTextSize(rdesc, style);
+	TigRect extents(
+			window->x + window->width - metrics.width - 18,
+			window->y + 11,
+			metrics.width,
+			metrics.height);
+
+	UiRenderer::RenderText(rdesc, extents, style);
+
+	style.textColor = const_cast<ColorRect *>(&bl);
+	metrics = UiRenderer::MeasureTextSize(rpre, style);
+	extents.x -= metrics.width + 2;
+	extents.width = metrics.width;
+	extents.height = metrics.height;
+
+	UiRenderer::RenderText(rpre, extents, style);
+
+	UiRenderer::PopFont();
+}
+
 objHndl UiCharHooks::GetCurrentCritter()
 {
 	return temple::GetRef<objHndl>(0x10BE9940);
@@ -2107,6 +2218,8 @@ void UiCharHooks::apply(){
 	replaceFunction(0x10144B40, ClassLevelBtnRender);
 	replaceFunction(0x10145020, AlignGenderRaceBtnRender);
 	replaceFunction(0x10144400, LongDescriptionPopupCreate);
+
+	replaceFunction(0x101445F0, MainWindowRender);
 
 	if (temple::Dll::GetInstance().HasCo8Hooks()) {
 		writeHex(0x1011DD4D, "90 90 90 90 90"); // disabling stat text draw calls

@@ -12,16 +12,16 @@ static_assert(temple::validate_size<TigTextStyle, 0x50>::value, "TigTextStyle ha
 ColorRect whiteColor(0xFFFFffff);
 const TigTextStyle TigTextStyle::standardWhite{ &whiteColor };
 
-TigTextStyle::TigTextStyle(ColorRect * color){
-	this->textColor = color;
-}
+TigTextStyle::TigTextStyle(ColorRect * color) : textColor(color) { }
 
-TigTextStyle::TigTextStyle(const ColorRect* textColor, const ColorRect* shadowColor, const ColorRect* backgroundColor)
-{
-	this->textColor = (ColorRect * )textColor;
-	this->shadowColor= (ColorRect*)shadowColor;
-	this->bgColor= (ColorRect*)backgroundColor;
-}
+TigTextStyle::TigTextStyle(
+		const ColorRect *fg,
+		const ColorRect *sh,
+		const ColorRect *bg) :
+	textColor(const_cast<ColorRect *>(fg)),
+	shadowColor(const_cast<ColorRect *>(sh)),
+	bgColor(const_cast<ColorRect *>(bg))
+{}
 
 TigTextStyle::TigTextStyle(){
 }
