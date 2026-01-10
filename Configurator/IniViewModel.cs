@@ -170,7 +170,8 @@ namespace TemplePlusConfig
             .Cast<HpOnLevelUpType>();
 
         public IEnumerable<StatRollMethodType> StatRollMethodTypes => Enum.GetValues(typeof(StatRollMethodType))
-          .Cast<StatRollMethodType>();
+          .Cast<StatRollMethodType>()
+          .Select(n => new KeyValuePair<StatRollMethodType, string>(n, n.Description()));
 
         public IEnumerable<HpForNPCHdType> HpForNPCHdTypes => Enum.GetValues(typeof(HpForNPCHdType))
             .Cast<HpForNPCHdType>();
