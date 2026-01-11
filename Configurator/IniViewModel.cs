@@ -169,7 +169,7 @@ namespace TemplePlusConfig
         public IEnumerable<HpOnLevelUpType> HpOnLevelUpTypes => Enum.GetValues(typeof (HpOnLevelUpType))
             .Cast<HpOnLevelUpType>();
 
-        public IEnumerable<StatRollMethodType> StatRollMethodTypes => Enum.GetValues(typeof(StatRollMethodType))
+        public IEnumerable<KeyValuePair<StatRollMethodType,string>> StatRollMethodTypes => Enum.GetValues(typeof(StatRollMethodType))
           .Cast<StatRollMethodType>()
           .Select(n => new KeyValuePair<StatRollMethodType, string>(n, n.Description()));
 
