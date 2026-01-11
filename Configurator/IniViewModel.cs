@@ -989,7 +989,17 @@ namespace TemplePlusConfig
         [System.ComponentModel.Description("Roll 3d6 6 times per ability")]
         Roll3d6SixPerScore = 3,
         [System.ComponentModel.Description("Roll 3d6 twice per ability")]
-        Roll3d6TwoPerScore = 4
+        Roll3d6TwoPerScore = 4,
+        [System.ComponentModel.Description("1E Commoner")]
+        RollCommoner = 0xc0,
+        [System.ComponentModel.Description("Dark Sun")]
+        RollDarkSun = 0xd5,
+        [System.ComponentModel.Description("Non-elite Array")]
+        NonEliteArray = 0xa15,
+        [System.ComponentModel.Description("Elite Array")]
+        EliteArray = 0xa25,
+        [System.ComponentModel.Description("Heroic Array")]
+        HeroicArray = 0xa32,
     }
 
     static class StatRollMethodExtensions {
@@ -1007,6 +1017,16 @@ namespace TemplePlusConfig
                 return "Roll 3d6 6 times per ability";
             case StatRollMethodType.Roll3d6TwoPerScore:
                 return "Roll 3d6 twice per ability";
+            case StatRollMethodType.RollCommoner:
+                return "1E Commoner";
+            case StatRollMethodType.RollDarkSun:
+                return "Dark Sun";
+            case StatRollMethodType.EliteArray:
+                return "Elite Array";
+            case StatRollMethodType.HeroicArray:
+                return "Heroic Array";
+            case StatRollMethodType.NonEliteArray:
+                return "Non-elite Array";
             }
             return "";
         }
