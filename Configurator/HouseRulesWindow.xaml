@@ -64,7 +64,7 @@
             </TabItem>
             <TabItem Header="Ruleset">
                 <StackPanel Orientation="Horizontal" Margin="5" Width="800" Height="500">
-                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="200">
+                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="450">
                         <StackPanel Orientation="Horizontal">
                             <Label VerticalAlignment="Center" Content="HP on Level Up" Height="27" />
                             <ComboBox VerticalAlignment="Center" SelectedValue="{Binding HpOnLevelUp}"  ItemsSource="{Binding HpOnLevelUpTypes}"/>
@@ -87,7 +87,7 @@
                         <CheckBox VerticalAlignment="Center" Content="Stricter Rules Enforcement" IsChecked="{Binding StricterRulesEnforcement}" Margin="0,5,25,5" ToolTip="Change grease size to 5 foot radius and enforce tower shield attack penalty."/>
                         <CheckBox VerticalAlignment="Center" Content="Prefer Poison Spec File" Margin="0,5,25,5" IsChecked="{Binding PreferPoisonSpecFile}" ToolTip="Fixes some incorrect poison types from the base game (makes some fights harder)"/>
                     </StackPanel>
-                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="206" Margin="255,10,0,0" x:Name="LaxRulesPanel">
+                    <StackPanel HorizontalAlignment="Left" Height="231" VerticalAlignment="Top" Width="210" Margin="5,10,0,0" x:Name="LaxRulesPanel">
                         <Label VerticalAlignment="Center" Content="Lax Rules Options" Margin="0,0,10,0" />
                         <CheckBox VerticalAlignment="Center" Content="Disable Alignment Restrictions" IsChecked="{Binding DisableAlignmentRestrictions}" Margin="0,5,10,5" ToolTip="Alignment restrictions will not apply when choosing a class with respect to the critter's alignment, nor to the party alignment."/>
                         <CheckBox VerticalAlignment="Center" Content="Disable Crafting Spell Reqs." IsChecked="{Binding DisableCraftingSpellReqs}" Margin="0,5,10,5" ToolTip="Crafting Magic Arms and Armor or Wondrous Items will ignore spell requirements. Scrolls/Wands still apply obviously."/>
