@@ -1962,17 +1962,18 @@ BOOL UiCharEditor::FeatsWndMsg(int widId, TigMsg * msg)
 			if (FeatAlreadyPicked(feat)) // fixes being able to right click and gain the feat more than once when you shouldn't
 				break;
 
-			if (IsSelectingNormalFeat() && selPkt.feat0 == FEAT_NONE){
-				selPkt.feat0 = feat;
-				putFeat = true;
-				break;
-			} 
-			else if (IsSelectingBonusFeat() && IsClassBonusFeat(feat) && selPkt.feat2 == FEAT_NONE)
+			if (IsSelectingBonusFeat() && IsClassBonusFeat(feat) && selPkt.feat2 == FEAT_NONE)
 			{
 				selPkt.feat2 = feat;
 				putFeat = true;
 				break;
 			}
+
+			if (IsSelectingNormalFeat() && selPkt.feat0 == FEAT_NONE){
+				selPkt.feat0 = feat;
+				putFeat = true;
+				break;
+			} 
 		}
 
 		if (putFeat){

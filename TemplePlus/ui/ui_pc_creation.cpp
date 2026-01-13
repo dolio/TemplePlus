@@ -1102,6 +1102,13 @@ BOOL UiPcCreation::FeatsWndMsg(int widId, TigMsg* msg) {
 			// don't add the feat if already picked
 			if (FeatAlreadyPicked(feat)) break;
 
+			if (IsSelectingBonusFeat() && IsClassBonusFeat(feat) && selPkt.feat2 == FEAT_NONE)
+			{
+				selPkt.feat2 = feat;
+				putFeat = true;
+				break;
+			}
+
 			if (IsSelectingNormalFeat() && selPkt.feat0 == FEAT_NONE) {
 				selPkt.feat0 = feat;
 				putFeat = true;
@@ -1111,13 +1118,6 @@ BOOL UiPcCreation::FeatsWndMsg(int widId, TigMsg* msg) {
 			if (IsSelectingSecondFeat() && selPkt.feat1 == FEAT_NONE)
 			{
 				selPkt.feat1 = feat;
-				putFeat = true;
-				break;
-			}
-
-			if (IsSelectingBonusFeat() && IsClassBonusFeat(feat) && selPkt.feat2 == FEAT_NONE)
-			{
-				selPkt.feat2 = feat;
 				putFeat = true;
 				break;
 			}
