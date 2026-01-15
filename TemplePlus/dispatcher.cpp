@@ -331,6 +331,13 @@ float DispatcherSystem::Dispatch40GetBaseMoveSpeed(objHndl objHnd, DispIoMoveSpe
 	return result;
 }
 
+BOOL DispatcherSystem::DispatchProjectileDestroyed(
+		objHndl attacker, objHndl projectile, D20CAF flags)
+{
+	auto original =
+		temple::GetRef<BOOL(__cdecl)(objHndl, objHndl, D20CAF)>(0x1004F420);
+	return original(attacker, projectile, flags);
+}
 
 
 void DispatcherSystem::dispIOTurnBasedStatusInit(DispIOTurnBasedStatus* dispIOtbStat)

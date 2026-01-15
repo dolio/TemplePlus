@@ -65,6 +65,7 @@ public:
 	static ActionErrorCode AddToSeqWithTarget(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
 	static ActionErrorCode AddToSeqWhirlwindAttack(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
 	static ActionErrorCode AddToSeqTripAttack(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
+	static ActionErrorCode AddToSeqThrowGrenade(D20Actn *d20a, ActnSeq *actSeq, TurnBasedStatus *tbstat);
 
 
 
@@ -130,6 +131,7 @@ public:
 	static ActionErrorCode PerformEmptyBody(D20Actn* d20a);
 	static ActionErrorCode PerformFullAttack(D20Actn* d20a);
 	static ActionErrorCode PerformPython(D20Actn* d20a);
+	static ActionErrorCode PerformRangedAttack(D20Actn *d20a);
 	static ActionErrorCode PerformReload(D20Actn* d20a);
 	static ActionErrorCode PerformQuiveringPalm(D20Actn* d20a);
 	static ActionErrorCode PerformSneak(D20Actn* d20a);
@@ -160,6 +162,7 @@ public:
 	// Projectile Hit
 	static BOOL ProjectileHitStandard(D20Actn* d20a, objHndl projectile, objHndl obj2);
 	static BOOL ProjectileHitSpell(D20Actn* d20a, objHndl projectile, objHndl obj2);
+	static BOOL ProjectileHitGrenade(D20Actn *, objHndl, objHndl);
 	static BOOL ProjectileHitPython(D20Actn* d20a, objHndl projectile, objHndl obj2);
 
 } d20Callbacks;
@@ -690,6 +693,26 @@ void LegacyD20System::NewD20ActionsInit()
 
 	d20Type = D20A_BREAK_FREE;
 	d20Defs[d20Type].performFunc = d20Callbacks.PerformBreakFree;
+
+	d20Type = D20A_THROW_GRENADE;
+	d20Defs[d20Type].addToSeqFunc = d20Callbacks.AddToSeqThrowGrenade;
+	d20Defs[d20Type].turnBasedStatusCheck = d20Callbacks.StdAttackTurnBasedStatusCheck;
+	d20Defs[d20Type].locCheckFunc = nullptr;
+	d20Defs[d20Type].tgtCheckFunc = nullptr;
+	// Note: different function in DLL, but appears to be an exact copy
+	d20Defs[d20Type].actionCheckFunc = d20Callbacks.ActionCheckStdRangedAttack;
+	d20Defs[d20Type].performFunc = d20Callbacks.PerformRangedAttack;
+	d20Defs[d20Type].actionFrameFunc = d20Callbacks.ActionFrameRangedAttack;
+	d20Defs[d20Type].projectileHitFunc = d20Callbacks.ProjectileHitGrenade;
+	d20Defs[d20Type].actionCost = d20Callbacks.ActionCostStandardAttack;
+	d20Defs[d20Type].seqRenderFunc = addresses._PickerFuncTooltipToHitChance;
+	d20Defs[d20Type].flags =
+		static_cast<D20ADF>(
+				D20ADF_TargetSingleExcSelf |
+				D20ADF_Unk20 |
+				D20ADF_QueryForAoO |
+				D20ADF_TriggersCombat);
+
 
 	// *(int*)&d20Defs[D20A_USE_POTION].flags |= (int)D20ADF_SimulsCompatible;  // need to modify the SimulsEnqueue script because it also checks for san_start_combat being null
 	// *(int*)&d20Defs[D20A_TRIP].flags -= (int)D20ADF_Unk8000;
@@ -2020,6 +2043,48 @@ ActionErrorCode D20ActionCallbacks::PerformPython(D20Actn* d20a){
 	dispIo.DispatchPythonActionPerform(pyActionEnum);
 	
 	return (ActionErrorCode)dispIo.returnVal; 
+}
+
+
+ActionErrorCode D20ActionCallbacks::PerformRangedAttack(D20Actn *d20a)
+{
+	auto attacker = d20a->d20APerformer;
+	auto target = d20a->d20ATarget;
+	auto isCrit = false;
+	auto atkNum = d20a->data1;
+	auto secondary = d20Sys.UsingSecondaryWeapon(d20a);
+	auto thrown = false;
+
+	d20a->d20Caf |= D20CAF_RANGED;
+
+	objHndl weapon = d20Sys.GetAttackWeapon(
+			attacker, atkNum, static_cast<D20CAF>(d20a->d20Caf));
+
+	if (inventory.IsThrowingWeapon(weapon)) {
+		d20a->d20Caf |= D20CAF_THROWN;
+		thrown = true;
+	}
+
+	combatSys.ToHitProcessing(*d20a);
+
+	if (d20a->d20Caf & D20CAF_CRITICAL) isCrit = true;
+
+	auto animIdx = rngSys.GetInt(0, 2);
+
+	bool wait = false;
+	auto & anim = gameSystems->GetAnim();
+	if (thrown) {
+		wait = anim.PushThrowWeapon(attacker, target, -1, secondary);
+	} else {
+		wait =
+			anim.PushAttackAnim(attacker, target, -1, animIdx, isCrit, secondary);
+	}
+
+	if (wait) {
+		d20a->animID = anim.GetActionAnimId(attacker);
+		d20a->d20Caf |= D20CAF_NEED_ANIM_COMPLETED;
+	}
+	return AEC_OK;
 }
 
 // Note: rework this if dual wielding loaded weapons ever happens
@@ -3378,6 +3443,35 @@ BOOL D20ActionCallbacks::ProjectileHitSpell(D20Actn * d20a, objHndl projectile, 
 	return TRUE;
 }
 
+BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile, objHndl grenade)
+{
+	auto attacker = d20a->d20APerformer;
+	auto target = d20a->d20ATarget;
+	auto d20Caf = static_cast<D20CAF>(d20a->d20Caf);
+	bool isHit = !!(d20Caf & D20CAF_HIT);
+
+	logger->trace("ProjectileHitGrenade: grenade: {}", grenade);
+	logger->trace("ProjectileHitGrenade: grenade: {}", projectile);
+
+	// dll ordering, for some reason
+	histSys.CreateRollHistoryString(d20a->rollHistId1);
+	histSys.CreateRollHistoryString(d20a->rollHistId2);
+	histSys.CreateRollHistoryString(d20a->rollHistId0);
+
+	objects.ClearFlag(grenade, OF_OFF);
+
+	bool secondary = d20Caf & D20CAF_SECONDARY_WEAPON;
+	auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
+
+	damage.DealAttackDamage(
+			attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
+	inventory.ItemDrop(grenade);
+	critterSys.SwapWield(attacker, weapon, secondary);
+	dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
+
+	return 1;
+}
+
 BOOL D20ActionCallbacks::ProjectileHitPython(D20Actn * d20a, objHndl projectile, objHndl obj2){
 	auto pyActionEnum = d20a->GetPythonActionEnum();
 	return pythonD20ActionIntegration.PyProjectileHit(pyActionEnum, d20a, projectile, obj2);
@@ -4074,6 +4168,25 @@ ActionErrorCode D20ActionCallbacks::AddToSeqTripAttack(D20Actn* d20a, ActnSeq* a
 	memcpy(&actSeq->d20ActArray[actSeq->d20ActArrayNum++], d20a, sizeof(D20Actn));
 	return AEC_OK;
 	//return AddToSeqWithTarget(d20a, actSeq, tbStat);
+}
+
+ActionErrorCode D20ActionCallbacks::AddToSeqThrowGrenade(D20Actn *d20a, ActnSeq *actSeq, TurnBasedStatus *tbstat)
+{
+	d20a->d20Caf |= D20CAF_TOUCH_ATTACK | D20CAF_THROWN_GRENADE;
+
+	// From here down is AddToSeqThrow; split out if adding that.
+	d20a->d20Caf |= D20CAF_THROWN | D20CAF_RANGED;
+
+	auto tbStatus = *tbstat;
+	auto d20a_copy = *d20a;
+	auto result = actSeqSys.TurnBasedStatusUpdate(&tbStatus, d20a);
+
+	if (result) return static_cast<ActionErrorCode>(result);
+
+	d20a_copy.data1 = tbStatus.attackModeCode;
+	actSeq->d20ActArray[actSeq->d20ActArrayNum++] = d20a_copy;
+
+	return AEC_OK;
 }
 
 ActionErrorCode D20ActionCallbacks::StdAttackTurnBasedStatusCheck(D20Actn* d20a, TurnBasedStatus* tbStat){

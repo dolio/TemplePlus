@@ -219,6 +219,7 @@ static struct AnimationAdresses : temple::AddressTable {
                                int hitAnimIdx, int playCrit,
                                int useSecondaryAnim);
 
+  int(__cdecl *PushThrowWeapon)(objHndl actor, objHndl target, int, int sec);
   bool(__cdecl *PushRunNearTile)(objHndl actor, LocAndOffsets target,
                                  int radiusFeet);
 
@@ -253,6 +254,7 @@ static struct AnimationAdresses : temple::AddressTable {
     rebase(PushRunNearTile, 0x1001C1B0);
 
     rebase(PushAttackAnim, 0x1001C370);
+    rebase(PushThrowWeapon, 0x1001C530);
 
     rebase(animIdGlobal, 0x102AC880);
 
@@ -439,6 +441,11 @@ int AnimSystem::PushAttackAnim(objHndl actor, objHndl target, int unk1,
                                    int useSecondaryAnim) {
   return addresses.PushAttackAnim(actor, target, unk1, hitAnimIdx, playCrit,
                                   useSecondaryAnim);
+}
+
+int AnimSystem::PushThrowWeapon(objHndl actor, objHndl target, int unk1, int secondary)
+{
+  return addresses.PushThrowWeapon(actor, target, unk1, secondary);
 }
 
 int AnimSystem::GetActionAnimId(objHndl objHndl) {

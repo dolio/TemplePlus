@@ -2496,6 +2496,52 @@ objHndl LegacyCritterSystem::GetSecondaryWield(objHndl critter)
 		return weapl;
 }
 
+// Gets the quipment slot for the indicated weapon, accounting for wield
+// settings.
+EquipSlot LegacyCritterSystem::GetWieldSlot(objHndl critter, bool secondary)
+{
+	const EquipSlot none = static_cast<EquipSlot>(-1);
+
+	if (!critter) return none;
+
+	auto weapor = inventory.ItemWornAt(critter, EquipSlot::WeaponPrimary);
+	auto weapol = inventory.ItemWornAt(critter, EquipSlot::WeaponSecondary);
+	auto shield = inventory.ItemWornAt(critter, EquipSlot::Shield);
+
+	if (secondary ^ LeftHandIsPrimary(critter)) {
+		if (weapol) {
+			return EquipSlot::WeaponSecondary;
+		} else if (d20Sys.d20Query(critter, DK_QUE_Can_Shield_Bash)) {
+			return EquipSlot::Shield;
+		} else if (inventory.IsDoubleWeapon(weapor)) {
+			return EquipSlot::WeaponPrimary;
+		}
+	} else {
+		if (weapor) {
+			return EquipSlot::WeaponPrimary;
+		}
+	}
+
+	return none;
+}
+
+// Swaps the critter's indicated weapon to the provided item, returning the
+// item that was already there, if any.
+objHndl LegacyCritterSystem::SwapWield(objHndl critter, objHndl item, bool primary)
+{
+	auto slot = GetWieldSlot(critter, primary);
+	auto result = inventory.ItemWornAt(critter, slot);
+
+	if (item) {
+		if (inventory.SetItemParent(item, critter, 0))
+			inventory.Wield(critter, item, slot);
+	} else {
+		inventory.ItemUnwield(critter, slot);
+	}
+
+	return result;
+}
+
 FightingStyle LegacyCritterSystem::GetFightingStyle(objHndl critter)
 {
 	if (!critter || !objSystem->IsValidHandle(critter))

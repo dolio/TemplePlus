@@ -66,6 +66,7 @@ struct DispatcherSystem : temple::AddressTable
 	int32_t dispatch1ESkillLevel(objHndl objHnd, SkillEnum skill, BonusList * bonOut, objHndl objHnd2, int32_t flag);
 	float Dispatch29hGetMoveSpeed(objHndl objHnd, DispIoMoveSpeed * dispIo = nullptr);
 	float Dispatch40GetBaseMoveSpeed(objHndl objHnd, DispIoMoveSpeed * dispIo = nullptr);
+	BOOL DispatchProjectileDestroyed(objHndl attacker, objHndl projectile, D20CAF flags);
 	void dispIOTurnBasedStatusInit(DispIOTurnBasedStatus* dispIOtbStat);
 	void dispatchTurnBasedStatusInit(objHndl objHnd, DispIOTurnBasedStatus* dispIOtB);
 

@@ -452,6 +452,8 @@ struct LegacyCritterSystem : temple::AddressTable
 	objHndl GetRightWield(objHndl hndl);
 	objHndl GetLeftWield(objHndl hndl);
 	objHndl GetPrimaryWield(objHndl hndl);
+	EquipSlot GetWieldSlot(objHndl, bool primary);
+	objHndl SwapWield(objHndl critter, objHndl item, bool primary);
 	objHndl GetSecondaryWield(objHndl hndl);
 	bool CanTwoWeaponFight(objHndl hndl);
 	FightingStyle GetFightingStyle(objHndl hndl);
