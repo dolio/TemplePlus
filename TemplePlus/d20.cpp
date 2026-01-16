@@ -2052,10 +2052,15 @@ ActionErrorCode D20ActionCallbacks::PerformRangedAttack(D20Actn *d20a)
 	auto target = d20a->d20ATarget;
 	auto isCrit = false;
 	auto atkNum = d20a->data1;
-	auto secondary = d20Sys.UsingSecondaryWeapon(d20a);
+	auto secondaryAnim = critterSys.LeftHandIsPrimary();
 	auto thrown = false;
 
 	d20a->d20Caf |= D20CAF_RANGED;
+
+	if (d20Sys.UsingSecondaryWeapon(d20a)) {
+		d20a->d20Caf |= D20CAF_SECONDARY_WEAPON;
+		secondaryAnim = !secondaryAnim;
+	}
 
 	objHndl weapon = d20Sys.GetAttackWeapon(
 			attacker, atkNum, static_cast<D20CAF>(d20a->d20Caf));
