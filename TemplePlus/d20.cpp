@@ -697,10 +697,13 @@ void LegacyD20System::NewD20ActionsInit()
 	d20Type = D20A_THROW_GRENADE;
 	d20Defs[d20Type].addToSeqFunc = d20Callbacks.AddToSeqThrowGrenade;
 	d20Defs[d20Type].turnBasedStatusCheck = d20Callbacks.StdAttackTurnBasedStatusCheck;
-	d20Defs[d20Type].locCheckFunc = nullptr;
+	d20Defs[d20Type].locCheckFunc =
+		[](D20Actn *d20a, TurnBasedStatus *tbStat, LocAndOffsets *loc) {
+			// Note: different function in DLL, but appears to be an exact copy
+			return d20Callbacks.ActionCheckStdRangedAttack(d20a, tbStat);
+		};
 	d20Defs[d20Type].tgtCheckFunc = nullptr;
-	// Note: different function in DLL, but appears to be an exact copy
-	d20Defs[d20Type].actionCheckFunc = d20Callbacks.ActionCheckStdRangedAttack;
+	d20Defs[d20Type].actionCheckFunc = nullptr;
 	d20Defs[d20Type].performFunc = d20Callbacks.PerformRangedAttack;
 	d20Defs[d20Type].actionFrameFunc = d20Callbacks.ActionFrameRangedAttack;
 	d20Defs[d20Type].projectileHitFunc = d20Callbacks.ProjectileHitGrenade;
@@ -2052,7 +2055,7 @@ ActionErrorCode D20ActionCallbacks::PerformRangedAttack(D20Actn *d20a)
 	auto target = d20a->d20ATarget;
 	auto isCrit = false;
 	auto atkNum = d20a->data1;
-	auto secondaryAnim = critterSys.LeftHandIsPrimary();
+	auto secondaryAnim = critterSys.LeftHandIsPrimary(attacker);
 	auto thrown = false;
 
 	d20a->d20Caf |= D20CAF_RANGED;
@@ -2079,10 +2082,10 @@ ActionErrorCode D20ActionCallbacks::PerformRangedAttack(D20Actn *d20a)
 	bool wait = false;
 	auto & anim = gameSystems->GetAnim();
 	if (thrown) {
-		wait = anim.PushThrowWeapon(attacker, target, -1, secondary);
+		wait = anim.PushThrowWeapon(attacker, target, -1, secondaryAnim);
 	} else {
 		wait =
-			anim.PushAttackAnim(attacker, target, -1, animIdx, isCrit, secondary);
+			anim.PushAttackAnim(attacker, target, -1, animIdx, isCrit, secondaryAnim);
 	}
 
 	if (wait) {
@@ -2598,8 +2601,14 @@ ActionErrorCode D20ActionCallbacks::ActionCheckStdRangedAttack(D20Actn * d20a, T
 	}
 
 	auto equipSlot = (d20a->d20Caf & D20CAF_SECONDARY_WEAPON) ? EquipSlot::WeaponSecondary : EquipSlot::WeaponPrimary;
-	if (!combatSys.AmmoMatchesItemAtSlot(performer, equipSlot)) {
-		return AEC_OUT_OF_AMMO;
+
+	logger->trace("ActionCheckStdRangedAttack CAF {}", d20a->d20Caf);
+
+	// thrown weapons don't use ammo
+	if (!(d20a->d20Caf & (D20CAF_THROWN|D20CAF_THROWN_GRENADE))) {
+		if (!combatSys.AmmoMatchesItemAtSlot(performer, equipSlot)) {
+			return AEC_OUT_OF_AMMO;
+		}
 	}
 
 	if (!d20a->d20ATarget) {
