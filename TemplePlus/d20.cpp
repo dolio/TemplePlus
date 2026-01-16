@@ -3465,22 +3465,22 @@ BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile,
 	bool isHit = !!(d20Caf & D20CAF_HIT);
 
 	logger->trace("ProjectileHitGrenade: grenade: {}", grenade);
-	logger->trace("ProjectileHitGrenade: grenade: {}", projectile);
+	logger->trace("ProjectileHitGrenade: projectile: {}", projectile);
 
 	// dll ordering, for some reason
 	histSys.CreateRollHistoryString(d20a->rollHistId1);
 	histSys.CreateRollHistoryString(d20a->rollHistId2);
 	histSys.CreateRollHistoryString(d20a->rollHistId0);
 
-	objects.ClearFlag(grenade, OF_OFF);
+	//objects.ClearFlag(grenade, OF_OFF);
 
 	bool secondary = d20Caf & D20CAF_SECONDARY_WEAPON;
-	auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
+	//auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
 
 	damage.DealAttackDamage(
 			attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
-	inventory.ItemDrop(grenade);
-	critterSys.SwapWield(attacker, weapon, secondary);
+	//inventory.ItemDrop(grenade);
+	//critterSys.SwapWield(attacker, weapon, secondary);
 	dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
 
 	return 1;
