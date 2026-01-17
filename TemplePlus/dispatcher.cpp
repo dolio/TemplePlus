@@ -1639,6 +1639,11 @@ void DispatcherCallbackArgs::SetExpired()
 	subDispNode->condNode->flags |= 1;
 }
 
+bool DispatcherCallbackArgs::IsCondition(const std::string & name) const
+{
+	return subDispNode->condNode->condStruct == conds.GetByName(name);
+}
+
 void DispatcherCallbackArgs::RemoveCondition(){
 	conds.ConditionRemove(this->objHndCaller, this->subDispNode->condNode);
 }

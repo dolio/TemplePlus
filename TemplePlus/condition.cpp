@@ -256,7 +256,8 @@ public:
 	static int __cdecl WeaponToHitBonus(DispatcherCallbackArgs args);
 	static int __cdecl WeaponDamageBonus(DispatcherCallbackArgs args);
 
-	static int __cdecl HolyWaterDamage(DispatcherCallbackArgs args, bool holy);
+	static int __cdecl WaterDamage(DispatcherCallbackArgs args, bool holy);
+	static int __cdecl WaterProjectEnd(DispatcherCallbackArgs args);
 
 	int (*oldMaxDexBonus)(objHndl armor) = nullptr;
 	int (*oldArmorCheckPenalty)(objHndl armor) = nullptr;
@@ -600,13 +601,15 @@ public:
 		replaceFunction<int(DispatcherCallbackArgs)>(0x101045B0,
 				[](DispatcherCallbackArgs args) {
 					// holy water
-					return itemCallbacks.HolyWaterDamage(args, true);
+					return itemCallbacks.WaterDamage(args, true);
 				});
 		replaceFunction<int(DispatcherCallbackArgs)>(0x10104660,
 				[](DispatcherCallbackArgs args) {
 					// unholy water
-					return itemCallbacks.HolyWaterDamage(args, false);
+					return itemCallbacks.WaterDamage(args, false);
 				});
+
+		replaceFunction(0x101013D0, itemCallbacks.WaterProjectEnd);
 
 		// Allow silent moves and shadow armor to have multipe levels
 		replaceFunction<int(DispatcherCallbackArgs)>(0x10102370, itemCallbacks.ArmorShadowSilentMovesSkillBonus);
@@ -7309,7 +7312,7 @@ int ItemCallbacks::WeaponDamageBonus(DispatcherCallbackArgs args){
 //   weapon to deal extra damage.
 // - These also apply an 'attack power' type, in case regeneration avoied
 //   by (un)holy damage is in play. At least, that's the intention.
-int ItemCallbacks::HolyWaterDamage(DispatcherCallbackArgs args, bool holy)
+int ItemCallbacks::WaterDamage(DispatcherCallbackArgs args, bool holy)
 {
 	auto dispIo = dispatch.DispIoCheckIoType4(args.dispIO);
 	if (!dispIo) return 0;
@@ -7346,6 +7349,36 @@ int ItemCallbacks::HolyWaterDamage(DispatcherCallbackArgs args, bool holy)
 	} else {
 		// reset damage packet to ensure all damage is nullified
 		damage.DamagePacketInit(&dispIo->damage);
+	}
+
+	return 0;
+}
+
+int ItemCallbacks::WaterProjectEnd(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType5(args.dispIO);
+	if (!dispIo) return 0;
+	bool holy = args.IsCondition("Holy Water"s);
+
+	auto attacker = args.objHndCaller;
+	auto self = inventory.GetItemAtInvIdx(attacker, args.GetCondArg(2));
+	auto projectile = dispIo->attackPacket.ammoItem;
+	auto weapon = dispIo->attackPacket.weaponUsed;
+
+	if (!self || !projectile || self != weapon) return 0;
+
+	logger->trace("WaterProjectEnd: projectile {}", projectile);
+
+	auto & partsys = gameSystems->GetParticleSys();
+	auto partId = objects.getInt32(projectile, obj_f_projectile_part_sys_id);
+	if (partId) partsys.End(partId);
+
+	auto loc = objects.GetLocation(projectile);
+	auto pos = loc.ToInches3D();
+	if (holy) {
+		partsys.CreateAtPos("sp-holy water", pos);
+	} else {
+		partsys.CreateAtPos("sp-unholy water", pos);
 	}
 
 	return 0;

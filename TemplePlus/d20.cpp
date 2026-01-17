@@ -700,6 +700,9 @@ void LegacyD20System::NewD20ActionsInit()
 	d20Defs[d20Type].locCheckFunc =
 		[](D20Actn *d20a, TurnBasedStatus *tbStat, LocAndOffsets *loc) {
 			// Note: different function in DLL, but appears to be an exact copy
+			//
+			// This is in locCheckFunc because putting it in actionCheckFunc means
+			// that the CAF field won't be set correctly to skip the ammo check.
 			return d20Callbacks.ActionCheckStdRangedAttack(d20a, tbStat);
 		};
 	d20Defs[d20Type].tgtCheckFunc = nullptr;
@@ -3472,16 +3475,16 @@ BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile,
 	histSys.CreateRollHistoryString(d20a->rollHistId2);
 	histSys.CreateRollHistoryString(d20a->rollHistId0);
 
-	//objects.ClearFlag(grenade, OF_OFF);
-
-	bool secondary = d20Caf & D20CAF_SECONDARY_WEAPON;
-	//auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
-
-	damage.DealAttackDamage(
-			attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
-	//inventory.ItemDrop(grenade);
-	//critterSys.SwapWield(attacker, weapon, secondary);
-	dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
+	if (isHit) {
+		bool secondary = d20Caf & D20CAF_SECONDARY_WEAPON;
+		//auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
+		//objects.ClearFlag(grenade, OF_OFF);
+		damage.DealAttackDamage(
+				attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
+		//inventory.ItemDrop(grenade);
+		//critterSys.SwapWield(attacker, weapon, secondary);
+		dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
+	}
 
 	return 1;
 }

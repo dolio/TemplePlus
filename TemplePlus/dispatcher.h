@@ -275,7 +275,7 @@ struct DispatcherCallbackArgs {
 	void RemoveSpellMod();
 	void RemoveSpell(); // general spell remover
 	void SetExpired(); // set expired flag on condnode
-	
+	bool IsCondition(const std::string & name) const;	
 };
 
 struct DispIoCondStruct : DispIO { // DispIoType = 1
