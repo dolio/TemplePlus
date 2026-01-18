@@ -1011,7 +1011,7 @@ void LegacyD20System::D20ActnInit(objHndl objHnd, D20Actn* d20a)
 	d20a->distTraversed = 0;
 	d20a->radialMenuActualArg = 0;
 	d20a->spellId = 0;
-	d20a->d20Caf = 0;
+	d20a->d20Caf = D20CAF_NONE;
 
 	if (pq && pq >= pathfinding->pathQArray && pq < (pathfinding->pathQArray + PQR_CACHE_SIZE))
 	{
@@ -1355,12 +1355,17 @@ void LegacyD20System::ExtractAttackNumber(objHndl obj, int attackCode, int* atta
 	}
 }
 
+// This is the check used in the DLL, and ported many places here. However,
+// in the wider world of 3E, it's not safe to assume that touch attacks are
+// not made with a weapon. E.G. brilliant energy weapons.
+bool LegacyD20System::AttackUsesWeapon(D20CAF flags)
+{
+	return (flags & D20CAF_TOUCH_ATTACK) && !(flags & D20CAF_THROWN_GRENADE);
+}
+
 objHndl LegacyD20System::GetAttackWeapon(objHndl obj, int attackCode, D20CAF flags)
 {
-	if (flags & D20CAF_TOUCH_ATTACK && !(flags & D20CAF_THROWN_GRENADE))
-	{
-		return objHndl::null;
-	}
+	if (!AttackUsesWeapon(flags)) return objHndl::null;
 
 	auto weapr = inventory.ItemWornAt(obj, EquipSlot::WeaponPrimary);
 	auto weapl = inventory.ItemWornAt(obj, EquipSlot::WeaponSecondary);
@@ -2230,6 +2235,7 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 	auto locAndOffOut = tgt->GetLocationFull();
 	auto performerObj = objSystem->GetObject(d20a->d20APerformer);
 	auto performerLoc = performerObj->GetLocationFull();
+	auto d20Caf = static_cast<D20CAF>(d20a->d20Caf);
 	
 	if (!(d20a->d20Caf & D20CAF_HIT))
 	{
@@ -2239,13 +2245,13 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 		locSys.RegularizeLoc(&locAndOffOut);
 	}
 	
-	if (d20a->d20Caf & D20CAF_TOUCH_ATTACK)                          // D20CAF_TOUCH_ATTACK
+	if (!d20Sys.AttackUsesWeapon(d20a->d20Caf))
 	{
 		wpn = objHndl::null;
 	}
 	else
 	{
-		wpn =  d20Sys.GetAttackWeapon(d20a->d20APerformer, d20a->data1, (D20CAF)d20a->d20Caf);
+		wpn = d20Sys.GetAttackWeapon(d20a->d20APerformer, d20a->data1, d20a->d20Caf);
 		if (d20a->d20Caf & D20CAF_SECONDARY_WEAPON)
 			itemSlot = INVENTORY_WORN_IDX_START + EquipSlot::WeaponSecondary;
 	}
@@ -2270,7 +2276,7 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 	if (d20a->ProjectileAppend(projectileHndl, thrownItem))
 	{
 		static auto Dispatch55ProjectileCreated = temple::GetRef<BOOL(__cdecl)(objHndl, objHndl, D20CAF)>(0x1004F330);
-		Dispatch55ProjectileCreated(d20a->d20APerformer, projectileHndl, (D20CAF) d20a->d20Caf);
+		Dispatch55ProjectileCreated(d20a->d20APerformer, projectileHndl, d20Caf);
 		d20a->d20Caf |= D20CAF_NEED_PROJECTILE_HIT;
 	}
 
@@ -3460,14 +3466,16 @@ BOOL D20ActionCallbacks::ProjectileHitSpell(D20Actn * d20a, objHndl projectile, 
 	return TRUE;
 }
 
-BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile, objHndl grenade)
+BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile, objHndl ammo)
 {
 	auto attacker = d20a->d20APerformer;
 	auto target = d20a->d20ATarget;
+	auto attackCode = d20a->data1;
 	auto d20Caf = static_cast<D20CAF>(d20a->d20Caf);
+	auto grenade = d20Sys.GetAttackWeapon(attacker, d20a->data1, d20Caf);
 	bool isHit = !!(d20Caf & D20CAF_HIT);
 
-	logger->trace("ProjectileHitGrenade: grenade: {}", grenade);
+	logger->trace("ProjectileHitGrenade: ammo: {}", ammo);
 	logger->trace("ProjectileHitGrenade: projectile: {}", projectile);
 
 	// dll ordering, for some reason
@@ -3478,11 +3486,9 @@ BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile,
 	if (isHit) {
 		bool secondary = d20Caf & D20CAF_SECONDARY_WEAPON;
 		//auto weapon = critterSys.SwapWield(attacker, grenade, secondary);
-		//objects.ClearFlag(grenade, OF_OFF);
+		objects.ClearFlag(grenade, OF_OFF);
 		damage.DealAttackDamage(
 				attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
-		//inventory.ItemDrop(grenade);
-		//critterSys.SwapWield(attacker, weapon, secondary);
 		dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
 	}
 

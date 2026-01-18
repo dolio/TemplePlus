@@ -1873,7 +1873,7 @@ void ActionSequenceSystem::ProcessSequenceForAoOs(ActnSeq* actSeq, D20Actn* d20a
 		d20aAoOMovement.d20APerformer = aooPacket.interrupters[i];
 		d20aAoOMovement.d20ATarget = d20a->d20APerformer;
 		d20aAoOMovement.destLoc = aooPacket.aooLocs[i];
-		d20aAoOMovement.d20Caf = 0;
+		d20aAoOMovement.d20Caf = D20CAF_NONE;
 		d20aAoOMovement.distTraversed = 0;
 		d20aAoOMovement.path = nullptr;
 		d20aAoOMovement.d20ActType = D20A_AOO_MOVEMENT;

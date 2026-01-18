@@ -103,6 +103,7 @@ struct LegacyD20System : temple::AddressTable
 	bool UsingSecondaryWeapon(D20Actn* d20a);
 	bool UsingSecondaryWeapon(objHndl obj, int attackCode);
 	void ExtractAttackNumber(objHndl obj, int attackCode, int * attackNumber, int* dualWielding); // e.g. is it a 2nd attack? (-5 penalty)
+	static bool AttackUsesWeapon(D20CAF flags);
 	objHndl GetAttackWeapon(objHndl obj, int attackCode, D20CAF flags);
 
 	int TargetWithinReachOfLoc(objHndl obj, objHndl target, LocAndOffsets* loc);
@@ -183,7 +184,7 @@ inline D20ADF & operator |=(D20ADF & lhs, D20ADF rhs) {
 struct D20Actn{
 	D20ActionType d20ActType;
 	int data1; // generic piece of data
-	int d20Caf; // Based on D20_CAF flags
+	D20CAF d20Caf; // Based on D20_CAF flags
 	uint32_t field_C; // unknown use
 	objHndl d20APerformer;
 	objHndl d20ATarget;
@@ -205,7 +206,7 @@ struct D20Actn{
 		//d20ActType = 0;
 		d20APerformer = 0;
 		d20ATarget = 0;
-		d20Caf = 0;
+		d20Caf = D20CAF_NONE;
 		distTraversed = 0;
 		path = 0;
 		spellId = 0;
@@ -220,7 +221,7 @@ struct D20Actn{
 		d20ActType = type;
 		d20APerformer = 0;
 		d20ATarget = 0;
-		d20Caf = 0;
+		d20Caf = D20CAF_NONE;
 		distTraversed = 0;
 		path = 0;
 		spellId = 0;
