@@ -2073,10 +2073,9 @@ ActionErrorCode D20ActionCallbacks::PerformRangedAttack(D20Actn *d20a)
 		secondaryAnim = !secondaryAnim;
 	}
 
-	objHndl weapon = d20Sys.GetAttackWeapon(
-			attacker, atkNum, static_cast<D20CAF>(d20a->d20Caf));
+	objHndl weapon = d20Sys.GetAttackWeapon(attacker, atkNum, d20a->d20Caf);
 
-	if (inventory.IsThrowingWeapon(weapon)) {
+	if (weapon && inventory.IsThrowingWeapon(weapon)) {
 		d20a->d20Caf |= D20CAF_THROWN;
 		thrown = true;
 	}
