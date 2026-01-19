@@ -3470,7 +3470,7 @@ BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile,
 	auto attacker = d20a->d20APerformer;
 	auto target = d20a->d20ATarget;
 	auto attackCode = d20a->data1;
-	auto d20Caf = static_cast<D20CAF>(d20a->d20Caf);
+	auto d20Caf = d20a->d20Caf;
 	auto grenade = d20Sys.GetAttackWeapon(attacker, d20a->data1, d20Caf);
 	bool isHit = !!(d20Caf & D20CAF_HIT);
 
@@ -3488,8 +3488,8 @@ BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile,
 		objects.ClearFlag(grenade, OF_OFF);
 		damage.DealAttackDamage(
 				attacker, target, d20a->data1, d20Caf, d20a->d20ActType);
-		dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
 	}
+	dispatch.DispatchProjectileDestroyed(attacker, projectile, d20Caf);
 
 	return 1;
 }
