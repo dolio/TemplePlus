@@ -103,6 +103,7 @@ struct LegacyD20System : temple::AddressTable
 	bool UsingSecondaryWeapon(D20Actn* d20a);
 	bool UsingSecondaryWeapon(objHndl obj, int attackCode);
 	void ExtractAttackNumber(objHndl obj, int attackCode, int * attackNumber, int* dualWielding); // e.g. is it a 2nd attack? (-5 penalty)
+	bool AttackUsesWeapon(D20CAF flags);
 	objHndl GetAttackWeapon(objHndl obj, int attackCode, D20CAF flags);
 
 	int TargetWithinReachOfLoc(objHndl obj, objHndl target, LocAndOffsets* loc);

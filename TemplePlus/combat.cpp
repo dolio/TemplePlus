@@ -1291,11 +1291,11 @@ std::vector<objHndl> LegacyCombatSystem::GetEnemiesCanMelee(objHndl handle){
 
 objHndl LegacyCombatSystem::GetWeapon(AttackPacket* attackPacket)
 {
-	D20CAF flags = attackPacket->flags;
 	objHndl result = objHndl::null;
 
-	if (!(flags & D20CAF_TOUCH_ATTACK) || flags & D20CAF_THROWN_GRENADE )
+	if (d20Sys.AttackUsesWeapon(attackPacket->flags))
 		result = attackPacket->weaponUsed;
+
 	return result;
 }
 

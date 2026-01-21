@@ -1326,9 +1326,19 @@ void LegacyD20System::ExtractAttackNumber(objHndl obj, int attackCode, int* atta
 	}
 }
 
+// This is the check used in the DLL, and ported many places here. However,
+// in the wider world of 3E, it's not safe to assume that touch attacks are
+// not made with a weapon. E.G. brilliant energy weapons.
+//
+// Revise this check in the future if one of those situations arise.
+bool LegacyD20System::AttackUsesWeapon(D20CAF flags)
+{
+	return !(flags & D20CAF_TOUCH_ATTACK) || (flags & D20CAF_THROWN_GRENADE);
+}
+
 objHndl LegacyD20System::GetAttackWeapon(objHndl obj, int attackCode, D20CAF flags)
 {
-	if (flags & D20CAF_TOUCH_ATTACK && !(flags & D20CAF_THROWN_GRENADE))
+	if (!AttackUsesWeapon(flags))
 	{
 		return objHndl::null;
 	}
