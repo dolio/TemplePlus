@@ -66,6 +66,7 @@ struct DispatcherSystem : temple::AddressTable
 	int32_t dispatch1ESkillLevel(objHndl objHnd, SkillEnum skill, BonusList * bonOut, objHndl objHnd2, int32_t flag);
 	float Dispatch29hGetMoveSpeed(objHndl objHnd, DispIoMoveSpeed * dispIo = nullptr);
 	float Dispatch40GetBaseMoveSpeed(objHndl objHnd, DispIoMoveSpeed * dispIo = nullptr);
+	int DispatchProjectileDestroyed(objHndl atkr, objHndl proj, D20CAF flags);
 	void dispIOTurnBasedStatusInit(DispIOTurnBasedStatus* dispIOtbStat);
 	void dispatchTurnBasedStatusInit(objHndl objHnd, DispIOTurnBasedStatus* dispIOtB);
 
@@ -274,7 +275,7 @@ struct DispatcherCallbackArgs {
 	void RemoveSpellMod();
 	void RemoveSpell(); // general spell remover
 	void SetExpired(); // set expired flag on condnode
-	
+	bool IsCondition(const std::string & name) const;	
 };
 
 struct DispIoCondStruct : DispIO { // DispIoType = 1

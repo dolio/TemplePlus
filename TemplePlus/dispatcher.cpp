@@ -331,7 +331,13 @@ float DispatcherSystem::Dispatch40GetBaseMoveSpeed(objHndl objHnd, DispIoMoveSpe
 	return result;
 }
 
-
+int DispatcherSystem::DispatchProjectileDestroyed(
+		objHndl attacker, objHndl projectile, D20CAF flags)
+{
+	auto original =
+		temple::GetRef<int(__cdecl)(objHndl,objHndl,D20CAF)>(0x1004F420);
+	return original(attacker, projectile, flags);
+}
 
 void DispatcherSystem::dispIOTurnBasedStatusInit(DispIOTurnBasedStatus* dispIOtbStat)
 {
@@ -1630,6 +1636,12 @@ void DispatcherCallbackArgs::SetCondArgObjHndl(uint32_t argIdx, const objHndl& h
 void DispatcherCallbackArgs::SetExpired()
 {
 	subDispNode->condNode->flags |= 1;
+}
+
+bool DispatcherCallbackArgs::IsCondition(const std::string & name) const
+{
+	std::string myName(subDispNode->condNode->condStruct->condName);
+	return myName == name;
 }
 
 void DispatcherCallbackArgs::RemoveCondition(){
