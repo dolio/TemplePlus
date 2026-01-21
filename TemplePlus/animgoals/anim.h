@@ -172,6 +172,7 @@ public:
 	void PushFallDown(objHndl actor, int unk);
 
 	int PushAttackAnim(objHndl actor, objHndl target, int unk1, int hitAnimIdx, int playCrit, int useSecondaryAnim);
+	int PushThrowWeapon(objHndl actor, objHndl tgt, int unk1, int secondary);
 	int GetActionAnimId(objHndl objHndl);
 	int PushAttemptAttack(objHndl attacker, objHndl defender);
 	int PushGoalHitByWeapon(objHndl attacker, objHndl defender);
