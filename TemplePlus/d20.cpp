@@ -75,6 +75,7 @@ public:
 	static ActionErrorCode AddToSeqWithTarget(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
 	static ActionErrorCode AddToSeqWhirlwindAttack(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
 	static ActionErrorCode AddToSeqTripAttack(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
+	static ActionErrorCode AddToSeqThrowGrenade(D20Actn *d20a, ActnSeq *actSeq, TurnBasedStatus *tbStat);
 
 
 
@@ -125,6 +126,7 @@ public:
 	static ActionErrorCode LocationCheckDisarmedWeaponRetrieve(D20Actn* d20a, TurnBasedStatus* tbStat, LocAndOffsets* loc);
 	static ActionErrorCode LocationCheckPython(D20Actn* d20a, TurnBasedStatus* tbStat, LocAndOffsets* loc);
 	static ActionErrorCode LocationCheckStdAttack(D20Actn* d20a, TurnBasedStatus* tbStat, LocAndOffsets* loc);
+	static ActionErrorCode LocationCheckGrenade(D20Actn *, TurnBasedStatus *, LocAndOffsets *);
 
 	// Perform 
 	static ActionErrorCode PerformAidAnotherWakeUp(D20Actn* d20a);
@@ -145,6 +147,7 @@ public:
 	static ActionErrorCode PerformSneak(D20Actn* d20a);
 	static ActionErrorCode PerformStandardAttack(D20Actn* d20a);
 	static ActionErrorCode PerformStopConcentration(D20Actn* d20a);
+	static ActionErrorCode PerformThrowGrenade(D20Actn *d20a);
 	static ActionErrorCode PerformTouchAttack(D20Actn* d20a);
 	static ActionErrorCode PerformTripAttack(D20Actn* d20a);
 	static ActionErrorCode PerformUseItem(D20Actn* d20a);
@@ -156,6 +159,7 @@ public:
 	static BOOL ActionFrameCharge(D20Actn* d20a);
 	static BOOL ActionFrameCoupDeGrace(D20Actn* d20a);
 	static BOOL ActionFrameDisarm(D20Actn* d20a);
+	static BOOL ActionFrameGrenade(D20Actn *d20a);
 	static BOOL ActionFramePython(D20Actn* d20a);
 	static BOOL ActionFrameQuiveringPalm(D20Actn* d20a);
 	static BOOL ActionFrameReload(D20Actn *d20a);
@@ -171,6 +175,7 @@ public:
 	static BOOL ProjectileHitStandard(D20Actn* d20a, objHndl projectile, objHndl obj2);
 	static BOOL ProjectileHitSpell(D20Actn* d20a, objHndl projectile, objHndl obj2);
 	static BOOL ProjectileHitPython(D20Actn* d20a, objHndl projectile, objHndl obj2);
+	static BOOL ProjectileHitGrenade(D20Actn *d20a, objHndl projectile, objHndl thrown);
 
 } d20Callbacks;
 
@@ -255,6 +260,7 @@ static struct LegacyD20SystemAddresses : temple::AddressTable {
 	ActionErrorCode (__cdecl* LocationCheckStdAttack)(D20Actn*, TurnBasedStatus*, LocAndOffsets*);
 	ActionErrorCode (__cdecl*ActionCostStandardAttack)(D20Actn *d20, TurnBasedStatus *tbStat, ActionCostPacket *acp);
 	uint32_t(__cdecl*_PickerFuncTooltipToHitChance)(D20Actn * d20a, int flags);
+	uint32_t(__cdecl*_PickerFuncTooltipCoverToHit)(D20Actn *, int);
 	uint32_t(__cdecl*AddToSeqStdAttack)(D20Actn*, ActnSeq*, TurnBasedStatus*);
 	uint32_t(__cdecl*ActionCheckStdAttack)(D20Actn*, TurnBasedStatus*);
 	int(__cdecl*TargetWithinReachOfLoc)(objHndl obj, objHndl target, LocAndOffsets* loc);
@@ -268,6 +274,7 @@ static struct LegacyD20SystemAddresses : temple::AddressTable {
 		rebase(LocationCheckStdAttack, 0x1008C910);
 		rebase(ActionCostStandardAttack, 0x100910F0);
 		rebase(_PickerFuncTooltipToHitChance, 0x1008EDF0);
+		rebase(_PickerFuncTooltipCoverToHit, 0x1008F460);
 		rebase(AddToSeqStdAttack, 0x100955E0);
 		rebase(ActionCheckStdAttack, 0x1008C910);
 
@@ -700,6 +707,23 @@ void LegacyD20System::NewD20ActionsInit()
 
 	d20Type = D20A_BREAK_FREE;
 	d20Defs[d20Type].performFunc = d20Callbacks.PerformBreakFree;
+
+	d20Type = D20A_THROW_GRENADE;
+	d20Defs[d20Type].addToSeqFunc = d20Callbacks.AddToSeqThrowGrenade;
+	d20Defs[d20Type].turnBasedStatusCheck = d20Callbacks.StdAttackTurnBasedStatusCheck;
+	d20Defs[d20Type].locCheckFunc = d20Callbacks.LocationCheckGrenade;
+	d20Defs[d20Type].tgtCheckFunc = nullptr;
+	d20Defs[d20Type].actionCheckFunc = nullptr;
+	d20Defs[d20Type].performFunc = d20Callbacks.PerformThrowGrenade;
+	d20Defs[d20Type].actionFrameFunc = d20Callbacks.ActionFrameGrenade;
+	d20Defs[d20Type].projectileHitFunc = d20Callbacks.ProjectileHitGrenade;
+	d20Defs[d20Type].actionCost = d20Callbacks.ActionCostStandardAttack;
+	d20Defs[d20Type].seqRenderFunc = addresses._PickerFuncTooltipCoverToHit;
+	d20Defs[d20Type].flags =
+			D20ADF_TargetSingleExcSelf |
+			D20ADF_Unk20 |
+			D20ADF_QueryForAoO |
+			D20ADF_TriggersCombat;
 
 	// *(int*)&d20Defs[D20A_USE_POTION].flags |= (int)D20ADF_SimulsCompatible;  // need to modify the SimulsEnqueue script because it also checks for san_start_combat being null
 	// *(int*)&d20Defs[D20A_TRIP].flags -= (int)D20ADF_Unk8000;
@@ -1405,6 +1429,27 @@ ActionErrorCode D20ActionCallbacks::PerformStandardAttack(D20Actn* d20a)
 
 ActionErrorCode D20ActionCallbacks::PerformStopConcentration(D20Actn* d20a){
 	d20Sys.d20SendSignal(d20a->d20APerformer, DK_SIG_Remove_Concentration, d20a->d20APerformer);
+	return AEC_OK;
+}
+
+ActionErrorCode D20ActionCallbacks::PerformThrowGrenade(D20Actn *d20a)
+{
+	d20a->d20Caf |= D20CAF_RANGED;
+	combatSys.ToHitProcessing(*d20a);
+
+	bool crit = d20a->d20Caf & D20CAF_CRITICAL;
+	auto anIx = rngSys.GetInt(0, 2);
+	auto attacker = d20a->d20APerformer;
+	auto target = d20a->d20ATarget;
+	auto attackCode = d20a->data1;
+	bool secondary = SecondaryWeaponLogic(d20a);
+
+	auto & animSys = gameSystems->GetAnim();
+	if (animSys.PushThrowWeapon(attacker, target, -1, secondary)) {
+		d20a->animID = animSys.GetActionAnimId(attacker);
+		d20a->d20Caf |= D20CAF_NEED_ANIM_COMPLETED;
+	}
+
 	return AEC_OK;
 }
 
@@ -2155,6 +2200,7 @@ BOOL D20ActionCallbacks::ActionFrameReload(D20Actn *d20a) {
 }
 
 /* 0x1008EB90 */
+// TODO: revise this to work like ActionFrameGrenade w/r/t thrown stuff
 BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 {
 	auto wpn = objHndl::null;
@@ -2889,6 +2935,44 @@ BOOL D20ActionCallbacks::ActionFrameDisarm(D20Actn* d20a){
 	return FALSE;
 };
 
+// could probably be generalized to ActionFrameThrow
+BOOL D20ActionCallbacks::ActionFrameGrenade(D20Actn *d20a)
+{
+	auto attacker = d20a->d20APerformer;
+	auto target = d20a->d20ATarget;
+	auto attackCode = d20a->data1;
+	auto atkLoc = objects.GetLocation(attacker);
+	auto tgtLoc = objects.GetLocationFull(target);
+	auto grenade = d20Sys.GetAttackWeapon(attacker, attackCode, d20a->d20Caf);
+
+	if (!(d20a->d20Caf & D20CAF_HIT)) {
+		double rot = M_PI * 2.0 * rngSys.GetInt(0, 360) / 360.0;
+		double dist = 12.0 * rngSys.GetInt(1, 6);
+
+		tgtLoc.off_x = sin(rot) * dist;
+		tgtLoc.off_y = cos(rot) * dist;
+		target = objHndl::null;
+		locSys.RegularizeLoc(&tgtLoc);
+	}
+
+	auto projectileProto = weapons.GetAmmoProtoId(grenade);
+	auto projectile = combatSys.CreateProjectileAndThrow(
+			atkLoc, projectileProto, tgtLoc, 0, 0, attacker, target);
+
+	if (projectile) {
+		objSystem->GetObject(projectile)->SetFloat(obj_f_offset_z, 60.0f);
+	}
+
+	objSystem->GetObject(grenade)->SetItemFlag(OIF_DRAW_WHEN_PARENTED, false);
+
+	if (d20a->ProjectileAppend(projectile, grenade)) {
+		dispatch.DispatchProjectileCreated(attacker, projectile, d20a->d20Caf);
+		d20a->d20Caf |= D20CAF_NEED_PROJECTILE_HIT;
+	}
+
+	return 1;
+}
+
 BOOL D20ActionCallbacks::ActionFramePython(D20Actn* d20a){
 	DispIoD20ActionTurnBased dispIo(d20a);
 	auto pyActionEnum = d20a->GetPythonActionEnum();
@@ -3049,6 +3133,18 @@ ActionErrorCode D20ActionCallbacks::LocationCheckStdAttack(D20Actn* d20a, TurnBa
 	return AEC_OK;
 }
 ;
+
+// This is a completely separate function in the DLL, but it appears to be
+// identical code.
+//
+// It seems that the reason it is a location check is so that the d20a
+// flags will be set by previous steps, whereas the action check runs
+// earlier and gets 0 flags.
+ActionErrorCode D20ActionCallbacks::LocationCheckGrenade(D20Actn * d20a, TurnBasedStatus * tbStat, LocAndOffsets * loc)
+{
+	return ActionCheckStdRangedAttack(d20a, tbStat);
+}
+
 
 ActionErrorCode D20ActionCallbacks::ActionCheckDisarmedWeaponRetrieve(D20Actn* d20a, TurnBasedStatus* tbStat){
 	int dummy = 1;
@@ -3389,6 +3485,78 @@ BOOL D20ActionCallbacks::ProjectileHitSpell(D20Actn * d20a, objHndl projectile, 
 BOOL D20ActionCallbacks::ProjectileHitPython(D20Actn * d20a, objHndl projectile, objHndl obj2){
 	auto pyActionEnum = d20a->GetPythonActionEnum();
 	return pythonD20ActionIntegration.PyProjectileHit(pyActionEnum, d20a, projectile, obj2);
+}
+
+// Notes
+//
+// I've rearranged some of the logic as part of throwing. The original
+// logic went something like this:
+//
+//   1. ActionFrameGrenade causes
+//     - the weapon to be dropped
+//     - sets it invisible
+//     - replaces it with a new weapon for Quick Draw
+//   2. ProjectileHitGrenade causes
+//     - attacker to picks the grenade back up
+//     - swaps held weapon with grenade
+//     - makes grenade visible again
+//     - deals damage
+//     - swaps back to previously held weapon
+//
+// All the swapping is necessary to get the right damage behavior, because
+// the weapon needs to be held to trigger its hooks. But the overall
+// process _seems_ unnecessarily complicated.
+//
+// Instead, I've moved the weapon management into this function, after
+// dealing damage, so that all the swapping isn't necessary.
+//
+// ---
+//
+// Even though grenades don't use ammo, the `ammoItem` field of the
+// projectile is set to the grenade, so we get it as an argument here.
+//
+// ---
+//
+// This omits all splash effects. In the DLL, they were hard coded here by
+// proto id. Instead, just use the ProjectileDestroyed event of the grenade
+// condition to cause splash effects. It happens before the item is
+// dropped/deleted.
+BOOL D20ActionCallbacks::ProjectileHitGrenade(D20Actn *d20a, objHndl projectile, objHndl grenade)
+{
+	auto attacker = d20a->d20APerformer;
+	auto atkLoc = objects.GetLocation(attacker);
+	auto target = d20a->d20ATarget;
+	auto attackCode = d20a->data1;
+	bool isHit = !!(d20a->d20Caf & D20CAF_HIT);
+
+	// order in the dll for some reason
+	histSys.CreateRollHistoryString(d20a->rollHistId1);
+	histSys.CreateRollHistoryString(d20a->rollHistId2);
+	histSys.CreateRollHistoryString(d20a->rollHistId0);
+
+	if (isHit) {
+		damage.DealAttackDamage(
+				attacker, target, attackCode, d20a->d20Caf, d20a->d20ActType);
+	}
+
+	dispatch.DispatchProjectileDestroyed(attacker, projectile, d20a->d20Caf);
+
+	auto thrown = inventory.SplitObjectFromStack(grenade, atkLoc);
+	objSystem->GetObject(grenade)->SetItemFlag(OIF_DRAW_WHEN_PARENTED, true);
+	objects.SetFlag(thrown, OF_OFF);
+
+	// handle the corner case where we've used up our entire equipped supply
+	if (grenade && thrown == grenade) {
+		auto itemSlot = inventory.GetInventoryLocation(grenade);
+		inventory.ItemDrop(grenade);
+		if (feats.HasFeatCountByClass(attacker, FEAT_QUICK_DRAW)) {
+			auto draw = inventory.FindMatchingStackableItem(attacker, grenade);
+			if (draw && !inventory.IsEquipped(draw))
+				inventory.ItemPlaceInIdx(draw, itemSlot);
+		}
+	}
+
+	return 1;
 }
 
 ActionErrorCode D20ActionCallbacks::PerformAidAnotherWakeUp(D20Actn* d20a){
@@ -4096,6 +4264,25 @@ ActionErrorCode D20ActionCallbacks::AddToSeqTripAttack(D20Actn* d20a, ActnSeq* a
 	memcpy(&actSeq->d20ActArray[actSeq->d20ActArrayNum++], d20a, sizeof(D20Actn));
 	return AEC_OK;
 	//return AddToSeqWithTarget(d20a, actSeq, tbStat);
+}
+
+ActionErrorCode D20ActionCallbacks::AddToSeqThrowGrenade(D20Actn *d20a, ActnSeq *actSeq, TurnBasedStatus *tbStat)
+{
+	d20a->d20Caf |= D20CAF_TOUCH_ATTACK | D20CAF_THROWN_GRENADE;
+
+	// from here down is AddToSeqThrow; split off if adding that
+	d20a->d20Caf |= D20CAF_THROWN | D20CAF_RANGED;
+
+	auto tbStatus = *tbStat;
+	auto d20a_copy = *d20a;
+	auto result = actSeqSys.TurnBasedStatusUpdate(&tbStatus, d20a);
+
+	if (result) return static_cast<ActionErrorCode>(result);
+
+	d20a_copy.data1 = tbStatus.attackModeCode;
+	actSeq->d20ActArray[actSeq->d20ActArrayNum++] = d20a_copy;
+
+	return AEC_OK;
 }
 
 ActionErrorCode D20ActionCallbacks::StdAttackTurnBasedStatusCheck(D20Actn* d20a, TurnBasedStatus* tbStat){

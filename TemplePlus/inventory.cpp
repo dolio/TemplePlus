@@ -365,6 +365,18 @@ objHndl InventorySystem::GetItemAtInvIdx(objHndl handle, uint32_t nIdx){
 	return result;
 }
 
+bool InventorySystem::IsEquipped(objHndl item) const
+{
+	if (!item || !objects.IsEquipment(item)) return false;
+
+	auto index = GetInventoryLocation(item);
+
+	const auto min = InvIdxForSlot(EquipSlot::Helmet);
+	const auto max = InvIdxForSlot(EquipSlot::Invalid);
+
+	return min <= index && index < max;
+}
+
 objHndl InventorySystem::FindMatchingStackableItem(objHndl receiver, objHndl item){
 	if (!item)
 		return objHndl::null;
@@ -850,7 +862,7 @@ std::vector<objHndl> InventorySystem::GetInventory(objHndl handle){
 	return result;
 }
 
-int InventorySystem::GetInventoryLocation(objHndl item){
+int InventorySystem::GetInventoryLocation(objHndl item) const {
 	if (!item){
 		logger->error("GetInventoryLocation: called on null item!");
 		return 0;
@@ -2564,11 +2576,11 @@ void InventorySystem::UiOpenContainer(objHndl triggerer, objHndl container)
 	addresses.UiOpenContainer_0(triggerer, container);
 }
 
-int InventorySystem::InvIdxForSlot(EquipSlot slot){
+int InventorySystem::InvIdxForSlot(EquipSlot slot) const {
 	return slot + INVENTORY_WORN_IDX_START;
 }
 
-int InventorySystem::InvIdxForSlot(int slot){
+int InventorySystem::InvIdxForSlot(int slot) const {
 	return InvIdxForSlot(static_cast<EquipSlot>(slot));
 }
 

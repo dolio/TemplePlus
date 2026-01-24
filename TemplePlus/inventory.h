@@ -81,6 +81,7 @@ struct InventorySystem : temple::AddressTable
 
 	objHndl(__cdecl *GetSubstituteInventory)  (objHndl);
 	objHndl GetItemAtInvIdx(objHndl, uint32_t nIdx); // returns the item at obj_f_critter_inventory subIdx nIdx  (or obj_f_container_inventory for containers); Note the difference to ItemWornAt! (this is a more low level function)
+	bool IsEquipped(objHndl) const;
 	objHndl FindMatchingStackableItem(objHndl objHndReceiver, objHndl objHndItem);
 	objHndl SplitObjectFromStack(objHndl handle, locXY& tgtLoc);
 	void WieldBest(objHndl handle, int invSlot, objHndl target);
@@ -139,7 +140,7 @@ struct InventorySystem : temple::AddressTable
 	bool IsVisibleInventoryFull(objHndl obj);
 	int GetInventory(objHndl obj, objHndl** inventoryArray);
 	std::vector<objHndl> GetInventory(objHndl obj);
-	int GetInventoryLocation(objHndl item);
+	int GetInventoryLocation(objHndl item) const;
 	ItemFlag GetItemFlags(objHndl item);
 	int IsItemNonTransferable(objHndl item, objHndl receiver);
 	
@@ -278,8 +279,8 @@ private:
 	objHndl(__cdecl *_ItemWornAt)(objHndl, EquipSlot nItemSlot);
 	//int(__cdecl *_GetWieldType)(objHndl wielder, objHndl item);
 
-	int InvIdxForSlot(EquipSlot slot); // converts EquipSlot to inventory index
-	int InvIdxForSlot(int slot); // converts EquipSlot to inventory index
+	int InvIdxForSlot(EquipSlot slot) const; // converts EquipSlot to inventory index
+	int InvIdxForSlot(int slot) const; // converts EquipSlot to inventory index
 
 	int FindEmptyInvIdx(objHndl item, objHndl parent, int idxMin, int idxMax); // finds empty slot between idxMin and idxMax (not including idxMax, but including idxMin)
 	objHndl BagFindLast(objHndl parent); // gets the highest index bag
