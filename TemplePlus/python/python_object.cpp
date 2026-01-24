@@ -3099,7 +3099,7 @@ static PyObject* PyObjHandle_ApplyProjectileParticles(PyObject* obj, PyObject* a
 		return 0;
 	}
 
-	auto result = temple::GetRef<BOOL(__cdecl)(objHndl, objHndl, D20CAF)>(0x1004F330)(self->handle, projectile, flags);
+	auto result = dispatch.DispatchProjectileCreated(self->handle, projectile, flags);
 	return PyInt_FromLong(result);
 }
 

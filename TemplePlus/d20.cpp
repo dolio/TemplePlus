@@ -2199,8 +2199,7 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 	
 	if (d20a->ProjectileAppend(projectileHndl, thrownItem))
 	{
-		static auto Dispatch55ProjectileCreated = temple::GetRef<BOOL(__cdecl)(objHndl, objHndl, D20CAF)>(0x1004F330);
-		Dispatch55ProjectileCreated(d20a->d20APerformer, projectileHndl, d20a->d20Caf);
+		dispatch.DispatchProjectileCreated(d20a->d20APerformer, projectileHndl, d20a->d20Caf);
 		d20a->d20Caf |= D20CAF_NEED_PROJECTILE_HIT;
 	}
 

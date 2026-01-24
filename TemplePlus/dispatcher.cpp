@@ -331,10 +331,18 @@ float DispatcherSystem::Dispatch40GetBaseMoveSpeed(objHndl objHnd, DispIoMoveSpe
 	return result;
 }
 
+int DispatcherSystem::DispatchProjectileCreated(
+		objHndl attacker, objHndl projectile, D20CAF flags)
+{
+	static auto original =
+		temple::GetRef<BOOL(__cdecl)(objHndl, objHndl, D20CAF)>(0x1004F330);
+	return original(attacker, projectile, flags);
+}
+
 int DispatcherSystem::DispatchProjectileDestroyed(
 		objHndl attacker, objHndl projectile, D20CAF flags)
 {
-	auto original =
+	static auto original =
 		temple::GetRef<int(__cdecl)(objHndl,objHndl,D20CAF)>(0x1004F420);
 	return original(attacker, projectile, flags);
 }
