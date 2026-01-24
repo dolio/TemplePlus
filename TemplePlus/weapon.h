@@ -23,6 +23,7 @@ struct WeaponSystem : temple::AddressTable
 	uint32_t IsWizardWeapon(WeaponTypes wpnType);
 	uint32_t IsElvenWeapon(WeaponTypes wpnType);
 	uint32_t IsBardWeapon(WeaponTypes wpnType);
+	bool IsWeaponType(objHndl, WeaponTypes);
 
 	int GetAmmoProtoId(objHndl weapon);
 	int GetAmmoProtoId(WeaponAmmoType ammoType);

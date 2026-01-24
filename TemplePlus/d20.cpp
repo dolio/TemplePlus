@@ -2210,7 +2210,7 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 		}
 		
 		objects.SetFlag(thrownItem, OF_OFF);
-		if (ammoType == wat_shuriken || feats.HasFeatCountByClass(d20a->d20APerformer, FEAT_QUICK_DRAW))
+		if (weapons.IsWeaponType(wpn, wt_shuriken) || feats.HasFeatCountByClass(d20a->d20APerformer, FEAT_QUICK_DRAW))
 		{
 			auto v10 = inventory.FindMatchingStackableItem(d20a->d20APerformer, wpn);
 			if (v10 && v10 != inventory.GetItemAtInvIdx(d20a->d20APerformer, INVENTORY_WORN_IDX_START + EquipSlot::WeaponSecondary)) { // this might cause a bug if you throw from the secondary weapon slot...

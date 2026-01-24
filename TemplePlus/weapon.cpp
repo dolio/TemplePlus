@@ -173,6 +173,13 @@ uint32_t WeaponSystem::IsBardWeapon(WeaponTypes wpnType)
 	return 0;
 }
 
+bool WeaponSystem::IsWeaponType(objHndl weapon, WeaponTypes ty)
+{
+	if (!weapon) return false; 
+
+	return objects.GetWeaponType(weapon) == ty;
+}
+
 int WeaponSystem::GetAmmoProtoId(objHndl weapon)
 {
 	auto ty = WeaponAmmoType::wat_arrow;
