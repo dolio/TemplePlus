@@ -2183,11 +2183,7 @@ BOOL D20ActionCallbacks::ActionFrameRangedAttack(D20Actn* d20a)
 		if (d20a->d20Caf & D20CAF_SECONDARY_WEAPON)
 			itemSlot = INVENTORY_WORN_IDX_START + EquipSlot::WeaponSecondary;
 	}
-	auto ammoType = WeaponAmmoType::wat_arrow; // default (0)
-	if (wpn != objHndl::null) { // vanilla didn't check this...
-		ammoType = (WeaponAmmoType)objects.getInt32(wpn, obj_f_weapon_ammo_type);
-	}
-	auto projectileProtoNum = weapons.GetAmmoProtoId(ammoType);
+	auto projectileProtoNum = weapons.GetAmmoProtoId(wpn);
 	auto tgtLoc = locAndOffOut;
 	
 	auto projectileHndl = combatSys.CreateProjectileAndThrow(

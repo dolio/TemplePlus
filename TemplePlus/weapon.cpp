@@ -173,6 +173,15 @@ uint32_t WeaponSystem::IsBardWeapon(WeaponTypes wpnType)
 	return 0;
 }
 
+int WeaponSystem::GetAmmoProtoId(objHndl weapon)
+{
+	auto ty = WeaponAmmoType::wat_arrow;
+	if (weapon)
+		ty = static_cast<WeaponAmmoType>(objects.getInt32(weapon, obj_f_weapon_ammo_type));
+
+	return GetAmmoProtoId(ty);
+}
+
 int WeaponSystem::GetAmmoProtoId(WeaponAmmoType ammoType)
 {
 	static int table[18] = {

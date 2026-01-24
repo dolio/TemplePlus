@@ -24,6 +24,7 @@ struct WeaponSystem : temple::AddressTable
 	uint32_t IsElvenWeapon(WeaponTypes wpnType);
 	uint32_t IsBardWeapon(WeaponTypes wpnType);
 
+	int GetAmmoProtoId(objHndl weapon);
 	int GetAmmoProtoId(WeaponAmmoType ammoType);
 
 	bool IsSlashingOrBludgeoning(objHndl weapon);
