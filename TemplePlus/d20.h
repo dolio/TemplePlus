@@ -176,8 +176,14 @@ enum D20ADF : int {
 	D20ADF_Python = 0x1000000
 };
 
+inline D20ADF operator |(D20ADF l0, D20ADF r0) {
+	int l = static_cast<int>(l0);
+	int r = static_cast<int>(r0);
+	return static_cast<D20ADF>(l | r);
+}
+
 inline D20ADF & operator |=(D20ADF & lhs, D20ADF rhs) {
-	lhs = static_cast<D20ADF>(lhs | rhs);
+	lhs = lhs | rhs;
 	return lhs;
 }
 
