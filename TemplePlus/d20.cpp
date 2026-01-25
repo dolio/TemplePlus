@@ -55,6 +55,16 @@ public:
 #define PerformFunc(fname) static ActionErrorCode  Perform ## fname ## (D20Actn* d20a)
 #define ActionCost(fname) static ActionErrorCode ActionCost ## fname ## (D20Actn* d20a, TurnBasedStatus* tbStat, ActionCostPacket* acp);
 #define ActionFrame(fname) static ActionErrorCode ActionFrame ## fname ## (D20Actn* d20a)
+
+	// Checks whether the d20 action uses the secondary weapon, setting
+	// appropriate flags. Returns whether the secondary _animation_ should be
+	// used, which may not correspond to whether the attack is secondary
+	// (because 'secondary' animation means left hand).
+	//
+	// Doesn't handle natural attacks in any coherent way, so they should be
+	// checked separately.
+	static bool SecondaryWeaponLogic(D20Actn *d20a);
+
 	// Add to sequence funcs
 	static ActionErrorCode AddToSeqCharge(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
 	static ActionErrorCode AddToSeqPython(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat);
@@ -1368,20 +1378,13 @@ ActionErrorCode D20ActionCallbacks::PerformStandardAttack(D20Actn* d20a)
 
 	int d20data = d20a->data1;
 	int playCritFlag = 0;
-	int useSecondaryAnim = 0;
-	if (d20Sys.UsingSecondaryWeapon(d20a))
-	{
-		d20a->d20Caf |= D20CAF_SECONDARY_WEAPON; 
-		useSecondaryAnim = 1;
-	}
-	else if (d20a->data1 >= ATTACK_CODE_NATURAL_ATTACK + 1)
-	{
+
+	bool useSecondaryAnim = SecondaryWeaponLogic(d20a);
+
+	if (d20a->data1 >= ATTACK_CODE_NATURAL_ATTACK + 1) {
 		useSecondaryAnim = rngSys.GetInt(0, 1);
 		hitAnimIdx = (d20a->data1 - (ATTACK_CODE_NATURAL_ATTACK + 1)) % 3;
 	}
-
-	if (critterSys.LeftHandIsPrimary(d20a->d20APerformer))
-		useSecondaryAnim = !useSecondaryAnim;
 
 	combatSys.ToHitProcessing(*d20a);
 
@@ -3828,6 +3831,20 @@ ActionErrorCode D20ActionCallbacks::CanCopyScroll(D20Actn* d20a) {
 	else return AEC_OK;
 }
 
+bool D20ActionCallbacks::SecondaryWeaponLogic(D20Actn *d20a)
+{
+	bool useSecondaryAnim = false;
+
+	if (d20Sys.UsingSecondaryWeapon(d20a)) {
+		d20a->d20Caf |= D20CAF_SECONDARY_WEAPON;
+		useSecondaryAnim = true;
+	}
+
+	if (critterSys.LeftHandIsPrimary(d20a->d20APerformer))
+		useSecondaryAnim = !useSecondaryAnim;
+
+	return useSecondaryAnim;
+}
 
 ActionErrorCode D20ActionCallbacks::AddToSeqCharge(D20Actn* d20a, ActnSeq* actSeq, TurnBasedStatus* tbStat){
 	auto tgt = d20a->d20ATarget;
