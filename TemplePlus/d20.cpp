@@ -2582,8 +2582,10 @@ ActionErrorCode D20ActionCallbacks::ActionCheckStdRangedAttack(D20Actn * d20a, T
 	}
 
 	auto equipSlot = (d20a->d20Caf & D20CAF_SECONDARY_WEAPON) ? EquipSlot::WeaponSecondary : EquipSlot::WeaponPrimary;
-	if (!combatSys.AmmoMatchesItemAtSlot(performer, equipSlot)) {
-		return AEC_OUT_OF_AMMO;
+	if (!(d20a->d20Caf & D20CAF_THROWN)) {
+		if (!combatSys.AmmoMatchesItemAtSlot(performer, equipSlot)) {
+			return AEC_OUT_OF_AMMO;
+		}
 	}
 
 	if (!d20a->d20ATarget) {
