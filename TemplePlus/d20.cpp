@@ -4279,6 +4279,7 @@ ActionErrorCode D20ActionCallbacks::AddToSeqThrowGrenade(D20Actn *d20a, ActnSeq 
 	auto d20a_copy = *d20a;
 	auto result = actSeqSys.TurnBasedStatusUpdate(&tbStatus, d20a);
 
+	logger->trace("AddToSeqThrowGrenade: attack code {}, base attack code {}", tbStatus.attackModeCode, tbStatus.baseAttackNumCode);
 	if (result) return static_cast<ActionErrorCode>(result);
 
 	d20a_copy.data1 = tbStatus.attackModeCode;
