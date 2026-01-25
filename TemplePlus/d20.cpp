@@ -82,6 +82,7 @@ public:
 	// Turn Based Status checks
 	static ActionErrorCode StdAttackTurnBasedStatusCheck(D20Actn* d20a, TurnBasedStatus* tbStat);
 	static ActionErrorCode TurnBasedStatusCheckPython(D20Actn* d20a, TurnBasedStatus* tbStat);
+	static ActionErrorCode TurnBasedStatusGrenade(D20Actn *d20a, TurnBasedStatus *tbStat);
 
 	// Action Checks
 	static ActionErrorCode ActionCheckAidAnotherWakeUp(D20Actn* d20a, TurnBasedStatus* tbStat);
@@ -710,7 +711,7 @@ void LegacyD20System::NewD20ActionsInit()
 
 	d20Type = D20A_THROW_GRENADE;
 	d20Defs[d20Type].addToSeqFunc = d20Callbacks.AddToSeqThrowGrenade;
-	d20Defs[d20Type].turnBasedStatusCheck = d20Callbacks.StdAttackTurnBasedStatusCheck;
+	d20Defs[d20Type].turnBasedStatusCheck = d20Callbacks.TurnBasedStatusGrenade;
 	d20Defs[d20Type].locCheckFunc = d20Callbacks.LocationCheckGrenade;
 	d20Defs[d20Type].tgtCheckFunc = nullptr;
 	d20Defs[d20Type].actionCheckFunc = nullptr;
@@ -4294,6 +4295,19 @@ ActionErrorCode D20ActionCallbacks::StdAttackTurnBasedStatusCheck(D20Actn* d20a,
 
 ActionErrorCode D20ActionCallbacks::TurnBasedStatusCheckPython(D20Actn* d20a, TurnBasedStatus* tbStat){
 	return AEC_OK;
+}
+ActionErrorCode D20ActionCallbacks::TurnBasedStatusGrenade(
+		D20Actn *d20a, TurnBasedStatus *tbStat)
+{
+	auto attacker = d20a->d20APerformer;
+	auto attackCode = tbStat->attackModeCode;
+	auto weapon = d20Sys.GetAttackWeapon(attacker, attackCode, d20a->d20Caf);
+
+	if (!inventory.IsGrenade(weapon)) {
+		return AEC_WRONG_WEAPON_TYPE;
+	}
+
+	return StdAttackTurnBasedStatusCheck(d20a, tbStat);
 }
 
 ActionErrorCode D20ActionCallbacks::ActionCostFullAttack(D20Actn * d20a, TurnBasedStatus * tbStat, ActionCostPacket * acp){
