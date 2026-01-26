@@ -257,6 +257,7 @@ public:
 	static int __cdecl WeaponDamageBonus(DispatcherCallbackArgs args);
 
 	static int __cdecl HolyWaterDamage(DispatcherCallbackArgs args, bool holy);
+	static int __cdecl HolyWaterProjectileHit(DispatcherCallbackArgs args);
 
 	int (*oldMaxDexBonus)(objHndl armor) = nullptr;
 	int (*oldArmorCheckPenalty)(objHndl armor) = nullptr;
@@ -607,6 +608,7 @@ public:
 					// unholy water
 					return itemCallbacks.HolyWaterDamage(args, false);
 				});
+		replaceFunction(0x101013D0, itemCallbacks.HolyWaterProjectileHit);
 
 		// Allow silent moves and shadow armor to have multipe levels
 		replaceFunction<int(DispatcherCallbackArgs)>(0x10102370, itemCallbacks.ArmorShadowSilentMovesSkillBonus);
@@ -7348,6 +7350,64 @@ int ItemCallbacks::HolyWaterDamage(DispatcherCallbackArgs args, bool holy)
 	} else {
 		// reset damage packet to ensure all damage is nullified
 		damage.DamagePacketInit(&dispIo->damage);
+	}
+
+	return 0;
+}
+
+int ItemCallbacks::HolyWaterProjectileHit(DispatcherCallbackArgs args)
+{
+	auto dispIo = dispatch.DispIoCheckIoType5(args.dispIO);
+	if (!dispIo) return 0;
+
+	bool holy = args.IsCondition("Holy Water"s);
+
+	auto attacker = args.objHndCaller;
+	auto self = inventory.GetItemAtInvIdx(attacker, args.GetCondArg(2));
+	auto projectile = dispIo->attackPacket.ammoItem;
+	auto weapon = dispIo->attackPacket.weaponUsed;
+
+	if (!self || !projectile || self != weapon) return 0;
+
+	auto & partsys = gameSystems->GetParticleSys();
+	auto partId = objects.getInt32(projectile, obj_f_projectile_part_sys_id);
+	if (partId) partsys.End(partId);
+
+	auto locoff = objects.GetLocationFull(projectile);
+	auto pos = locoff.location.ToInches3D();
+	if (holy) {
+		partsys.CreateAtPos("sp-holy water", pos);
+	} else {
+		partsys.CreateAtPos("sp-unholy water", pos);
+	}
+
+	ObjList targets;
+	targets.ListVicinity(locoff.location, OLC_CRITTERS);
+
+	const Dice plink(0,0,1);
+
+	auto dmgTy = DamageType::PositiveEnergy;
+	int atkPw = static_cast<int>(AttackPowerType::Holy);
+	const auto actTy = D20A_THROW_GRENADE;
+
+	if (!holy) {
+		dmgTy = DamageType::NegativeEnergy;
+		atkPw = static_cast<int>(AttackPowerType::Unholy);
+	}
+
+	for (auto i = 0; i < targets.size(); i++) {
+		auto & target = targets[i];
+		if (!target || locSys.DistanceToLocFeet(target, &locoff) > 5.0) continue;
+
+		auto hit =
+			holy
+				? critterSys.IsFiend(target) || critterSys.IsUndead(target)
+				: critterSys.IsCelestial(target);
+
+		if (hit) {
+			damage.DealDamage(
+					target, attacker, plink, dmgTy, atkPw, 100, 103, actTy);
+		}
 	}
 
 	return 0;
