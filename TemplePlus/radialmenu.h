@@ -113,7 +113,7 @@ struct RadialMenuEntryAction : RadialMenuEntry
 	RadialMenuEntryAction(int combatMesLine, D20ActionType d20aType, int data1,  uint32_t helpId);
 	RadialMenuEntryAction(int combatMesLine, D20ActionType d20aType, int data1, const char *helpId);
 	RadialMenuEntryAction(int combatMesLine, int d20aType, int data1, const char *helpId);
-	RadialMenuEntryAction(std::string & text, int d20aType, int data1, std::string & helpId);
+	RadialMenuEntryAction(const std::string & text, int d20aType, int data1, const std::string & helpId);
 	RadialMenuEntryAction(SpellStoreData &spData);
 };
 
