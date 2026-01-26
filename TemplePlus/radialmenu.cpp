@@ -1087,7 +1087,7 @@ RadialMenuEntryAction::RadialMenuEntryAction(int combatMesLine, int d20aType, in
 {
 }
 
-RadialMenuEntryAction::RadialMenuEntryAction(std::string & textArg, int d20aType, int data1, std::string & helpId) : RadialMenuEntry()
+RadialMenuEntryAction::RadialMenuEntryAction(const std::string & textArg, int d20aType, int data1, const std::string & helpId) : RadialMenuEntry()
 {
 	type = RadialMenuEntryType::Action;
 	auto textId = ElfHash::Hash(textArg);
