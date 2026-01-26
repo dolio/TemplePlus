@@ -100,6 +100,9 @@ class RadialMenuReplacements : public TempleFix
 	// adds reload radials for weapons that won't have conditions for it
 	static void AddReload(objHndl critter);
 
+	// fixes thrown weapons logic
+	static int AddThrown(objHndl critter);
+
 	static RadialMenuNode* HookedGetActiveMenuNode(int nodeId);
 
 	void apply() override {
@@ -124,6 +127,9 @@ class RadialMenuReplacements : public TempleFix
 		//	
 		//});
 
+		// replace thrown weapon radial adder; it was impossible to throw
+		// off-hand grenades as grenades
+		replaceFunction(0x100FF020, AddThrown);
 
 		// RadialMenuUpdate
 		replaceFunction<void(__cdecl)(objHndl)>(0x1004D1F0, [](objHndl objHnd){
@@ -276,6 +282,45 @@ void RadialMenuReplacements::AddReload(objHndl critter)
 
 	RadialMenuEntryAction radEntry(5009, D20A_RELOAD, 0, "TAG_WEAPONS_SLING");
 	radEntry.AddChildToStandard(critter, Offense);
+}
+
+int RadialMenuReplacements::AddThrown(objHndl critter)
+{
+	const EquipSlot slots[2] =
+		{ EquipSlot::WeaponPrimary, EquipSlot::WeaponSecondary };
+	const std::string help = "TAG_THROWN_WEAPON"s;
+	static std::string mes(combatSys.GetCombatMesLine(5088));
+	static auto offense =
+		radialMenus.GetStandardNode(RadialMenuStandardNode::Offense);
+
+	int result = 0;
+
+	for (auto slot : slots) {
+		auto weapon = inventory.ItemWornAt(critter, slot);
+		if (!weapon) continue;
+
+		auto ammoTy = objects.getInt32(weapon, obj_f_weapon_ammo_type);
+
+		// actual ammo < dagger; invalid > 18
+		if (ammoTy < wat_dagger || ammoTy > wat_unk18) continue;
+
+		int actType = D20A_THROW;
+		if (ammoTy >= wat_ball_of_fire) { // grenade
+			actType = D20A_THROW_GRENADE;
+		}
+
+		std::string weapName = objects.GetDisplayName(weapon, critter);
+		std::string title = fmt::format("{} {}", mes, weapName);
+
+		RadialMenuEntryAction radEntry(title, actType, 0, help);
+
+		// TODO: logic may not be right w/r/t left/right swapping.
+		if (slot == EquipSlot::WeaponSecondary)
+			radEntry.d20Caf = D20CAF_SECONDARY_WEAPON;
+
+		result = radEntry.AddAsChild(critter, offense);
+	}
+	return result;
 }
 
 RadialMenuNode * RadialMenuReplacements::HookedGetActiveMenuNode(int nodeId){
