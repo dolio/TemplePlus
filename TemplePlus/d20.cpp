@@ -4127,12 +4127,16 @@ ActionErrorCode D20ActionCallbacks::AddToStandardAttack(D20Actn * d20a, ActnSeq 
 			}
 		}
 
-		if (actSeqSys.TurnBasedStatusUpdate(&tbStatCopy, &d20aCopy) == AEC_OK){
-			if (inventory.IsThrowingWeapon(weapon)){
-				d20aCopy.d20ActType = D20A_THROW;
+		if (actSeqSys.TurnBasedStatusUpdate(&tbStatCopy, &d20aCopy) == AEC_OK) {
+			if (inventory.IsThrowingWeapon(weapon)) {
+				if (inventory.IsGrenade(weapon)) {
+					d20aCopy.d20ActType = D20A_THROW_GRENADE;
+					d20aCopy.d20Caf |= D20CAF_THROWN_GRENADE | D20CAF_TOUCH_ATTACK;
+				} else {
+					d20aCopy.d20ActType = D20A_THROW;
+				}
 				d20aCopy.d20Caf |= D20CAF_THROWN;
-			} else
-			{
+			} else {
 				d20aCopy.d20ActType = D20A_STANDARD_RANGED_ATTACK;
 			}
 		}
