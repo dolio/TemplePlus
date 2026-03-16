@@ -4305,6 +4305,7 @@ ActionErrorCode D20ActionCallbacks::TurnBasedStatusGrenade(
 	auto attacker = d20a->d20APerformer;
 	auto attackCode = tbStat->attackModeCode;
 	auto weapon = d20Sys.GetAttackWeapon(attacker, attackCode, d20a->d20Caf);
+	if (!weapon) return AEC_INVALID_ACTION;
 
 	if (!inventory.IsGrenade(weapon)) {
 		return AEC_WRONG_WEAPON_TYPE;
