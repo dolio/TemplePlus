@@ -312,7 +312,8 @@ int RadialMenuReplacements::AddThrown(objHndl critter)
 		std::string weapName = objects.GetDisplayName(weapon, critter);
 		std::string title = fmt::format("{} {}", mes, weapName);
 
-		RadialMenuEntryAction radEntry(title, actType, 0, help);
+		auto data1 = static_cast<int>(slot);
+		RadialMenuEntryAction radEntry(title, actType, data1, help);
 
 		// TODO: logic may not be right w/r/t left/right swapping.
 		if (slot == EquipSlot::WeaponSecondary)

@@ -4304,6 +4304,15 @@ ActionErrorCode D20ActionCallbacks::TurnBasedStatusGrenade(
 {
 	auto attacker = d20a->d20APerformer;
 	auto attackCode = tbStat->attackModeCode;
+
+	switch (static_cast<EquipSlot>(d20a->data1))
+	{
+	case EquipSlot::WeaponSecondary:
+		d20a->d20Caf |= D20CAF_SECONDARY_WEAPON;
+	default:
+		break;
+	}
+
 	auto weapon = d20Sys.GetAttackWeapon(attacker, attackCode, d20a->d20Caf);
 	if (!weapon) return AEC_INVALID_ACTION;
 
